@@ -1,5 +1,5 @@
 import argparse
-from Inception import InceptionObject
+from inception import InceptionObject
 class InceptionArgParser(argparse.ArgumentParser, InceptionObject):
     def __init__(self, *args, **kwargs):
         super(InceptionArgParser, self).__init__(*args, **kwargs)

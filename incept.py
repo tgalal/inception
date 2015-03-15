@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys, time
-from Inception.argparsers import BootstrapArgParser, MakeArgParser, PlantArgParser, LearnArgParser, DeployArgParser
-from Inception.argparsers.exceptions import InceptionArgParserException
+from inception.argparsers import BootstrapArgParser, MakeArgParser, PlantArgParser, LearnArgParser, DeployArgParser
+from inception.argparsers.exceptions import InceptionArgParserException
 
 if __name__ == "__main__":
     args = sys.argv

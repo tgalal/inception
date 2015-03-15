@@ -1,5 +1,5 @@
 from constants import InceptionConstants
-from Inception import InceptionObject
+from inception import InceptionObject
 import os, json, sys
 class ConfigNotFoundException(Exception):
     pass

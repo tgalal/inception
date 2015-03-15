@@ -2,11 +2,11 @@ from argparser import InceptionArgParser
 from exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
 from .. import InceptionConstants
 from .. import Configurator, ConfigNotFoundException
-from Inception.generators import UpdateScriptGenerator
-from Inception.generators import BootImgGenerator
-from Inception.generators import WPASupplicantConfGenerator
-from Inception.generators import CacheImgGenerator
-from Inception.generators import SettingsGenerator
+from inception.generators import UpdateScriptGenerator
+from inception.generators import BootImgGenerator
+from inception.generators import WPASupplicantConfGenerator
+from inception.generators import CacheImgGenerator
+from inception.generators import SettingsGenerator
 
 import sys, os, subprocess, json, shutil, threading
 

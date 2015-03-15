@@ -6,7 +6,7 @@ from .. import Configurator, ConfigNotFoundException
 from .. import InceptionExecCmdFailedException
 #from .. import Adb 
 import os, subprocess, json, shutil
-from Inception.generators.settings import SettingsDatabaseFactory
+from inception.generators.settings import SettingsDatabaseFactory
 
 class LearnArgParser(InceptionArgParser):
 
