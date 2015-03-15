@@ -1,0 +1,2 @@
+class BootImgGenerationFailedException(Exception):
+    pass

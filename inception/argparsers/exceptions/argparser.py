@@ -1,0 +1,2 @@
+class InceptionArgParserException(Exception):
+    pass

@@ -1,0 +1,2 @@
+class MakeUpdatePkgFailedException(Exception):
+    pass

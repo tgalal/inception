@@ -1,0 +1,191 @@
+from argparser import InceptionArgParser
+from make import MakeArgParser
+from exceptions import InceptionArgParserException
+from .. import InceptionConstants
+from .. import Configurator, ConfigNotFoundException
+from .. import InceptionExecCmdFailedException
+from .. import Heimdall
+from .. import RkFlashTool
+import os, subprocess, json
+
+class PlantArgParser(InceptionArgParser):
+
+    def __init__(self):
+        super(PlantArgParser, self).__init__(description = "Plant mode cmd")
+        self.flashers = ("heimdall", "rkflash", "dd", "cat")
+
+        requiredOpts = self.add_argument_group("Required args")
+        requiredOpts.add_argument('-v', '--variant', required = True, action = "store")
+        requiredOpts.add_argument('-t', '--through', required = True, action = "store", metavar="(%s)" % ("|".join(self.getFlashers())))
+
+        optionalOpts = self.add_argument_group("Plant options")
+        optionalOpts.add_argument('-m', '--make', required = False, action = "store_true")
+
+        imageOptions = self.add_argument_group("Plant images")
+        imageOptions.add_argument('-b', '--boot', required = False, action = "store_false")
+        imageOptions.add_argument('-c', '--cache', required = False, action = "store_false")
+        imageOptions.add_argument('-r', '--recovery', required = False, action = "store_false")
+
+    def getFlashers(self):
+        return self.flashers
+
+    def process(self):
+        super(PlantArgParser, self).process()
+        try:
+            configurator = Configurator(self.args["variant"])
+            vendor, model, variant = self.args["variant"].split('.')
+        except ConfigNotFoundException, e:
+            raise InceptionArgParserException(e)
+        except ValueError, e:
+            raise InceptionArgParserException("Code must me in the format vendor.model.variant")
+
+
+        self.config = configurator.getConfig()
+        self.setOutDir(os.path.join(InceptionConstants.OUT_DIR, vendor, model, variant))
+      
+
+        if not (self.args["boot"] and
+            self.args["cache"] and
+            self.args["recovery"]):
+
+            self.args["boot"] = not self.args["boot"]
+            self.args["cache"] = not self.args["cache"]
+            self.args["recovery"] = not self.args["recovery"]
+
+        if self.args["make"]:
+            m = MakeArgParser()
+            if not m.make(self.args["variant"]):
+                raise InceptionArgParserException("Make failed")
+
+
+
+        if self.args["through"] == "heimdall":
+            return self.processHeimdall()
+        elif self.args["through"] == "dd":
+            return self.processDataDestroyer()
+        elif self.args["through"] == "rkflash":
+            return self.processRkflash()
+        elif self.args["through"] == "cat":
+            return self.processCat()
+        else:
+            raise InceptionArgParserException("Unsupported plant method: %s " % self.args["through"])
+
+    def processRkflash(self):
+        r = RkFlashTool(self.config.get("config.rkflashtool.bin"))
+        flashDict = {}
+
+        def add(t):
+            flashDict[self.config.get("fstab.%s.pit_name" % t)] = self.getOutDir() + "/%s.img" % t
+        if self.args["boot"]:
+            add("boot")
+        if self.args["recovery"]:
+            add("recovery")
+        if self.args["cache"]:
+            add("cache")
+
+        r.flash(**flashDict)
+        return True
+
+    def processDataDestroyer(self):
+        flashDict = {}
+        targetTmp = "/sdcard/inception_dd"
+        cache = self.config.get("fstab.cache")
+        recovery = self.config.get("fstab.recovery")
+        
+        adb = self.getAdb(self.config.get("config.adb.bin"))
+        adb.mkdir(targetTmp)
+
+        def add(t):
+            flashDict[self.config.get("fstab.%s.dev" % t)] = self.getOutDir() + "/%s.img" % t
+
+        if self.args["boot"]:
+            add("boot")
+        if self.args["recovery"]:
+            add("recovery")
+        if self.args["cache"]:
+            add("cache")
+
+        for device, img in flashDict.items():
+            self.d("Pushing " + img)
+            targetImgPath = targetTmp + "/" + os.path.basename(img)
+            adb.push(img, targetTmp)
+
+        for device, img in flashDict.items():
+            self.d("Flashing %s to %s" % (targetImgPath, device))
+            devices = adb.devices()
+            deviceMode = devices.itervalues().next()
+            adb.cmd(
+                "dd",
+                "if=%s" % targetImgPath,
+                "of=%s" % device,
+                su = self.config.get("config.adb.require-su", False) and deviceMode == "device"
+            )
+        adb.rmdir(targetTmp)
+
+        return True
+
+    def processCat(self):
+        flashDict = {}
+        targetTmp = "/sdcard/inception_dd"
+        cache = self.config.get("fstab.cache")
+        recovery = self.config.get("fstab.recovery")
+        
+        adb = self.getAdb(self.config.get("config.adb.bin"))
+        adb.mkdir(targetTmp)
+
+        def add(t):
+            flashDict[self.config.get("fstab.%s.dev" % t)] = self.getOutDir() + "/%s.img" % t
+
+        if self.args["boot"]:
+            add("boot")
+        if self.args["recovery"]:
+            add("recovery")
+        if self.args["cache"]:
+            add("cache")
+
+        for device, img in flashDict.items():
+            self.d("Pushing " + img)
+            targetImgPath = targetTmp + "/" + os.path.basename(img)
+            adb.push(img, targetTmp)
+
+        for device, img in flashDict.items():
+            self.d("Flashing %s to %s" % (targetImgPath, device))
+            devices = adb.devices()
+            deviceMode = devices.itervalues().next()
+            adb.cmd(
+                "cat",
+                targetImgPath,
+                ">",
+                device,
+                su = self.config.get("config.adb.require-su", False) and deviceMode == "device"
+            )
+            adb.cmd(
+                "sync"
+            )
+            adb.cmd(
+                "sync"
+            )
+            adb.cmd(
+                "sync"
+            )
+
+        adb.rmdir(targetTmp)
+
+        return True
+
+    def processHeimdall(self):
+        h = Heimdall(self.config.get("config.heimdall.bin"))
+        flashDict = {}
+
+        def add(t):
+            flashDict[self.config.get("fstab.%s.pit_name" % t)] = self.getOutDir() + "/%s.img" % t
+
+        if self.args["boot"]:
+            add("boot")
+        if self.args["recovery"]:
+            add("recovery")
+        if self.args["cache"]:
+            add("cache")
+
+        h.flash(**flashDict)
+        return True
