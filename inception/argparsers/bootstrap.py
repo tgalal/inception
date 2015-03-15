@@ -30,7 +30,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.configurator = Configurator(self.args["base"])
 
         self.configDir = os.path.dirname(self.configurator.getConfigPath())
-        self.config = self.configurator.getConfig().getData()
+        self.config = self.configurator.getConfig()
         vendor = self.configurator.getConfigVendor()
         model = self.configurator.getConfigModel()
 
@@ -50,17 +50,19 @@ class BootstrapArgParser(InceptionArgParser):
         #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
         unpacker = self.newConfig.get("config.unpackbootimg.bin") 
-
-        if "boot" in self.config["imgs"]:
+        
+        if self.config.get("imgs.boot", None):
             self.d("Unpacking boot img")
-            bootImg = "%s/%s" % (self.configDir, self.config["imgs"]["boot"])
-            self.unpackimg(bootImg, self.bootDir, unpacker, "boot")
+            bootImg = "%s/%s" % (self.configDir, self.config.get("imgs.boot"))
+            self.unpackimg(bootImg, self.bootDir, unpacker, "boot")       
+            self.createDir(self.bootDir)
         
 
-        if "recovery" in self.config["imgs"]:
-            recoveryImg = "%s/%s" % (self.configDir, self.config["imgs"]["recovery"])
+        if  self.config.get("imgs.recovery"):
+            recoveryImg = "%s/%s" % (self.configDir, self.config.get("imgs.recovery"))
             self.d("Unpacking recovery img")
             self.unpackimg(recoveryImg, self.recoveryDir, unpacker, "recovery")
+            self.createDir(self.recoveryDir)
 
         
 
@@ -145,9 +147,7 @@ class BootstrapArgParser(InceptionArgParser):
 
         self.createDir(self.variantDir)
         self.createDir(self.fsDir)
-        self.createDir(self.imgDir)
-        self.createDir(self.bootDir)
-        self.createDir(self.recoveryDir)
+
 
     def getAbsolutePathOf(self, f):
         return os.path.dirname(os.path.realpath(__file__)) + "/" + f 

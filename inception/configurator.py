@@ -77,8 +77,6 @@ class Config(object):
                 parent = self.getParent()
                 if parent is not None:
                     return parent.get(prop, default)
-            elif default is None:
-                raise ValueError("Couldn't find %s" % prop)
 
             return default
 
