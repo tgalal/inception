@@ -551,7 +551,7 @@ class MakeArgParser(InceptionArgParser):
                 "decode",
                 "--frame-path", frameworksDir,
                 "%s.%s" % (targetFname, targetExt))
-            logger.warn(cmd)
+
             self.execCmd(
                 *cmd,
                 cwd = patchDir)
