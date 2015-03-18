@@ -8,7 +8,9 @@ from inception.generators import WPASupplicantConfGenerator
 from inception.generators import CacheImgGenerator
 from inception.generators import SettingsGenerator
 
-import sys, os, json, shutil, threading
+import sys, os, json, shutil, threading, logging
+
+logger = logging.getLogger(__name__)
 
 
 class MakeArgParser(InceptionArgParser):
@@ -146,8 +148,12 @@ class MakeArgParser(InceptionArgParser):
         self.applyPatches()
         self.makeSettings()
 
-        if not noCache:
-            self.makeCacheImg(self.makeUpdatePkg() if makeUpdatePkg else None)
+        updatePkg = self.makeUpdatePkg() if makeUpdatePkg else None
+        if not noCache and updatePkg:
+            if self.config.get("fstab.cache.size", None) is None:
+                logger.warn("fstab.cache.size not set, will not generate cache")
+            else:
+                self.makeCacheImg(updatePkg)
 
         imgsConfig = self.config.get("imgs")
 
