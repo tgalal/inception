@@ -71,16 +71,14 @@ class Config(object):
     def get(self, prop, default = None):
         try:
             result = self.getProperty(prop)
-            return result or default
-        except ValueError, e:
+            return result if result is not None else default
+        except ValueError as e:
             if not self.isOrphan() and not self.isFull():
                 parent = self.getParent()
                 if parent is not None:
                     return parent.get(prop, default)
 
             return default
-
-
 
 class Configurator(InceptionObject):
 

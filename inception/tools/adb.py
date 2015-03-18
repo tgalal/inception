@@ -1,13 +1,17 @@
-from execwrapper import ExecWrapper
+from .execwrapper import ExecWrapper
 import os
 class Adb(ExecWrapper):
 
     def __init__(self, bin):
         super(Adb, self).__init__(bin)
+        self.busybox = False
 
     def _setAction(self, action):
         self.clearArgs()
         self.addPreArg(action)
+
+    def setBusyBoxCmds(self, busybox):
+        self.busybox = busybox
 
     def push(self, src, dest):
         self._setAction("push")
@@ -47,8 +51,12 @@ class Adb(ExecWrapper):
 
     def cmd(self, *cmd, **kwargs):
         self._setAction("shell")
+        if self.busybox:
+            cmd = ("busybox",) + cmd
         if "su" in kwargs and kwargs["su"] is True:
             self.addPreArg("su -c")
-        self.addPostArg(" ".join(cmd))
+
+        cmdFlat = " ".join(cmd)
+        self.addPostArg("\"%s\"" % cmdFlat)
 
         return self.run()

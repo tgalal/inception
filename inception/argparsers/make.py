@@ -1,14 +1,14 @@
-from argparser import InceptionArgParser
-from exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
-from .. import InceptionConstants
-from .. import Configurator, ConfigNotFoundException
+from inception.argparsers.argparser import InceptionArgParser
+from inception.argparsers.exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
+from inception.constants import InceptionConstants
+from inception.configurator import Configurator, ConfigNotFoundException
 from inception.generators import UpdateScriptGenerator
 from inception.generators import BootImgGenerator
 from inception.generators import WPASupplicantConfGenerator
 from inception.generators import CacheImgGenerator
 from inception.generators import SettingsGenerator
 
-import sys, os, subprocess, json, shutil, threading
+import sys, os, json, shutil, threading
 
 
 class MakeArgParser(InceptionArgParser):
@@ -35,10 +35,6 @@ class MakeArgParser(InceptionArgParser):
             required = False,
             action = "store_true")
 
-        optionalOpts.add_argument("-o", '--old-frontend',
-            required = False,
-            action = "store_true")
-
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
         self.threads = []
@@ -58,8 +54,7 @@ class MakeArgParser(InceptionArgParser):
 
         return self.make(self.args["variant"],
             writeManifest = self.args["write_manifest"], 
-            makeUpdatePkg = not self.args["no_updatepkg"],
-            newFrontend = not self.args["old_frontend"]
+            makeUpdatePkg = not self.args["no_updatepkg"]
             )
         
     
@@ -93,15 +88,14 @@ class MakeArgParser(InceptionArgParser):
                     else:
                         self.make(variantCode, noCache = self.args["no_cache"], 
                             writeManifest = self.args["write_manifest"],
-                            makeUpdatePkg = not self.args["no_updatepkg"],
-                            newFrontend = not self.args["old_frontend"])
+                            makeUpdatePkg = not self.args["no_updatepkg"])
 
         for thread in self.threads:
             thread.join()
 
-        print "\n=================\n\nResult:\n"
+        print("\n=================\n\nResult:\n")
         for k,v in result.items():
-            print "%s\t\t%s" % ("OK" if v else "Failed", k)
+            print("%s\t\t%s" % ("OK" if v else "Failed", k))
 
 
         return True
@@ -110,7 +104,7 @@ class MakeArgParser(InceptionArgParser):
     def make(self, code, noCache = False, writeManifest = False, makeUpdatePkg = True, newFrontend = True):
         try:
             self.vendor, self.model, self.variant = code.split('.')
-        except ValueError, e:
+        except ValueError as e:
             raise InceptionArgParserException(
                 "Code must me in the format vendor.model.variant"
                 )
@@ -131,7 +125,7 @@ class MakeArgParser(InceptionArgParser):
         self.workDir = self.getWorkDir() 
         try:
             self.configurator = Configurator(code)
-        except ConfigNotFoundException, e:
+        except ConfigNotFoundException as e:
             raise InceptionArgParserException(e)
         self.config = self.configurator.getConfig()
 
@@ -148,7 +142,7 @@ class MakeArgParser(InceptionArgParser):
         os.makedirs(outDir)
 
 
-        self.buildFS(newFrontend = newFrontend)
+        self.buildFS()
         self.applyPatches()
         self.makeSettings()
 
@@ -157,33 +151,36 @@ class MakeArgParser(InceptionArgParser):
 
         imgsConfig = self.config.get("imgs")
 
-        if "boot" in imgsConfig and imgsConfig["boot"] is not None:
+        if imgsConfig and "boot" in imgsConfig and imgsConfig["boot"] is not None:
             self.makeBootImg()
-        recoveryConfig = self.config.get("config.recovery")
-        if "stock_init_bin" in recoveryConfig:
-            #cp ramdisk to work
-            ramdisk = recoveryConfig["ramdisk"]
-            if not os.path.isdir(ramdisk):
-                raise ValueError("Can't yet handle compressed ramdisk in this case")
 
-            modifiedRamdiskPath = os.path.join(self.getWorkDir(), "ramdisk2")
 
-            shutil.copytree(ramdisk, modifiedRamdiskPath, symlinks = True)
-            shutil.copy(recoveryConfig["stock_init_bin"], modifiedRamdiskPath)
+        if self.hasRecovery():
+            recoveryConfig = self.config.get("config.recovery")
+            if "stock_init_bin" in recoveryConfig:
+                #cp ramdisk to work
+                ramdisk = recoveryConfig["ramdisk"]
+                if not os.path.isdir(ramdisk):
+                    raise ValueError("Can't yet handle compressed ramdisk in this case")
 
-            if "stock_init_rc_append" in recoveryConfig:
-                origF = open(modifiedRamdiskPath + "/init.rc", "a")
-                appendF = open(recoveryConfig["stock_init_rc_append"], "r")
-                origF.write("\n")
-                origF.write("".join(appendF.readlines()))
-                appendF.close()
-                origF.close()
+                modifiedRamdiskPath = os.path.join(self.getWorkDir(), "ramdisk2")
 
-            gen = self._makeBootImgGenerator("recovery")
-            gen.setRamdisk(modifiedRamdiskPath)
-            gen.generate(self.getOutDir() + "/recovery.img")
-        else:
-            self.makeRecoveryImg()
+                shutil.copytree(ramdisk, modifiedRamdiskPath, symlinks = True)
+                shutil.copy(recoveryConfig["stock_init_bin"], modifiedRamdiskPath)
+
+                if "stock_init_rc_append" in recoveryConfig:
+                    origF = open(modifiedRamdiskPath + "/init.rc", "a")
+                    appendF = open(recoveryConfig["stock_init_rc_append"], "r")
+                    origF.write("\n")
+                    origF.write("".join(appendF.readlines()))
+                    appendF.close()
+                    origF.close()
+
+                gen = self._makeBootImgGenerator("recovery")
+                gen.setRamdisk(modifiedRamdiskPath)
+                gen.generate(self.getOutDir() + "/recovery.img")
+            else:
+                self.makeRecoveryImg()
 
         self.writeUsedConfig()
         self.writeCmdLog(os.path.join(self.getOutDir(), "make.commands.log"))
@@ -192,6 +189,10 @@ class MakeArgParser(InceptionArgParser):
             self.writeManifest()
 
         return True
+
+
+    def hasRecovery(self):
+        return self.config.get("config.recovery.ramdisk") is not None
 
     def writeUsedConfig(self):
         f = open(os.path.join(self.getOutDir(), "config.json"), "w")
@@ -213,13 +214,14 @@ class MakeArgParser(InceptionArgParser):
         if len(self.config.get("network.aps", [])):
             self.makeWPASupplicant(updatePkgDir)
 
-
         updateScriptPath = self.makeUpdateScript(updateScriptDir, writeRecovery = writeRecovery)
         if updateScriptPath:
             updateBin = self.config.get("config.update-binary.bin")
             shutil.copy(updateBin, updateScriptDir)
 
-            return self.makeUpdateZip(updatePkgDir)
+            updatePkgPath = self.makeUpdateZip(updatePkgDir)
+            shutil.copy(updatePkgPath, os.path.join(self.getOutDir(), "update.zip" ))
+            return updatePkgPath
         return False
 
 
@@ -242,7 +244,7 @@ class MakeArgParser(InceptionArgParser):
         #return src + "/../update.zip"
         return os.path.join(src, signedUpdatePkgZipPath)
 
-    def buildFS(self, newFrontend = True):
+    def buildFS(self):
         #merge fs folder in all tree
         self.d("Building fs")
         
@@ -258,15 +260,6 @@ class MakeArgParser(InceptionArgParser):
         for fspath in fspaths:
             if os.path.isdir(fspath):
                 self.execCmd("cp", "-r", fspath, self.getWorkDir())        
-
-        version = "new" if newFrontend else "old"
-        try:
-            sp = self.config.get("config.suitepad.path_%s" % version)
-            devman = self.config.get("config.devicemanager.path_%s" % version)
-            shutil.copy(sp, os.path.join(self.getWorkDir(),InceptionConstants.FS_DIR, "data/app"))
-            shutil.copy(devman, os.path.join(self.getWorkDir(),InceptionConstants.FS_DIR, "data/app"))
-        except ValueError:
-            pass
 
 
     def findFile(self, fname, config):
@@ -312,25 +305,36 @@ class MakeArgParser(InceptionArgParser):
                 shutil.copytree(fpath, outdir + "/" + d)
             else:
                 shutil.copy(fpath, outdir)
-            
+
+    def hasNetworkConfig(self):
+        return len(self.config.get("network.aps", [])) > 0
+
     def makeUpdateScript(self, updateScriptDir, writeRecovery = False):
         u = UpdateScriptGenerator()
+
+        formatData = self.config.get("fstab.data.format", True)
 
         if writeRecovery:
             u.writeImage("/cache/recovery.img", self.config.get("fstab.recovery.dev"))
 
         u.mount("/system")
         u.mount("/data")
+
         for f in self.config.get("fs.rm", []):
             u.rm(f)
 
         for f in self.config.get("fs.rmdir", []):
             u.rm(f, recursive = True)
 
-        u.rm("/data", True)
+        if formatData:
+            u.rm("/data", True)
 
-        for f in self.config.get("fs.add", []):
+        toAdd = self.config.get("fs.add", [])
+        for f in toAdd:
             u.extractDir(f, "/" + f)
+
+        if self.hasNetworkConfig() and not "data" in toAdd:
+            u.extractDir("data/misc/wifi", "/data/misc/wifi")
 
         for path, permissions in self.config.get("files", {}).items():
             if "mode_dirs" in permissions:
@@ -340,12 +344,14 @@ class MakeArgParser(InceptionArgParser):
                     permissions["mode_files"],
                     permissions["mode_dirs"])
             else:
-                 u.setPermissions(path, 
+                if not self.hasNetworkConfig() and path == "/data/misc/wifi/wpa_supplicant.conf":
+                    continue
+                u.setPermissions(path,
                     permissions["uid"],
                     permissions["gid"],
                     permissions["mode"])
-        if not u.isDirty():
-            return False
+        #if not u.isDirty():
+        #    return False
 
         updateScript = u.generate()
         self.d("Writing", updateScriptDir+"/updater-script")
@@ -367,6 +373,7 @@ class MakeArgParser(InceptionArgParser):
 
     def makeWPASupplicant(self, outdir):
         aps = self.config.get("network.aps", [])
+
         gen = WPASupplicantConfGenerator()
         gen.setWorkDir(self.getWorkDir())
         gen.setOutDir(self.getOutDir())
@@ -383,7 +390,7 @@ class MakeArgParser(InceptionArgParser):
 
         wifiDir = self.createPathString(outdir, "data", "misc", "wifi")
         if not os.path.exists(wifiDir):
-            os.makedirs(self.createPathString(outdir, "data", "misc", "wifi"))
+            os.makedirs(wifiDir)
 
         wpaSupplicantFilePath = self.createPathString(wifiDir, "wpa_supplicant.conf")
         wpaSupplicantFile = open(wpaSupplicantFilePath, "w")
@@ -415,6 +422,9 @@ class MakeArgParser(InceptionArgParser):
             os.remove(self.getOutDir() + "/recovery.img")
 
         cacheConfig = self.config.get("fstab.cache")
+        cacheConfigSize = self.config.get("fstab.cache.size")
+        if cacheConfigSize is None:
+            raise AssertionError("Must set cache size in config")
         gen.setSize(cacheConfig["size"])
         gen.setMountPoint("cache")
         gen.setSparsed("sparsed" not in cacheConfig or cacheConfig["sparsed"]!= False)
@@ -503,7 +513,7 @@ class MakeArgParser(InceptionArgParser):
             patchedOutput = patchDir + "/" + "%s.%s_patched" % (targetFname, targetExt)
 
             if not targetExt == "apk":
-                print "Cannot handle non apks at the moment"
+                print("Cannot handle non apks at the moment")
                 sys.exit(1)
 
             apktool = self.config.get("config.apktool")

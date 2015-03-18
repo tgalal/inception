@@ -1,14 +1,18 @@
-from argparser import InceptionArgParser
-from make import MakeArgParser
-from exceptions import InceptionArgParserException
-from .. import InceptionConstants
-from .. import Configurator, ConfigNotFoundException
-from .. import InceptionExecCmdFailedException
-from .. import Heimdall
-from .. import RkFlashTool
-import os, subprocess, json
+from .argparser import InceptionArgParser
+from .make import MakeArgParser
+from .exceptions import InceptionArgParserException
+from inception.constants import InceptionConstants
+from inception.configurator import Configurator, ConfigNotFoundException
+from inception.tools import Heimdall
+from inception.tools import RkFlashTool
+import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PlantArgParser(InceptionArgParser):
+
+    IMGS = ("boot", "cache", "recovery")
 
     def __init__(self):
         super(PlantArgParser, self).__init__(description = "Plant mode cmd")
@@ -34,28 +38,26 @@ class PlantArgParser(InceptionArgParser):
         try:
             configurator = Configurator(self.args["variant"])
             vendor, model, variant = self.args["variant"].split('.')
-        except ConfigNotFoundException, e:
+        except ConfigNotFoundException as e:
             raise InceptionArgParserException(e)
-        except ValueError, e:
+        except ValueError as e:
             raise InceptionArgParserException("Code must me in the format vendor.model.variant")
 
 
         self.config = configurator.getConfig()
         self.setOutDir(os.path.join(InceptionConstants.OUT_DIR, vendor, model, variant))
-      
 
-        if not (self.args["boot"] and
-            self.args["cache"] and
-            self.args["recovery"]):
-
-            self.args["boot"] = not self.args["boot"]
-            self.args["cache"] = not self.args["cache"]
-            self.args["recovery"] = not self.args["recovery"]
+        argImgs = (self.args[img] for img in self.__class__.IMGS)
+        if not all(argImgs):
+            for img in argImgs:
+                self.ags[img] = not self.args
 
         if self.args["make"]:
             m = MakeArgParser()
             if not m.make(self.args["variant"]):
                 raise InceptionArgParserException("Make failed")
+
+
 
 
 
@@ -69,6 +71,18 @@ class PlantArgParser(InceptionArgParser):
             return self.processCat()
         else:
             raise InceptionArgParserException("Unsupported plant method: %s " % self.args["through"])
+
+    def getFlashDict(self):
+        flashDict = {}
+
+        for img in self.__class__.IMGS:
+            imgPath = self.getOutDir() + "/%s.img" % img
+            if os.path.exists(imgPath):
+                flashDict[img] = (self.config.get("fstab.%s.dev" % img), imgPath)
+            else:
+                logger.warn("Args contain %s but there was no %s" % (img, imgPath))
+
+        return flashDict
 
     def processRkflash(self):
         r = RkFlashTool(self.config.get("config.rkflashtool.bin"))
@@ -87,42 +101,37 @@ class PlantArgParser(InceptionArgParser):
         return True
 
     def processDataDestroyer(self):
-        flashDict = {}
+        flashDict = self.getFlashDict()
         targetTmp = "/sdcard/inception_dd"
         cache = self.config.get("fstab.cache")
         recovery = self.config.get("fstab.recovery")
         
-        adb = self.getAdb(self.config.get("config.adb.bin"))
+        adb = self.getAdb(self.config.get("config.adb.bin"), busybox=self.config.get("config.adb.busybox"))
         adb.mkdir(targetTmp)
 
-        def add(t):
-            flashDict[self.config.get("fstab.%s.dev" % t)] = self.getOutDir() + "/%s.img" % t
-
-        if self.args["boot"]:
-            add("boot")
-        if self.args["recovery"]:
-            add("recovery")
-        if self.args["cache"]:
-            add("cache")
-
-        for device, img in flashDict.items():
+        for imgName, imgData in flashDict.items():
+            device, img = imgData
             self.d("Pushing " + img)
             targetImgPath = targetTmp + "/" + os.path.basename(img)
-            adb.push(img, targetTmp)
+            adb.push(img, targetImgPath)
 
-        for device, img in flashDict.items():
+        for imgName, imgData in flashDict.items():
+            device, img = imgData
             self.d("Flashing %s to %s" % (targetImgPath, device))
             devices = adb.devices()
             deviceMode = devices.itervalues().next()
-            adb.cmd(
+
+            cmd = (
                 "dd",
                 "if=%s" % targetImgPath,
                 "of=%s" % device,
-                su = self.config.get("config.adb.require-su", False) and deviceMode == "device"
             )
+
+            adb.cmd(*cmd, su = self.config.get("config.adb.require-su", False) and deviceMode == "device")
         adb.rmdir(targetTmp)
 
         return True
+
 
     def processCat(self):
         flashDict = {}

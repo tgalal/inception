@@ -1,4 +1,4 @@
-from .. import InceptionObject
+from inception.inceptionobject import InceptionObject
 class ExecWrapper(InceptionObject):
     def __init__(self, bin):
         super(ExecWrapper, self).__init__()

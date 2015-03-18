@@ -1,9 +1,7 @@
-from argparser import InceptionArgParser
-from exceptions import InceptionArgParserException
-from .. import InceptionConstants
-from .. import Configurator, ConfigNotFoundException
-from .. import InceptionExecCmdFailedException
-import os, subprocess, json, shutil
+from .argparser import InceptionArgParser
+from .exceptions import InceptionArgParserException
+from inception.constants import InceptionConstants
+import os, shutil
 
 class DeployArgParser(InceptionArgParser):
 
@@ -45,16 +43,16 @@ class DeployArgParser(InceptionArgParser):
                     variantCode = "%s.%s.%s" % (v,m,c)
                     result[variantCode] = self.deployOne(variantCode, to + "/" + variantCode)
 
-        print "\n=================\n\nResult:\n"
+        print("\n=================\n\nResult:\n")
         for k,v in result.items():
-            print "%s\t\t%s" % ("OK" if v else "Failed", k)
+            print("%s\t\t%s" % ("OK" if v else "Failed", k))
 
         return True
 
     def deployOne(self, variantCode, to):
         try:
             vendor, model, variant = variantCode.split('.')
-        except ValueError, e:
+        except ValueError as e:
             raise InceptionArgParserException("Code must me in the format vendor.model.variant")
 
         sourceDir = os.path.join(InceptionConstants.OUT_DIR, vendor, model, variant)
@@ -69,7 +67,7 @@ class DeployArgParser(InceptionArgParser):
         for item in toDeploy:
             path = os.path.join(sourceDir, item)
             if not os.path.exists(path):
-                print "Couldn't find %s" % path
+                print("Couldn't find %s" % path)
                 return False
 
         #copy files

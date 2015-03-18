@@ -191,7 +191,7 @@ class BootstrapArgParser(InceptionArgParser):
         unpackResult = self.execCmd(unpacker, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
         try:
             self.execCmd("gunzip", ramdisk + ".gz") 
-        except InceptionExecCmdFailedException, e:
+        except InceptionExecCmdFailedException as e:
             self.execCmd("mv", ramdisk + ".gz", ramdisk + ".xz")
             self.execCmd("unxz", ramdisk + ".xz")
 

@@ -22,13 +22,11 @@ class InceptionObject(object):
     def d(self, *messages):
         print("%s:\t%s" % (self.__class__.__name__, "\t".join(messages) ))
 
-    def getAdb(self, adbBin):
-        if InceptionObject.ADB_INSTANCE:
-            return InceptionObject.ADB_INSTANCE
-
-        from tools import Adb
-
-        InceptionObject.ADB_INSTANCE = Adb(adbBin)
+    def getAdb(self, adbBin, busybox = False):
+        if not InceptionObject.ADB_INSTANCE:
+            from tools import Adb
+            InceptionObject.ADB_INSTANCE = Adb(adbBin)
+        InceptionObject.ADB_INSTANCE.setBusyBoxCmds(busybox)
         return InceptionObject.ADB_INSTANCE
 
     def writeCmdLog(self, out):
@@ -53,9 +51,9 @@ class InceptionObject(object):
                     result = subprocess.call(cmd, cwd = cwd, stdin = stdin, stdout = stdout, shell = "|" in cmd)
                 else:
                     result = subprocess.check_output(cmd, cwd = cwd, stdin = stdin)
-            except OSError, e:
+            except OSError as e:
                 raise InceptionExecCmdFailedException(e)
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 raise InceptionExecCmdFailedException(failMessage or e)
 
             #if result != 0 and failMessage is not None:
