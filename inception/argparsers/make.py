@@ -213,7 +213,7 @@ class MakeArgParser(InceptionArgParser):
     def makeUpdatePkg(self):
         recoveryConfig = self.config.get("config.recovery")
         writeRecovery = "stock_init_bin" in recoveryConfig
-        updatePkgDir = self.createPathString(self.workDir, "update-pkg");
+        updatePkgDir = self.createPathString(self.workDir, "update-pkg")
         updateScriptDir = self.createPathString(updatePkgDir, 
             "META-INF/com/google/android")
         self.createDir(updatePkgDir)
@@ -238,22 +238,35 @@ class MakeArgParser(InceptionArgParser):
 
     def makeUpdateZip(self, src):
         updatePkgZipPath = "../update-unsigned.zip"
-        signedUpdatePkgZipPath = "../update.zip"
-        self.execCmd("zip", "-q", "-r", "-0", 
+        outputUpdatePkgZipPath = updatePkgZipPath
+        self.execCmd("zip", "-q", "-r", "-0",
             updatePkgZipPath, ".", cwd = src, 
             failMessage="Failed to create Update Package")
         self.d("Created update package")
-        self.execCmd("java", 
-            "-jar", 
-            "/home/tarek/testlab/signapk/SignApk/signapk.jar", 
-            "/home/tarek/testlab/signapk/SignApk/testkey.x509.pem",
-            "/home/tarek/testlab/signapk/SignApk/testkey.pk8",
-            updatePkgZipPath, 
-            signedUpdatePkgZipPath,  
-            cwd = src, 
-            failMessage = "Faield to sign update package")
-        #return src + "/../update.zip"
-        return os.path.join(src, signedUpdatePkgZipPath)
+
+
+        signapk = self.config.get("config.signapk.bin")
+        publicKey = self.config.get("config.update-package.sign-key-public")
+        privateKey = self.config.get("config.update-package.sign-key-private")
+
+        if signapk is None:
+            logger.warn("config.signapk.bin is not set, skipping update package signing")
+        elif None in (publicKey, privateKey):
+            logger.warn("Both config.update-package.sign-key-public and config.update-package.sign-key-private are "
+                        "required for signing, skipping update package signing")
+        else:
+            outputUpdatePkgZipPath = "../update-signed.zip"
+            self.execCmd("java",
+                "-jar",
+                "/home/tarek/testlab/signapk/SignApk/signapk.jar",
+                "/home/tarek/testlab/signapk/SignApk/testkey.x509.pem",
+                "/home/tarek/testlab/signapk/SignApk/testkey.pk8",
+                updatePkgZipPath,
+                outputUpdatePkgZipPath,
+                cwd = src,
+                failMessage = "Faield to sign update package")
+
+        return os.path.join(src, outputUpdatePkgZipPath)
 
     def buildFS(self):
         #merge fs folder in all tree
@@ -363,6 +376,19 @@ class MakeArgParser(InceptionArgParser):
                     permissions["mode"])
         #if not u.isDirty():
         #    return False
+
+
+        updateScriptHeader = self.config.get("config.update-package.script-header", None)
+        updateScriptFooter = self.config.get("config.update-package.script-footer", None)
+        updateScriptPostExecutionWait = int(self.config.get("config.update-package.wait", 0))
+
+        if updateScriptHeader is not None:
+            u.setHeader(updateScriptHeader)
+
+        if updateScriptFooter is not None:
+            u.setFooter(updateScriptFooter)
+
+        u.setPostExecutionWait(updateScriptPostExecutionWait)
 
         updateScript = u.generate()
         self.d("Writing", updateScriptDir+"/updater-script")
