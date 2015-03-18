@@ -1,8 +1,7 @@
-from generator import Generator
-import os
+from .generator import Generator
 class UpdateScriptGenerator(Generator):
 
-    HEADER_INCEPTION = """
+    ASCII_INCEPTION = """
 .__                            __             .___
 |__| ____   ____  ____ _______/  |_  ____   __| _/
 |  |/    \_/ ___\/ __ \\____ \   __\/ __ \ / __ | 
@@ -15,23 +14,22 @@ class UpdateScriptGenerator(Generator):
         super(UpdateScriptGenerator, self).__init__()
         self.commands = []
         self.dirty = False
-        self.header = """
-..######..##.....##.####.########.########.########.....###....########.
-.##....##.##.....##..##.....##....##.......##.....##...##.##...##.....##
-.##.......##.....##..##.....##....##.......##.....##..##...##..##.....##
-..######..##.....##..##.....##....######...########..##.....##.##.....##
-.......##.##.....##..##.....##....##.......##........#########.##.....##
-.##....##.##.....##..##.....##....##.......##........##.....##.##.....##
-..######...#######..####....##....########.##........##.....##.########.
-"""
-    
+        self.header = ""
+        self.footer = self.__class__.ASCII_INCEPTION
+        self.wait = 0
     def isDirty(self):
         return self.dirty
 
     def setHeader(self, header):
         self.header = header
 
-    def getHeaderCommands(self, header = None):
+    def setFooter(self, footer):
+        self.footer = footer
+
+    def setPostExecutionWait(self, wait):
+        self.wait = wait
+
+    def getPrintCommands(self, header = None):
         header = header or self.header
         commands = []
         if header is None: return commands
@@ -104,7 +102,7 @@ class UpdateScriptGenerator(Generator):
         return self._genCmd("set_progress", val)
 
     def generate(self):
-        headerCommands = self.getHeaderCommands()
+        headerCommands = self.getPrintCommands()
         commandsProgressified = []
         total = len(self.commands)
         lastProgress = ""
@@ -118,11 +116,12 @@ class UpdateScriptGenerator(Generator):
 
             commandsProgressified.append(c)
 
-        commands = headerCommands + commandsProgressified + self.getHeaderCommands(self.__class__.HEADER_INCEPTION)
+        commands = headerCommands + commandsProgressified + self.getPrintCommands(self.footer)
         
         for i in range(0, 5):
             commands.append(self._genCmd("ui_print", self._quote("#")))
 
-        # commands.append(self._genCmd("sleep", "15"))
+        if self.wait > 0:
+            commands.append(self._genCmd("sleep", "%s" % self.wait))
         return "\n".join(commands)
 
