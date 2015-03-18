@@ -130,6 +130,7 @@ class MakeArgParser(InceptionArgParser):
         except ConfigNotFoundException as e:
             raise InceptionArgParserException(e)
         self.config = self.configurator.getConfig()
+        self.configDir = os.path.dirname(self.configurator.getConfigPath())
 
 
         self.d("Cleaning work dir " + self.workDir)
@@ -196,6 +197,10 @@ class MakeArgParser(InceptionArgParser):
 
         return True
 
+    def resolvePathRelativeToConfig(self, path):
+        if path.startswith("/"):
+            return path
+        return os.path.join(self.configDir, path)
 
     def hasRecovery(self):
         return self.config.get("config.recovery.ramdisk") is not None
@@ -522,15 +527,33 @@ class MakeArgParser(InceptionArgParser):
                 print("Cannot handle non apks at the moment")
                 sys.exit(1)
 
-            apktool = self.config.get("config.apktool")
-            java = self.config.get("config.java")
+            apktool = self.config.get("config.apktool.bin", None)
+            frameworksDir = self.resolvePathRelativeToConfig(self.config.get('config.apktool.frameworks_dir', None))
 
-            self.execCmd(
-                java["bin"],
-                "-jar", apktool["bin"],
+
+
+            java = self.config.get("config.java.bin", None)
+
+            if apktool is None:
+                logger.error("config.apktool.bin not set, cannot patch")
+                sys.exit(1)
+
+            if frameworksDir is None:
+                logger.error("config.apktool.frameworks_dir not set, cannot patch without framework dirs")
+                sys.exit(1)
+
+            if java is None:
+                logger.error("config.java.bin not set, cannot patch without java bin")
+                sys.exit(1)
+
+            cmd = (java,
+                "-jar", apktool,
                 "decode",
-                "--frame-path", apktool["frameworks_dir"],
-                "%s.%s" % (targetFname, targetExt),
+                "--frame-path", frameworksDir,
+                "%s.%s" % (targetFname, targetExt))
+            logger.warn(cmd)
+            self.execCmd(
+                *cmd,
                 cwd = patchDir)
 
 
