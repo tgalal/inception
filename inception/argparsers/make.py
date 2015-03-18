@@ -566,11 +566,11 @@ class MakeArgParser(InceptionArgParser):
                 patchFile.close()
 
             self.execCmd(
-                java["bin"],
-                "-jar", apktool["bin"],
+                java,
+                "-jar", apktool,
                 "build",
                 "-c",
-                "--frame-path", apktool["frameworks_dir"],
+                "--frame-path", frameworksDir,
                 "--output", patchedOutput,
                 patchDir + "/" + targetFname,
                 )
