@@ -2,6 +2,8 @@
 import sys, time
 from inception.argparsers import BootstrapArgParser, MakeArgParser, PlantArgParser, LearnArgParser, DeployArgParser
 from inception.argparsers.exceptions import InceptionArgParserException
+import logging
+logging.basicConfig()
 
 if __name__ == "__main__":
     args = sys.argv
