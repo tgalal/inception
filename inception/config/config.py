@@ -2,11 +2,46 @@ import json
 import os
 from inception.constants import InceptionConstants
 class Config(object):
+
+    TEMPLATE_DEFAULT = {
+        "extends": None,
+        "device": {
+            "__extend__": True,
+            "name":  None
+        },
+        "network": {
+            "aps": []
+        },
+        "config": {
+            "boot": {
+                "kernel": None,
+                "ramdisk": None,
+            },
+            "recovery": {
+                "kernel": None,
+                "ramdisk": None,
+            }
+        }
+    }
+
     def __init__(self, identifier, contextData, parent = None, source = None):
         self.identifier = identifier
         self.parent = parent if parent else None
         self.source = source
         self.__contextData = contextData
+
+
+    @classmethod
+    def new(cls, identifier, name = None, base = None, template = None):
+        sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
+        sourceTemplate = sourceTemplate.copy()
+        assert base.__class__ == Config, "Base must be instance of config"
+        config = Config(identifier, sourceTemplate, base)
+        config.set("device.name", name)
+        config.set("extends", base.getIdentifier() if base else None)
+
+        return config
+
 
     def __getitem__(self, item):
         return self.get(item)
@@ -96,8 +131,8 @@ class Config(object):
         else:
             raise ValueError("Property not found")
 
-    def getSource(self):
-        return self.source
+    def getSource(self, getDir = False):
+        return os.path.dirname(self.source) if getDir and self.source else self.source
 
     def getIdentifier(self):
         return self.identifier

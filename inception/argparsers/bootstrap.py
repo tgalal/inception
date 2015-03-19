@@ -1,9 +1,9 @@
 from .argparser import InceptionArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
-from inception.configurator import Configurator
 from inception.inceptionobject import InceptionExecCmdFailedException
 import os, shutil
+from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
 
 class BootstrapArgParser(InceptionArgParser):
 
@@ -17,30 +17,23 @@ class BootstrapArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-f", "--force", required = False, action = "store_true")
-        optionalOpts.add_argument('-s', '--standalone', required = False, action = "store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
+        self.configTreeParser = ConfigTreeParser(DotIdentifierResolver([self.deviceDir, self.baseDir]))
 
     def process(self):
         super(BootstrapArgParser, self).process()
         self.createDir(self.deviceDir)
 
-        self.configurator = Configurator(self.args["base"])
+        self.config = self.configTreeParser.parseJSON(self.args["base"])
+        self.configDir = self.config.getSource(getDir=True)
 
-        self.configDir = os.path.dirname(self.configurator.getConfigPath())
-        self.config = self.configurator.getConfig()
-        vendor = self.configurator.getConfigVendor()
-        model = self.configurator.getConfigModel()
+        vendor,model = self.args["base"].split(".")
 
-        
+        self.d("Writing new config")
+        self.newConfig = self.createNewConfig(self.args["variant"], self.args["variant"], self.config)
 
-        if self.args["standalone"] == False:
-            self.d("Writing new config")
-            self.newConfig = self.createNewConfig(self.args["variant"], self.configurator.getConfig())
-        else:
-            self.d("Writing standalone config")
-            self.newConfig = self.createNewConfig(self.args["variant"], self.configurator.getConfig(), True)
 
         self.setupDirPaths(vendor, model, self.args["variant"])
         self.d("Creating dirs")
@@ -73,18 +66,13 @@ class BootstrapArgParser(InceptionArgParser):
         return True
 
 
-    def createNewConfig(self, name, baseConfig , standalone = False):
+    def createNewConfig(self, identifier, name, baseConfig):
+        return Config.new(identifier, name, baseConfig)
 
-        newConfigContent = self.configurator.createConfigTemplate(name, baseConfig = None if standalone else baseConfig)
-
-        if standalone == True:
-            newConfigContent = self.configurator.createConfigFromTree([self.configurator.getConfig().getData(), newConfigContent])
-
-        return newConfigContent
 
     def writeNewConfig(self, name):
         newConfigFile = open(os.path.join(self.variantDir, "%s.json" % name), "w")
-        newConfigFile.write(self.newConfig.toString())
+        newConfigFile.write(self.newConfig.dumpContextData())
         newConfigFile.close()
 
     def findBaseConfig(self, configName):
