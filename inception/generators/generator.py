@@ -1,4 +1,4 @@
-from .. import InceptionObject
+from inception.inceptionobject import InceptionObject
 class GenerationFailedException(Exception):
     pass
 

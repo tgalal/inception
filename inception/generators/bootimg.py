@@ -1,7 +1,5 @@
-from .. import InceptionConstants
-from generator import Generator
-import os, shutil, tempfile
-from exceptions import BootImgGenerationFailedException
+from .generator import Generator
+import os, tempfile
 class BootImgGenerator(Generator):
     def __init__(self, mkbootBin):
         super(BootImgGenerator, self).__init__()
