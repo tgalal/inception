@@ -1,12 +1,13 @@
 from inception.argparsers.argparser import InceptionArgParser
 from inception.argparsers.exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
 from inception.constants import InceptionConstants
-from inception.configurator import Configurator, ConfigNotFoundException
+# from inception.configurator import Configurator, ConfigNotFoundException
 from inception.generators import UpdateScriptGenerator
 from inception.generators import BootImgGenerator
 from inception.generators import WPASupplicantConfGenerator
 from inception.generators import CacheImgGenerator
 from inception.generators import SettingsGenerator
+from inception.config import ConfigTreeParser, DotIdentifierResolver
 
 import sys, os, json, shutil, threading, logging
 
@@ -39,6 +40,10 @@ class MakeArgParser(InceptionArgParser):
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
+        identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
+        self.configTreeParser = ConfigTreeParser(identifierResolver)
+
+
         self.threads = []
 
 
@@ -125,12 +130,15 @@ class MakeArgParser(InceptionArgParser):
             self.model,
             self.variant))
         self.workDir = self.getWorkDir() 
-        try:
-            self.configurator = Configurator(code)
-        except ConfigNotFoundException as e:
-            raise InceptionArgParserException(e)
-        self.config = self.configurator.getConfig()
-        self.configDir = os.path.dirname(self.configurator.getConfigPath())
+        # try:
+        #     self.configurator = Configurator(code)
+        # except ConfigNotFoundException as e:
+        #     raise InceptionArgParserException(e)
+
+        self.config = self.configTreeParser.parseJSON(code)
+        self.configDir = os.path.dirname(self.config.getSource())
+        # self.config = self.configurator.getConfig()
+        # self.configDir = os.path.dirname(self.configurator.getConfigPath())
 
 
         self.d("Cleaning work dir " + self.workDir)
@@ -207,7 +215,7 @@ class MakeArgParser(InceptionArgParser):
 
     def writeUsedConfig(self):
         f = open(os.path.join(self.getOutDir(), "config.json"), "w")
-        f.write(self.config.toString())
+        f.write(self.config.dumpFullData())
         f.close()
 
     def makeUpdatePkg(self):
