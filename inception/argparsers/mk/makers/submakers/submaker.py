@@ -16,10 +16,12 @@ class Submaker(object):
         return self.maker.getFSPath()
 
     def getConfigValue(self, key, default = None, directOnly = False):
-        return self.maker.getMakeConfigValue(self.key + "." + key, default, directOnly)
+        key = self.key + "." + key if not key == "." else self.key
+        return self.maker.getMakeConfigValue(key, default, directOnly)
 
     def getConfigProperty(self, key, default = None, directyOnly = False):
-        return self.maker.getMakeConfigProperty(self.key + "." + key, default, directyOnly)
+        key = self.key + "." + key if not key == "." else self.key
+        return self.maker.getMakeConfigProperty(key, default, directyOnly)
 
     def setConfigValue(self, key, value):
         return self.maker.setConfigValue(key, value)
