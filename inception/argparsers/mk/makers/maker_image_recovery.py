@@ -1,4 +1,4 @@
 from .maker_image import ImageMaker
-class BootImageMaker(ImageMaker):
+class RecoveryImageMaker(ImageMaker):
     def __init__(self, config):
-        super(BootImageMaker, self).__init__(config, "boot", "boot")
+        super(RecoveryImageMaker, self).__init__(config, "recovery", "recovery")

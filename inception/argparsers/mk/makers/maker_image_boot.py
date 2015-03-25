@@ -1,6 +1,4 @@
-from .maker import Maker
-class BootMaker(Maker):
+from .maker_image import ImageMaker
+class BootImageMaker(ImageMaker):
     def __init__(self, config):
-        super(BootMaker, self).__init__(config, "boot")
-    def make(self, workDir, outDir):
-        pass
+        super(BootImageMaker, self).__init__(config, "boot", "boot")
