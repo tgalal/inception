@@ -25,6 +25,43 @@ class BootstrapArgParser(InceptionArgParser):
     def process(self):
         super(BootstrapArgParser, self).process()
         self.createDir(self.deviceDir)
+        self.config = self.configTreeParser.parseJSON(self.args["base"])
+        self.configDir = self.config.getSource(getDir=True)
+
+        baseCodePath= "/".join(self.args["base"].split(".")[:2])
+
+        self.variantDir = os.path.join(self.deviceDir, baseCodePath, self.args["variant"])
+
+        self.d("Writing new config")
+        self.newConfig = self.createNewConfig(self.args["base"] + "." + self.args["variant"], self.args["variant"], self.config)
+        self.setupDirPaths()
+        self.createDirs()
+        #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
+
+        unpacker = self.config.get("common.tools.unpackbootimg.bin")
+        bootImg = self.config.getProperty("boot.img", None)
+        if bootImg:
+            if type(bootImg.getValue()) is str:
+                self.d("Unpacking boot img")
+                self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
+
+
+        recoveryImg = self.config.getProperty("recovery.img", None)
+        if recoveryImg:
+            if type(recoveryImg.getValue()) is str:
+                self.d("Unpacking recovery img")
+                self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
+
+        self.writeNewConfig(self.args["variant"])
+
+        self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
+
+
+        return True
+
+    def _process(self):
+        super(BootstrapArgParser, self).process()
+        self.createDir(self.deviceDir)
 
         self.config = self.configTreeParser.parseJSON(self.args["base"])
         self.configDir = self.config.getSource(getDir=True)
@@ -35,28 +72,25 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig = self.createNewConfig(self.args["variant"], self.args["variant"], self.config)
 
 
-        self.setupDirPaths(vendor, model, self.args["variant"])
+        self.setupDirPaths(self.args["variant"])
         self.d("Creating dirs")
         self.createDirs()
         
         #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
-        unpacker = self.newConfig.get("config.unpackbootimg.bin") 
-        
-        if self.config.get("imgs.boot", None):
-            self.d("Unpacking boot img")
-            bootImg = "%s/%s" % (self.configDir, self.config.get("imgs.boot"))
-            self.unpackimg(bootImg, self.bootDir, unpacker, "boot")       
-            self.createDir(self.bootDir)
-        
+        unpacker = self.config.get("common.tools.unpackbootimg.bin")
+        bootImg = self.config.getProperty("boot.img", None)
+        if bootImg:
+            if type(bootImg.getValue()) is str:
+                self.d("Unpacking boot img")
+                self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
 
-        if  self.config.get("imgs.recovery"):
-            recoveryImg = "%s/%s" % (self.configDir, self.config.get("imgs.recovery"))
-            self.d("Unpacking recovery img")
-            self.unpackimg(recoveryImg, self.recoveryDir, unpacker, "recovery")
-            self.createDir(self.recoveryDir)
 
-        
+        recoveryImg = self.config.getProperty("recovery.img", None)
+        if recoveryImg:
+            if type(recoveryImg.getValue()) is str:
+                self.d("Unpacking recovery img")
+                self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
         self.writeNewConfig(self.args["variant"])
 
@@ -75,47 +109,12 @@ class BootstrapArgParser(InceptionArgParser):
         newConfigFile.write(self.newConfig.dumpContextData())
         newConfigFile.close()
 
-    def findBaseConfig(self, configName):
-        #look inside device for specified id
-        #return if found else:
-        #look inside base
-        #return if found else:
-        #error
 
-        self.d("Looking for", configName, "in", self.deviceDir)
-        vendors = os.listdir(self.deviceDir)
-        for v in vendors:
-            modelsDir = self.createPathString(self.deviceDir, v)
-            models = os.listdir(modelsDir)
-            self.d("Entering", modelsDir)
-            for m in models:
-                variantsDir = self.createPathString(modelsDir, m)
-                variants = os.listdir(variantsDir)
-
-                configPath = self.createPathString(variantsDir, configName, "%s.json" % configName)
-                self.d("Checking", configPath)
-                if os.path.exists(configPath):
-                    return (v, m, configPath)
-
-        self.d("Looking for", configName, "in", self.baseDir)
-        vendors = os.listdir(self.baseDir)
-        for v in vendors:
-            modelsDir = self.createPathString(self.baseDir, v)
-            models = os.listdir(modelsDir)
-            configPath = self.createPathString(modelsDir, configName, "%s.json" % configName)
-            self.d("Checking", configPath)
-            if os.path.exists(configPath):
-                return (v, configName, configPath)
-
-        return None
 
     def createPathString(self, *args):
         return "/".join(args)
 
-    def setupDirPaths(self, vendor, model, variant):
-        self.vendorDir          = self.createPathString(self.deviceDir, vendor)
-        self.modelDir           = self.createPathString(self.vendorDir, model)
-        self.variantDir         = self.createPathString(self.modelDir, variant)
+    def setupDirPaths(self):
         self.imgDir             = self.createPathString(self.variantDir, "img")
         self.bootDir            = self.createPathString(self.imgDir, "boot")
         self.recoveryDir        = self.createPathString(self.imgDir, "recovery")
@@ -124,8 +123,7 @@ class BootstrapArgParser(InceptionArgParser):
 
 
     def createDirs(self):
-        self.createDir(self.vendorDir)
-        self.createDir(self.modelDir)
+        self.createDir(self.variantDir)
         if os.path.exists(self.variantDir):
             if self.args["force"]:
                 shutil.rmtree(self.variantDir)
@@ -168,13 +166,15 @@ class BootstrapArgParser(InceptionArgParser):
 
 
     def unpackimg(self, img, out, unpacker, imgType):
+        if not os.path.isfile(img):
+            raise ValueError("Coudn't find %s to unpack"  % img)
         filename = img.split('/')[-1]
         ramdisk = "%s/%s-ramdisk" % (out, filename)
         kernel = "%s/%s-zImage" % (out, filename)
         dt = "%s/%s-dt" % (out, filename)
         ramdiskDir = self.createPathString(out, "ramdisk")
         ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
-
+        os.makedirs(out)
         unpackResult = self.execCmd(unpacker, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
         try:
             self.execCmd("gunzip", ramdisk + ".gz") 
@@ -204,26 +204,26 @@ class BootstrapArgParser(InceptionArgParser):
                 value = None
 
             if key == "BOARD_KERNEL_CMDLINE":
-                self.newConfig.setProperty("config.%s.cmdline" % imgType, value)
+                self.newConfig.set("%s.img.cmdline" % imgType, value)
             elif key == "BOARD_KERNEL_BASE":
-                self.newConfig.setProperty("config.%s.base" % imgType, "0x" + value)
+                self.newConfig.set("%s.img.base" % imgType, "0x" + value)
             elif key == "BOARD_RAMDISK_OFFSET":
-                self.newConfig.setProperty("config.%s.ramdisk_offset" % imgType, "0x" + value)
+                self.newConfig.set("%s.img.ramdisk_offset" % imgType, "0x" + value)
             elif key == "BOARD_SECOND_OFFSET":
-                self.newConfig.setProperty("config.%s.second_offset" % imgType, "0x" + value)
+                self.newConfig.set("%s.img.second_offset" % imgType, "0x" + value)
             elif key == "BOARD_TAGS_OFFSET":
-                self.newConfig.setProperty("config.%s.tags_offset" % imgType, "0x" + value)
+                self.newConfig.set("%s.img.tags_offset" % imgType, "0x" + value)
             elif key == "BOARD_PAGE_SIZE":
-                self.newConfig.setProperty("config.%s.pagesize" % imgType, int(value))
+                self.newConfig.set("%s.img.pagesize" % imgType, int(value))
             elif key == "BOARD_SECOND_SIZE":
-                self.newConfig.setProperty("config.%s.second_size" % imgType, int(value))
+                self.newConfig.set("%s.img.second_size" % imgType, int(value))
             elif key == "BOARD_DT_SIZE":
-                self.newConfig.setProperty("config.%s.dt_size" % imgType, int(value))
+                self.newConfig.set("%s.img.dt_size" % imgType, int(value))
 
 
-        self.newConfig.setProperty("config.%s.kernel" % imgType, kernel)
-        self.newConfig.setProperty("config.%s.ramdisk" % imgType, ramdiskDir)
-        self.newConfig.setProperty("config.%s.dt" % imgType, dt)
+        self.newConfig.set("%s.img.kernel" % imgType, kernel)
+        self.newConfig.set("%s.img.ramdisk" % imgType, ramdiskDir)
+        self.newConfig.set("%s.img.dt" % imgType, dt)
 
 
 
