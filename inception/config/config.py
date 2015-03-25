@@ -1,25 +1,23 @@
 import json
 import os
+import re
 from inception.constants import InceptionConstants
+import sys
+
+if sys.version_info >= (3,0):
+    unicode = str
+
+
 class Config(object):
 
     TEMPLATE_DEFAULT = {
-        "extends": None,
+        "__extends__": None,
         "device": {
-            "__extend__": True,
             "name":  None
         },
-        "network": {
-            "aps": []
-        },
-        "config": {
-            "boot": {
-                "kernel": None,
-                "ramdisk": None,
-            },
-            "recovery": {
-                "kernel": None,
-                "ramdisk": None,
+        "update": {
+            "network": {
+                "aps": []
             }
         }
     }
@@ -30,7 +28,6 @@ class Config(object):
         self.source = source
         self.__contextData = contextData
 
-
     @classmethod
     def new(cls, identifier, name = None, base = None, template = None):
         sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
@@ -38,7 +35,7 @@ class Config(object):
         assert base.__class__ == Config, "Base must be instance of config"
         config = Config(identifier, sourceTemplate, base)
         config.set("device.name", name)
-        config.set("extends", base.getIdentifier() if base else None)
+        config.set("__extends__", base.getIdentifier() if base else None)
 
         return config
 
@@ -48,6 +45,12 @@ class Config(object):
 
     def __setitem__(self, key, value):
         return self.set(key, value)
+
+    def resolveRelativePath(self, path):
+        if path.startswith("/"):
+            return path
+
+        return os.path.join(self.getSource(True), path)
 
     def cloneContext(self):
         return self.__contextData.copy()
@@ -86,22 +89,23 @@ class Config(object):
         if self.parent:
             self.parent.dumpSources()
 
-    def get(self, key, default = None):
+    def get(self, key, default = None, directOnly = False):
         try:
             result = self.__getProperty(key)
             return result
         except ValueError:
-            if self.parent:
+            if not directOnly and self.parent:
                 return self.parent.get(key, default)
         return default
 
-
-    def getProperty(self, key, default = None):
+    def getProperty(self, key, default = None, directOnly = False):
         try:
             result = self.__getProperty(key)
+            if type(result) in (unicode, str):
+                result = result.encode()
             return ConfigProperty(self, key, result)
         except ValueError:
-            if self.parent:
+            if not directOnly and self.parent:
                 return self.parent.getProperty(key, default)
         return default
 
@@ -109,11 +113,23 @@ class Config(object):
     def set(self, key, value):
         self.__setProperty(key, value)
 
+    def c__setProperty(self, keys, item, d = None):
+        d = d if d is not None else self.__contextData
+        if "." in keys and not keys == ".":
+            key, rest = keys.split(".", 1)
+            if key not in d or type(d[key]) is not dict:
+                d[key] = {}
+            self.__setProperty(rest, item, d[key])
+        else:
+            d[keys] = item
+
     def __setProperty(self, keys, item, d = None):
         d = d if d is not None else self.__contextData
-        if "." in keys:
-            key, rest = keys.split(".", 1)
-            if key not in d:
+        dissect = re.split(r'(?<!\\)\.', keys, 1)
+
+        if len(dissect) > 1:
+            key, rest = dissect
+            if key not in d or type(d[key]) is not dict:
                 d[key] = {}
             self.__setProperty(rest, item, d[key])
         else:
@@ -121,8 +137,11 @@ class Config(object):
 
     def __getProperty(self, keys, d = None):
         d = d or self.__contextData
-        if "." in keys:
-            key, rest = keys.split(".", 1)
+
+        dissect = re.split(r'(?<!\\)\.', keys, 1)
+
+        if len(dissect) > 1:
+            key, rest = dissect
             if key not in d:
                 raise ValueError("Property not found")
             return self.__getProperty(rest, d[key])
@@ -138,7 +157,8 @@ class Config(object):
         return self.identifier
 
     def getFSPath(self):
-        return os.path.join(os.path.dirname(self.getSource()), InceptionConstants.FS_DIR)
+        return self.resolveRelativePath(InceptionConstants.FS_DIR)
+        # return os.path.join(os.path.dirname(self.getSource()), InceptionConstants.FS_DIR)
 
     def isOrphan(self):
         return self.parent is None
