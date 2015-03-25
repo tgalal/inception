@@ -4,7 +4,7 @@ import os
 
 class ConfigTreeParser(object):
 
-    KEY_INHERIT = "extends"
+    KEY_INHERIT = "__extends__"
 
     def __init__(self, identifierResolver):
         self.identifierResolver = identifierResolver
