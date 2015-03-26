@@ -17,6 +17,12 @@ class UpdateScriptGenerator(Generator):
         self.header = ""
         self.footer = self.__class__.ASCII_INCEPTION
         self.wait = 0
+        self.verbose = True
+
+
+    def setVerbose(self, verbose):
+        self.verbose = verbose
+
     def isDirty(self):
         return self.dirty
 
@@ -92,7 +98,7 @@ class UpdateScriptGenerator(Generator):
     
     def _add(self, *args):
         cmd = self._genCmd(*args)
-        if args[0] != "ui_print":
+        if args[0] != "ui_print" and self.verbose:
             self.echo(cmd.replace("\"","'"))
         self.commands.append(cmd)
 

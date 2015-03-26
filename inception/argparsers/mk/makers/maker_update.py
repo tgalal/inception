@@ -1,6 +1,7 @@
 from .maker import Maker
 from .submakers.submaker_wifi import WifiSubmaker
 from .submakers.submaker_fs import FsSubmaker
+from .submakers.submaker_updatescript import UpdatescriptSubmaker
 from .submakers.submaker_keyvaldb_settings import SettingsKeyValDBSubmaker
 import os
 class UpdateMaker(Maker):
@@ -13,6 +14,7 @@ class UpdateMaker(Maker):
         self.makeFS(rootFS)
         self.makeWPASupplicant(rootFS)
         self.makeSettings(rootFS)
+        self.makeUpdateScript(rootFS)
 
     def makeFS(self, fsPath):
         if not os.path.exists(fsPath):
@@ -29,3 +31,10 @@ class UpdateMaker(Maker):
         wpaSupplicantDir = os.path.join(workDir, "data", "misc", "wifi")
         smaker = WifiSubmaker(self, "network")
         smaker.make(wpaSupplicantDir)
+
+    def makeUpdateScript(self, updatePkgDir):
+        smaker = UpdatescriptSubmaker(self, ".")
+        smaker.make(updatePkgDir)
+
+    def makeUpdateZip(self, work, outDir):
+        pass
