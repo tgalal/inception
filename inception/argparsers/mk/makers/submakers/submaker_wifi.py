@@ -26,8 +26,9 @@ class WifiSubmaker(Submaker):
 
         for ap in aps:
             ssid = ap["ssid"]
-            security = ap["security"] if "security" in ap else None
             key = ap["key"] if "key" in ap else None
+            security = ap["security"] if "security" in ap else None
+            security = "WPA-PSK" if key and not security else security
             hidden = ap["hidden"] if "hidden" in ap else False
             prioriy = ap["priority"] if "priority" in ap else 1
             gen.addNetwork(ssid, security, key, hidden, prioriy)
