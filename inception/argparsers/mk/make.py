@@ -6,6 +6,7 @@ from inception.config import ConfigTreeParser, DotIdentifierResolver
 from .makers.maker_image_boot import BootImageMaker
 from .makers.maker_image_recovery import RecoveryImageMaker
 from .makers.maker_update import UpdateMaker
+from .makers.maker_cache import CacheMaker
 
 import sys, os, json, shutil, threading, logging
 
@@ -44,7 +45,8 @@ class MakeArgParser(InceptionArgParser):
         self.makersMap = [
             # ("boot", BootImageMaker),
             # ("recovery", RecoveryImageMaker),
-            ("update", UpdateMaker)
+            ("update", UpdateMaker),
+            ("cache", CacheMaker),
         ]
 
 

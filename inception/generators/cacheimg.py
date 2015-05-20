@@ -1,5 +1,4 @@
-from ext4fs import Ext4FSGenerator
-from .. import InceptionConstants
+from .ext4fs import Ext4FSGenerator
 import os, shutil
 class CacheImgGenerator(Ext4FSGenerator):
     def __init__(self, workingDir, ext4fsBin):

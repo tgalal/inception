@@ -1,4 +1,4 @@
-from generator import Generator, GenerationFailedException
+from .generator import Generator, GenerationFailedException
 from exceptions import Ext4FSGenerationFailedException
 from ..constants import InceptionConstants
 import time, sys
