@@ -3,6 +3,7 @@ from .submakers.submaker_wifi import WifiSubmaker
 from .submakers.submaker_fs import FsSubmaker
 from .submakers.submaker_updatescript import UpdatescriptSubmaker
 from .submakers.submaker_keyvaldb_settings import SettingsKeyValDBSubmaker
+from .submakers.submaker_property import PropertySubmaker
 import os
 class UpdateMaker(Maker):
     def __init__(self, config):
@@ -12,6 +13,7 @@ class UpdateMaker(Maker):
     def make(self, workDir, outDir):
         rootFS = os.path.join(workDir, self.rootFs)
         self.makeFS(rootFS)
+        self.makeProps(rootFS)
         self.makeWPASupplicant(rootFS)
         self.makeSettings(rootFS)
         self.makeUpdateScript(rootFS)
@@ -35,6 +37,10 @@ class UpdateMaker(Maker):
     def makeUpdateScript(self, updatePkgDir):
         smaker = UpdatescriptSubmaker(self, ".")
         smaker.make(updatePkgDir)
+
+    def makeProps(self, workDir):
+        smaker = PropertySubmaker(self, "property")
+        smaker.make(workDir)
 
     def makeUpdateZip(self, work, outDir):
         pass
