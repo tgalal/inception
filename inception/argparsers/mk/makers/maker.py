@@ -23,6 +23,10 @@ class Maker(object):
         key = "common." + key
         return self.config.get(key, default)
 
+    def getCommonConfigProperty(self, key, default = None):
+        key = "common." + key
+        return self.config.getProperty(key, default)
+
     def getMakeConfigValue(self, key, default = None, directOnly = False):
         res = self.getMakeConfigProperty(key, default, directOnly)
         if res and res.__class__ == ConfigProperty:

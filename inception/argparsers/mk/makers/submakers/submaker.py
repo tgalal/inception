@@ -15,6 +15,12 @@ class Submaker(object):
     def getFSPath(self):
         return self.maker.getFSPath()
 
+    def getCommonConfigValue(self, key, default = None):
+        return self.getMaker().getCommonConfigValue(key, default)
+
+    def getCommonConfigProperty(self, key, default = None):
+        return self.getMaker().getCommonConfigProperty(key, default)
+
     def getConfigValue(self, key, default = None, directOnly = False):
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
