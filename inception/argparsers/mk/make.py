@@ -163,8 +163,11 @@ class MakeArgParser(InceptionArgParser):
 
         for makerItem in self.makersMap:
             key, Maker = makerItem
-            m = Maker(self.config)
-            m.make(self.workDir, outDir)
+            if self.config.get(key + ".make", True):
+                m = Maker(self.config)
+                m.make(self.workDir, outDir)
+            else:
+                self.d("Skipping '%s' as it's disabled in config" % key)
 
         self.writeUsedConfig()
 
