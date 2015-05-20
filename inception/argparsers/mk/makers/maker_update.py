@@ -4,6 +4,8 @@ from .submakers.submaker_fs import FsSubmaker
 from .submakers.submaker_updatescript import UpdatescriptSubmaker
 from .submakers.submaker_keyvaldb_settings import SettingsKeyValDBSubmaker
 from .submakers.submaker_property import PropertySubmaker
+from .submakers.submaker_updatezip import UpdatezipSubmaker
+import shutil
 import os
 class UpdateMaker(Maker):
     def __init__(self, config):
@@ -17,6 +19,7 @@ class UpdateMaker(Maker):
         self.makeWPASupplicant(rootFS)
         self.makeSettings(rootFS)
         self.makeUpdateScript(rootFS)
+        self.makeUpdateZip(rootFS, outDir)
 
     def makeFS(self, fsPath):
         if not os.path.exists(fsPath):
@@ -43,4 +46,6 @@ class UpdateMaker(Maker):
         smaker.make(workDir)
 
     def makeUpdateZip(self, work, outDir):
-        pass
+        smake = UpdatezipSubmaker(self, ".")
+        updateZipPkgPath = smake.make(work)
+        shutil.copy(updateZipPkgPath, outDir)
