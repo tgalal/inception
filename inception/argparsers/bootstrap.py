@@ -123,7 +123,7 @@ class BootstrapArgParser(InceptionArgParser):
 
 
     def createDirs(self):
-        self.createDir(self.variantDir)
+        # self.createDir(self.variantDir)
         if os.path.exists(self.variantDir):
             if self.args["force"]:
                 shutil.rmtree(self.variantDir)

@@ -66,7 +66,7 @@ class InceptionObject(object):
     def createDir(self, d):
         if not os.path.exists(d):
             self.d("Creating:", d)
-            os.mkdir(d)
+            os.makedirs(d)
         else:
             self.d("Exists:", d)
 
