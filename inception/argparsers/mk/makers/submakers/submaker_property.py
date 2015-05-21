@@ -14,8 +14,8 @@ class PropertySubmaker(Submaker):
                 "destination": "/data/property",
                 "uid": "0",
                 "gid": "0",
-                "mode": "700",
-                "mode_dirs": "700"
+                "mode": "0600",
+                "mode_dirs": "0700"
             })
 
         for fname, val in propsFlat.items():
@@ -32,7 +32,7 @@ class PropertySubmaker(Submaker):
             "destination": "/data/property/%s" % fname,
             "uid": "0",
             "gid": "0",
-            "mode": "600"
+            "mode": "0600"
         }
 
     def flatten(self, d, parent_key='', sep='.'):
