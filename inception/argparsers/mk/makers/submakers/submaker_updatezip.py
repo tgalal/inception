@@ -1,10 +1,12 @@
 from .submaker import Submaker
 from inception.tools import SignApk
 import shutil
+import os
 class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
         signingKeys = None
         keys_name = self.getConfigValue("keys")
+        updateBinary = self.getCommonConfigValue("tools.update-binary.bin")
         if keys_name:
             signingKeysProp= self.getCommonConfigProperty("tools.signapk.keys.%s" % keys_name)
             if(signingKeysProp):
@@ -14,7 +16,7 @@ class UpdatezipSubmaker(Submaker):
                 privPath =signingKeysProp.getConfig().resolveRelativePath(priv)
                 signingKeys = privPath, pubPath
 
-
+        shutil.copy(updateBinary, os.path.join(updatePkgDir, "META-INF/com/google/android/"))
         updateZipPath = updatePkgDir + "/../"
         updateZipPath += "update_unsigned" if signingKeys else "update"
         shutil.make_archive(updateZipPath, "zip", updatePkgDir)
