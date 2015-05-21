@@ -9,6 +9,7 @@ if sys.version_info >= (3,0):
 
 
 class Config(object):
+    __OVERRIDE_KEY__ = "__override__"
 
     TEMPLATE_DEFAULT = {
         "__extends__": None,
@@ -92,6 +93,15 @@ class Config(object):
     def get(self, key, default = None, directOnly = False):
         try:
             result = self.__getProperty(key)
+            if type(result) is list:
+                override = self.__class__.__OVERRIDE_KEY__ in result
+                r = result[:]
+                while self.__class__.__OVERRIDE_KEY__ in r:
+                    r.remove(self.__class__.__OVERRIDE_KEY__)
+                if not override and not directOnly and self.parent:
+                    r.extend(self.parent.get(key, []))
+                    return r
+                result = r
             return result
         except ValueError:
             if not directOnly and self.parent:
@@ -103,6 +113,15 @@ class Config(object):
             result = self.__getProperty(key)
             if type(result) in (unicode, str):
                 result = result.encode()
+            elif type(result) is list:
+                override = self.__class__.__OVERRIDE_KEY__ in result
+                r = result[:]
+                while self.__class__.__OVERRIDE_KEY__ in r:
+                    r.remove(self.__class__.__OVERRIDE_KEY__)
+                if not override and not directOnly and self.parent:
+                    r.extend(self.parent.get(key, []))
+                result = r
+
             return ConfigProperty(self, key, result)
         except ValueError:
             if not directOnly and self.parent:
@@ -181,6 +200,9 @@ class ConfigProperty(object):
 
     def getConfig(self):
         return self.config
+
+    def __str__(self):
+        return "%s:\t%s" % (self.getKey(), self.getValue())
 
 
 
