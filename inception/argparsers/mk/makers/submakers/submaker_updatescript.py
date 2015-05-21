@@ -18,7 +18,7 @@ class UpdatescriptSubmaker(Submaker):
             u.rm(f, True)
 
         #### format?
-        if  self.getMaker().getConfig().get("data.format", False):
+        if  self.getConfigValue("script.format_data", False):
             u.rm("/data", recursive=True)
 
         #### extract our FS
