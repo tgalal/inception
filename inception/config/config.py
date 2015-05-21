@@ -102,6 +102,14 @@ class Config(object):
                     r.extend(self.parent.get(key, []))
                     return r
                 result = r
+            elif type(result) is dict:
+                override = self.__class__.__OVERRIDE_KEY__ in result and result[self.__class__.__OVERRIDE_KEY__] == True
+                r = result.copy()
+                if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
+                if not override and not directOnly and self.parent:
+                    r.update(self.parent.get(key, {}))
+                    return r
+                result = r
             return result
         except ValueError:
             if not directOnly and self.parent:
@@ -121,7 +129,13 @@ class Config(object):
                 if not override and not directOnly and self.parent:
                     r.extend(self.parent.get(key, []))
                 result = r
-
+            elif type(result) is dict:
+                override = self.__class__.__OVERRIDE_KEY__ in result and result[self.__class__.__OVERRIDE_KEY__] == True
+                r = result.copy()
+                if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
+                if not override and not directOnly and self.parent:
+                    r.update(self.parent.get(key, {}))
+                result = r
             return ConfigProperty(self, key, result)
         except ValueError:
             if not directOnly and self.parent:
