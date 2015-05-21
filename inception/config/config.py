@@ -156,16 +156,14 @@ class Config(object):
 
     def __getProperty(self, keys, d = None):
         d = d or self.__contextData
-
         dissect = re.split(r'(?<!\\)\.', keys, 1)
-
         if len(dissect) > 1:
             key, rest = dissect
-            if key not in d:
+            if key.replace("\\", "")  not in d:
                 raise ValueError("Property not found")
-            return self.__getProperty(rest, d[key])
-        elif keys in d:
-            return d[keys]
+            return self.__getProperty(rest, d[key.replace("\\", "")])
+        elif keys.replace("\\", "") in d:
+            return d[keys.replace("\\", "")]
         else:
             raise ValueError("Property not found")
 
