@@ -4,7 +4,7 @@ from inception.argparsers import BootstrapArgParser, PlantArgParser, LearnArgPar
 from inception.argparsers.mk.make import MakeArgParser
 from inception.argparsers.exceptions import InceptionArgParserException
 import logging
-logging.basicConfig()
+logging.basicConfig(level = logging.DEBUG)
 
 if __name__ == "__main__":
     args = sys.argv
