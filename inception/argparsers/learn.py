@@ -90,7 +90,7 @@ class LearnArgParser(InceptionArgParser):
             adb.pull(path + "-shm", dbPathShm)
             adb.pull(path + "-wal", dbPathWal)
 
-            settingsFactory = SettingsDatabaseFactory("/tmp/curr.db")
+            settingsFactory = SettingsDatabaseFactory(dbPath)
             tablesKey = "update.settings.%s.data" % (identifier.replace(".", "\\."))
             tablesDict = self.config.get(tablesKey)
             settingsResult[identifier]["data"] = {}
