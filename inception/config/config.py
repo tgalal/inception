@@ -112,7 +112,7 @@ class Config(object):
                 result = r
             return result
         except ValueError:
-            if not directOnly and self.parent:
+            if not directOnly and self.parent and not self.keyOverridesParent(key):
                 return self.parent.get(key, default)
         return default
 
@@ -138,10 +138,21 @@ class Config(object):
                 result = r
             return ConfigProperty(self, key, result)
         except ValueError:
-            if not directOnly and self.parent:
+            if not directOnly and self.parent and not self.keyOverridesParent(key):
                 return self.parent.getProperty(key, default)
-        return default
+        return ConfigProperty(self, key, default)
 
+    def keyOverridesParent(self, key):
+        dissect = re.split(r'(?<!\\)\.', key)
+        for i in range(len(dissect), 0, -1):
+            keyPart = ".".join([dissect[j] for j in range(0, i)]) + "." + self.__class__.__OVERRIDE_KEY__
+            try:
+                if self.__getProperty(keyPart) is True:
+                    return True
+            except ValueError:
+                pass
+
+        return False
 
     def set(self, key, value):
         self.__setProperty(key, value)
