@@ -51,7 +51,7 @@ class UpdatescriptSubmaker(Submaker):
                     print(pathData)
                     raise Exception("Missing permission data for " + destPath)
 
-                if os.path.isdir(updatePkgDir + destPath):
+                if "mode_dirs" in pathData:
                     u.setPermissions(destPath, pathData["uid"], pathData["gid"], pathData["mode"], pathData["mode_dirs"])
                 else:
                     u.setPermissions(destPath, pathData["uid"], pathData["gid"], pathData["mode"])
