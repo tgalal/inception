@@ -72,6 +72,7 @@ class Config(object):
 
     def override(self, config):
         for key in config.keys():
+            # self.set(key.replace(".", "\."), config.get(key))
             self.set(key, config.get(key))
 
     def keys(self, dictionary = None):
@@ -79,9 +80,9 @@ class Config(object):
         keys = []
         for key, item in dictionary.iteritems():
             if type(item) is dict and len(item):
-                keys.extend(map(lambda i: key + "." + i, self.keys(item)))
+                keys.extend(map(lambda i: key.replace(".", "\.") + "." + i, self.keys(item)))
             else:
-                keys.append(key)
+                keys.append(key.replace(".", "\."))
 
         return keys
 
@@ -107,8 +108,10 @@ class Config(object):
                 r = result.copy()
                 if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
                 if not override and not directOnly and self.parent:
-                    r.update(self.parent.get(key, {}))
-                    return r
+                    # r.update(self.parent.get(key, {}))
+                    p = Config("__sub__", self.parent.get(key, {}))
+                    p.override(Config("__sub__", r))
+                    return p.__contextData
                 result = r
             return result
         except ValueError:
@@ -134,7 +137,10 @@ class Config(object):
                 r = result.copy()
                 if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
                 if not override and not directOnly and self.parent:
-                    r.update(self.parent.get(key, {}))
+                    # r.update(self.parent.get(key, {}))
+                    p = Config("__sub__", self.parent.get(key, {}))
+                    p.override(Config("__sub__", r))
+                    r = p.__contextData
                 result = r
             return ConfigProperty(self, key, result)
         except ValueError:
@@ -173,11 +179,13 @@ class Config(object):
 
         if len(dissect) > 1:
             key, rest = dissect
+            key = key.replace("\.", ".")
             if key not in d or type(d[key]) is not dict:
                 d[key] = {}
             self.__setProperty(rest, item, d[key])
         else:
-            d[keys] = item
+            d[keys.replace("\.", ".")] = item
+            #d[keys] = item
 
     def __getProperty(self, keys, d = None):
         d = d or self.__contextData
