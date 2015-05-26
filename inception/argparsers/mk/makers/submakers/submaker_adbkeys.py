@@ -17,6 +17,6 @@ class AdbKeysSubmaker(Submaker):
                 "destination": "/data/misc/adb",
                 "uid": "1000",
                 "gid": "2000",
-                "mode": "0600",
-                "mode_dirs": "0640"
+                "mode": "0640",
+                "mode_dirs": "02750"
             })
