@@ -32,12 +32,11 @@ class SettingsDatabaseFactory(object):
     def __init__(self, dbPath):
         self.path = dbPath
         self.readonly = False
-        print dbPath
         try:
             self.conn = lite.connect(self.path)
             self.conn.text_factory = str
-        except lite.Error, e:
-            print "Error %s:" % e.args[0]
+        except lite.Error as e:
+            print("Error %s:" % e.args[0])
             sys.exit(1)
 
     def getIterable(self, name):
