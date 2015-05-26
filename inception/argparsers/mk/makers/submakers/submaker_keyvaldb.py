@@ -9,27 +9,34 @@ class KeyValDBSubmaker(Submaker):
     def setLocale(self, locale):
         self.locale = locale
 
-    def apply(self, dbPath, tableName, keyvals, colId = "_id", colKey = "name", colVal = "value"):
+    def apply(self, dbPath, version, tableKeyVals, colId = "_id", colKey = "name", colVal = "value", schema = ""):
+        colKey = colKey or "name"
+        colVal = colVal or "value"
         conn = sqlite3.connect(dbPath)
         conn.text_factory = str
-        table = Table(tableName, colId, colKey, colVal)
-        xtable = XTable(tableName)
-        xtable.setPKColumn(colId)
-        xtable.addColumn(colKey, str)
-        xtable.addColumn(colVal, str)
-        xtable.addIndex(colKey, tableName + "Index1")
-        xtable.create()
-        print("Creating %s:\t%s" % (dbPath, tableName))
-        for key, val in keyvals.items():
-            table.insert(key, val)
-            kwargs = {
-                colKey: key,
-                colVal: val
-            }
-            xtable.insert(**kwargs)
 
-        #table.execute(conn)
-        xtable.execute(conn)
+        schema = ("PRAGMA user_version = %s;" % version) + schema
+
+        conn.executescript(schema)
+        # table = Table(tableName, colId, colKey, colVal)
+
+        for tableName, data in tableKeyVals.items():
+
+            xtable = XTable(tableName)
+            if not schema:
+                xtable.setPKColumn(colId)
+                xtable.addColumn(colKey, str)
+                xtable.addColumn(colVal, str)
+                xtable.addIndex(colKey, tableName + "Index1")
+                xtable.create()
+            for key, val in data.items():
+                kwargs = {
+                    colKey: key,
+                    colVal: val
+                }
+                xtable.insert(**kwargs)
+
+            xtable.execute(conn)
         conn.commit()
         conn.close()
 
