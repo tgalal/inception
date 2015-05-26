@@ -52,9 +52,9 @@ class SettingsDatabaseFactory(object):
             self.tablename = tablename
             self.columnKey = "name"
             self.columnVal = "value"
-            self.readonly = readonly
-            self.conn.execute(self.formatQuery(_CREATE_QUERY))
-            self.conn.execute(self.formatQuery(_INDEX_QUERY))
+            self.readonly = True
+            #self.conn.execute(self.formatQuery(_CREATE_QUERY))
+            #self.conn.execute(self.formatQuery(_INDEX_QUERY))
 
         def formatQuery(self, q):
             q = q.format(
