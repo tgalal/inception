@@ -45,19 +45,23 @@ class LearnArgParser(InceptionArgParser):
             if f.startswith("."):
                 continue
             fullPath = os.path.join(propsDir, f)
-            keys = f.split(".")
-            subDict = propsDict
-            for i in range(0, len(keys) - 1):
-                k = keys[i]
-                if k == "persist":
-                    continue
-                if not k in subDict:
-                    subDict[k] = {}
-                subDict = subDict[k]
-
-
             with open(fullPath, 'r') as fHandle:
-                subDict[keys[-1]] = fHandle.read()
+                currFileVal = fHandle.read()
+                keys = f.split(".")
+                if keys[0] == "persist":
+                    keys = keys[1:]
+
+                if currFileVal == self.config.get("update.property." + (".".join(keys)), None):
+                    continue
+
+                subDict = propsDict
+                for i in range(0, len(keys) - 1):
+                    k = keys[i]
+                    if not k in subDict:
+                        subDict[k] = {}
+                    subDict = subDict[k]
+
+                subDict[keys[-1]] = currFileVal
 
         return propsDict
 
