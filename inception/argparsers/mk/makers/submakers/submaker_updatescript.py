@@ -32,9 +32,6 @@ class UpdatescriptSubmaker(Submaker):
         #### apply our FS permissions
 
 
-        d = self.getConfigValue("files.add")
-        import json
-        print(json.dumps(d, indent=4))
         for path, pathData in self.getConfigValue("files.add", {}).items():
             destPath = pathData["destination"]
             if not destPath.startswith("/"):
@@ -42,8 +39,8 @@ class UpdatescriptSubmaker(Submaker):
 
             localPath = updatePkgDir + destPath
 
-            if "__depends__" in pathData:
-                if self.getMaker().getConfig().get(pathData["__depends__"]) is None:
+            if "__depend__" in pathData:
+                if self.getMaker().getConfig().get(pathData["__depend__"]) is None:
                     continue
             if not os.path.exists(localPath):
                     raise Exception("Cannot set permissions for a missing file: " + destPath)
