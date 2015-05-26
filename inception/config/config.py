@@ -60,7 +60,7 @@ class Config(object):
         return json.dumps(self.__contextData, indent=4)
 
     def dumpFullData(self):
-        fullConfig = Config("__full__", self.cloneContext())
+        fullConfig = self #Config("__full__", self.cloneContext())
         curr = self
         while not curr.isOrphan():
             curr = curr.getParent()
