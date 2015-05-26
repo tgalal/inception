@@ -1,12 +1,13 @@
-from argparser import InceptionArgParser
-from make import MakeArgParser
-from exceptions import InceptionArgParserException
-from .. import InceptionConstants
-from .. import Configurator, ConfigNotFoundException
-from .. import InceptionExecCmdFailedException
-#from .. import Adb 
-import os, subprocess, json, shutil
+from .argparser import InceptionArgParser
+from inception.constants import InceptionConstants
+from inception.config import configtreeparser
+import json
 from inception.generators.settings import SettingsDatabaseFactory
+from inception.config.dotidentifierresolver import DotIdentifierResolver
+import logging
+import os
+import tempfile
+logger = logging.getLogger(__name__)
 
 class LearnArgParser(InceptionArgParser):
 
@@ -16,64 +17,92 @@ class LearnArgParser(InceptionArgParser):
         requiredOpts = self.add_argument_group("Required args")
         requiredOpts.add_argument('-v', '--variant', required = True, action = "store")
 
+        self.deviceDir = InceptionConstants.VARIANTS_DIR
+        self.baseDir = InceptionConstants.BASE_DIR
+        identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
+        self.configTreeParser = configtreeparser.ConfigTreeParser(identifierResolver)
+        self.tmpDir = tempfile.mkdtemp()
+
     def process(self):
         super(LearnArgParser, self).process()
+        resultDict = {
+            "update": {}
+        }
 
-        try:
-            configurator = Configurator(self.args["variant"])
-            vendor, model, variant = self.args["variant"].split('.')
-        except ConfigNotFoundException, e:
-            raise InceptionArgParserException(e)
-        #except ValueError, e:
-        #    raise InceptionArgParserException("Code must me in the format vendor.model.variant")
-
-
-        self.config = configurator.getConfig()
-        syncFiles = self.config.get("files")
-        self.setOutDir(os.path.join(InceptionConstants.OUT_DIR, vendor, model, variant))
-
-        deviceFSDir = os.path.join(os.path.dirname(self.config.getPath()), InceptionConstants.FS_DIR)
-
-        adb = self.getAdb(self.config.get("config.adb.bin"))
-        devices = adb.devices()
-        deviceMode = devices.itervalues().next()
-
-        for p, conf in syncFiles.items():
-            if "sync" in conf and conf["sync"] == False:
-                continue
-            else:
-                #construct directory
-                outputDir = os.path.join(deviceFSDir, os.path.dirname(p)[1:], os.path.basename(p))
-                adb.pull(
-                    p,
-                    outputDir,
-                    requireSu = self.config.get("config.adb.require-su", False) and deviceMode == "device"
-                )
-
-        #settings diff
-        settingsResult = {}
-        for identifier, data in self.config.get("settings", {}).items():
-            settingsResult[identifier] = {
-                "path": data["path"]
-            }
-            path = data["path"]
-            settingsFactory = SettingsDatabaseFactory(deviceFSDir + path)
-
-            if "set" in data and type(data["set"]) is dict:
-                settingsResult[identifier]["set"] = {} 
-                for table, content in data["set"].items():
-                    settingsResult[identifier]["set"][table] = {}
-                    material = settingsFactory.getIterable(table)
-                    
-                    for key, value in material.items():#content.items():
-                        if key not in data["set"][table]:
-                            settingsResult[identifier]["set"][table][key] = value
-                        elif data["set"][table][key] != material[key]:
-                            settingsResult[identifier]["set"][table][key] = value
-
-        print json.dumps(settingsResult, indent = 4)
-        self.d("Printed new and different settings, manually add to your config json file if needed")
-
-
+        self.config = self.configTreeParser.parseJSON(self.args["variant"])
+        resultDict["update"]["settings"] = self.learnSettings()
+        resultDict["update"]["property"] = self.learnProps()
+        print(json.dumps(resultDict, indent = 4))
+        logger.info("Printed new and different settings, manually add to your config json file if needed")
         return True
+
+    def learnProps(self):
+        adb = self.getAdb(self.config.get("common.tools.adb.bin"))
+        propsDict = {}
+        propsDir = os.path.join(self.tmpDir, "props")
+        adb.pull("/data/property", propsDir)
+        for f in os.listdir(propsDir):
+            if f.startswith("."):
+                continue
+            fullPath = os.path.join(propsDir, f)
+            keys = f.split(".")
+            subDict = propsDict
+            for i in range(0, len(keys) - 1):
+                k = keys[i]
+                if k == "persist":
+                    continue
+                if not k in subDict:
+                    subDict[k] = {}
+                subDict = subDict[k]
+
+
+            with open(fullPath, 'r') as fHandle:
+                subDict[keys[-1]] = fHandle.read()
+
+        return propsDict
+
+
+
+    def learnSettings(self):
+        adb = self.getAdb(self.config.get("common.tools.adb.bin"))
+        settingsResult = {}
+        currSettings = self.config.get("update.settings", {})
+        tmpDir = os.path.join(self.tmpDir, "db")
+        os.makedirs(tmpDir)
+        dbPath = os.path.join(tmpDir, "curr.db")
+        dbPathShm = dbPath + "-shm"
+        dbPathWal = dbPath + "-wal"
+
+        if not len(currSettings):
+            logger.warning("Config does not contain settings data, or overrides settings with no data")
+
+        for identifier, data in currSettings.items():
+            path = data["path"]
+            settingsResult[identifier] = {
+                "path": path
+            }
+
+            adb.pull(path, dbPath)
+            adb.pull(path + "-shm", dbPathShm)
+            adb.pull(path + "-wal", dbPathWal)
+
+            settingsFactory = SettingsDatabaseFactory("/tmp/curr.db")
+            tablesKey = "update.settings.%s.data" % (identifier.replace(".", "\\."))
+            tablesDict = self.config.get(tablesKey)
+            settingsResult[identifier]["data"] = {}
+            for table, tableData in tablesDict.items():
+                settingsResult[identifier]["data"][table] = {}
+                material = settingsFactory.getIterable(table)
+                currTableKey = tablesKey + "." + table
+                for key, value in material.items():
+                    currItemKey = currTableKey + "." + key.replace(".", "\\.")
+                    currItemVal = self.config.get(currItemKey, None)
+
+                    if currItemVal is None:
+                        settingsResult[identifier]["data"][table][key] = value
+                    elif currItemVal != material[key]:
+                        settingsResult[identifier]["data"][table][key] = value
+
+        return settingsResult
+
 
