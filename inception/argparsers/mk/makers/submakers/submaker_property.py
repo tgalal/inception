@@ -24,8 +24,8 @@ class PropertySubmaker(Submaker):
             fname = "persist.%s" % fname
             with open(os.path.join(localOutDir, fname), "w") as propFile:
                 propFile.write(val)
-            escapedFname = fname.replace(".", "\.")
-            self.setConfigValue("update.files.add.data/property/%s" % escapedFname, self._getPropFileData(fname))
+            #escapedFname = fname.replace(".", "\.")
+            #self.setConfigValue("update.files.add.data/property/%s" % escapedFname, self._getPropFileData(fname))
 
     def _getPropFileData(self, fname):
         return {
