@@ -7,7 +7,10 @@ class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
         signingKeys = None
         keys_name = self.getConfigValue("keys")
-        updateBinary = self.getCommonConfigValue("tools.update-binary.bin")
+        updateBinaryProp = self.getCommonConfigProperty("tools.update-binary.bin")
+        assert updateBinaryProp.getValue(), "common.tools.update-binary.bin is not set"
+        updateBinary = updateBinaryProp.getConfig().resolveRelativePath(updateBinaryProp.getValue())
+
         if keys_name:
             signingKeysProp= self.getCommonConfigProperty("tools.signapk.keys.%s" % keys_name)
             if(signingKeysProp):
@@ -25,7 +28,12 @@ class UpdatezipSubmaker(Submaker):
 
         if signingKeys:
             javaPath = self.getCommonConfigValue("tools.java.bin")
-            signApkPath = self.getCommonConfigValue("tools.signapk.bin")
+            signApkPathProp = self.getCommonConfigProperty("tools.signapk.bin")
+
+            assert signApkPathProp.getValue(), "common.tools.signapk.bin is not set"
+            signApkPath = signApkPathProp.getConfig().resolveRelativePath(signApkPathProp.getValue())
+
+
             signApk = SignApk(javaPath, signApkPath)
             targetPath =  updatePkgDir + "/../" + InceptionConstants.OUT_NAME_UPDATE
             signApk.sign(updateZipPath, targetPath, signingKeys[0], signingKeys[1])
