@@ -8,7 +8,6 @@ class RecoveryImageMaker(ImageMaker):
 
     def make(self, workDir, outDir):
         if self.getMakeConfigValue("include_update"):
-            print("INCLUDE!!!!!!")
             ramdDiskTarget = os.path.join(workDir, "recovery_ramdisk")
             updatezipTargetDir = os.path.join(ramdDiskTarget, "update")
             ramdDiskSrc = self.getMakeConfigValue("img.ramdisk")
@@ -44,3 +43,5 @@ class RecoveryImageMaker(ImageMaker):
             assert fsize < maxSize, "Output recovery img is greater than max size and won't work"
 
             return result
+        else:
+            return super(RecoveryImageMaker, self).make(workDir, outDir)
