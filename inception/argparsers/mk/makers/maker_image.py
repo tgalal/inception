@@ -15,12 +15,13 @@ class ImageMaker(Maker):
         gen.setWorkDir(workDir)
         gen.setOutDir(outDir)
 
-        bootConfig = self.getMakeConfigValue("img")
-        ramdisk = bootConfig["ramdisk_dir"] if "ramdisk_dir" in bootConfig else None
-        if ramdisk is None:
-            ramdisk = self.getMakeConfigValue("img.ramdisk")
 
-        kernel = self.getMakeConfigValue("img.kernel")
+        bootConfig = self.getMakeConfigValue("img")
+        ramdisk = self.getMakeConfigProperty("img.ramdisk_dir").resolveAsRelativePath()
+        if ramdisk is None:
+            ramdisk = self.getMakeConfigProperty("img.ramdisk").resolveAsRelativePath()
+
+        kernel = self.getMakeConfigProperty("img.kernel").resolveAsRelativePath()
 
         second = bootConfig["second"] if "second" in bootConfig else None
         cmdline = bootConfig["cmdline"] if "cmdline" in bootConfig else None
@@ -29,7 +30,7 @@ class ImageMaker(Maker):
         ramdisk_offset = bootConfig["ramdisk_offset"] if "ramdisk_offset" in bootConfig\
             else None
         ramdiskaddr = bootConfig["ramdiskaddr"] if "ramdiskaddr" in bootConfig else None
-        devicetree = bootConfig["dt"] if "dt" in bootConfig else None
+        devicetree = self.getMakeConfigProperty("img.dt").resolveAsRelativePath()
         signature = bootConfig["signature"] if "signature" in bootConfig else None
 
         gen.setKernel(kernel)
