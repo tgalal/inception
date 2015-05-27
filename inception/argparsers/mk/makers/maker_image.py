@@ -8,7 +8,10 @@ class ImageMaker(Maker):
         self.imageName = imageName
 
     def make(self, workDir, outDir):
-        gen = BootImgGenerator(self.getCommonConfigValue("tools.mkbootimg.bin"))
+        mkbootprop = self.getCommonConfigProperty("tools.mkbootimg.bin")
+        assert mkbootprop.getValue(), "tools.mkbootimg.bin is not set"
+        mkbootbin = mkbootprop.getConfig().resolveRelativePath(mkbootprop.getValue())
+        gen = BootImgGenerator(mkbootbin)
         gen.setWorkDir(workDir)
         gen.setOutDir(outDir)
 
