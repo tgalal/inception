@@ -2,6 +2,7 @@ from .submaker import Submaker
 from inception.tools import SignApk
 import shutil
 import os
+from inception.constants import InceptionConstants
 class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
         signingKeys = None
@@ -26,7 +27,7 @@ class UpdatezipSubmaker(Submaker):
             javaPath = self.getCommonConfigValue("tools.java.bin")
             signApkPath = self.getCommonConfigValue("tools.signapk.bin")
             signApk = SignApk(javaPath, signApkPath)
-            targetPath =  updatePkgDir + "/../update.zip"
+            targetPath =  updatePkgDir + "/../" + InceptionConstants.OUT_NAME_UPDATE
             signApk.sign(updateZipPath, targetPath, signingKeys[0], signingKeys[1])
             updateZipPath = targetPath
 
