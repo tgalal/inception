@@ -43,9 +43,9 @@ class MakeArgParser(InceptionArgParser):
         self.configTreeParser = ConfigTreeParser(identifierResolver)
 
         self.makersMap = [
-            ("boot", BootImageMaker),
-            ("recovery", RecoveryImageMaker),
             ("update", UpdateMaker),
+            # ("boot", BootImageMaker),
+            ("recovery", RecoveryImageMaker),
             ("cache", CacheMaker),
         ]
 
