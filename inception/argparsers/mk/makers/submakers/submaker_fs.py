@@ -19,12 +19,12 @@ class FsSubmaker(Submaker):
 
         currConfig = self.getMaker().getConfig()
         for path in lookupFPaths:
-            fsSourcePaths.append((os.path.join(currConfig.getFSPath(), path), currConfig.get("update.files.add.%s" % path)))
+            fsSourcePaths.append((os.path.join(currConfig.getFSPath(), path), currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))))
 
         while not currConfig.isOrphan():
             currConfig = currConfig.getParent()
             for path in lookupFPaths:
-                key = "update.files.add.%s" % path
+                key = "update.files.add.%s" % (path.replace(".", "\."))
                 pathInfo = currConfig.get(key, None)
                 if pathInfo:
                     fsSourcePaths.append((os.path.join(currConfig.getFSPath(), path), pathInfo))
@@ -36,6 +36,8 @@ class FsSubmaker(Submaker):
         #     if os.path.exists(srcPath):
         #         self._recursiveOverwrite(srcPath, workDir)
 
+        written = []
+
         for src in fsSourcePaths:
             srcPath, pathInfo = src
             if os.path.exists(srcPath):
@@ -44,7 +46,15 @@ class FsSubmaker(Submaker):
                     if destPath.startswith("/"):
                         destPath = destPath[1:]
                     target = os.path.join(workDir, destPath)
+
+                    # if not os.path.exists(srcPath):
+                    #     if destPath not in written:
+                    #         print("%s doesn't exist" % srcPath)
+                    #         sys.exit(1)
+                    #     else:
+                    #         continue
                     self._recursiveOverwrite(srcPath, target)
+                    written.append(destPath)
                 else:
                     print("Error destination for %s is not set" % srcPath)
                     sys.exit(1)
@@ -65,6 +75,8 @@ class FsSubmaker(Submaker):
                                         os.path.join(dest, f),
                                         ignore)
         else:
+            if not os.path.exists(os.path.dirname(dest)):
+                os.makedirs(os.path.dirname(dest))
             shutil.copyfile(src, dest)
 
 
