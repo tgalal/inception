@@ -109,9 +109,11 @@ class Config(object):
                 if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
                 if not override and not directOnly and self.parent:
                     # r.update(self.parent.get(key, {}))
-                    p = Config("__sub__", self.parent.get(key, {}))
-                    p.override(Config("__sub__", r))
-                    return p.__contextData
+                    parentData = self.parent.get(key, {})
+                    if type(parentData) is dict:
+                        p = Config("__sub__", parentData)
+                        p.override(Config("__sub__", r))
+                        return p.__contextData
                 result = r
             return result
         except ValueError:
@@ -138,9 +140,11 @@ class Config(object):
                 if self.__class__.__OVERRIDE_KEY__ in r: del r[self.__class__.__OVERRIDE_KEY__]
                 if not override and not directOnly and self.parent:
                     # r.update(self.parent.get(key, {}))
-                    p = Config("__sub__", self.parent.get(key, {}))
-                    p.override(Config("__sub__", r))
-                    r = p.__contextData
+                    parentData = self.getParent().get(key, {})
+                    if type(parentData) is dict:
+                        p = Config("__sub__", parentData)
+                        p.override(Config("__sub__", r))
+                        r = p.__contextData
                 result = r
             return ConfigProperty(self, key, result)
         except ValueError:
