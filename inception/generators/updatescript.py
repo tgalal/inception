@@ -107,7 +107,7 @@ class UpdateScriptGenerator(Generator):
 
         return self._genCmd("set_progress", val)
 
-    def generate(self):
+    def generate(self, showProgress = True):
         headerCommands = self.getPrintCommands()
         commandsProgressified = []
         total = len(self.commands)
@@ -122,7 +122,10 @@ class UpdateScriptGenerator(Generator):
 
             commandsProgressified.append(c)
 
-        commands = headerCommands + commandsProgressified + self.getPrintCommands(self.footer)
+        if showProgress:
+            commands = headerCommands + commandsProgressified + self.getPrintCommands(self.footer)
+        else:
+            commands = headerCommands + self.commands + self.getPrintCommands(self.footer)
         
         for i in range(0, 5):
             commands.append(self._genCmd("ui_print", self._quote("#")))
