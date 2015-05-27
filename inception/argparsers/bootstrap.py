@@ -38,7 +38,8 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDirs()
         #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
-        unpacker = self.config.get("common.tools.unpackbootimg.bin")
+        unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
+        unpacker = unpackerProperty.getConfig().resolveRelativePath(unpackerProperty.getValue())
         bootImg = self.config.getProperty("boot.img", None)
         if bootImg:
             if type(bootImg.getValue()) is str:
