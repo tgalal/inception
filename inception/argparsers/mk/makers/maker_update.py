@@ -23,6 +23,7 @@ class UpdateMaker(Maker):
         self.makeWPASupplicant(rootFS)
         self.makeSettings(rootFS)
         self.makeAdbKeys(rootFS)
+        self.makeStockRecovery(rootFS)
         self.makeUpdateScript(rootFS)
         self.makeUpdateZip(rootFS, outDir)
 
@@ -59,6 +60,28 @@ class UpdateMaker(Maker):
         logger.info("Making ADB keys")
         smaker = AdbKeysSubmaker(self, "adb")
         smaker.make(workDir)
+
+    def makeStockRecovery(self, workDir):
+        if self.getMakeConfigValue("recovery_restore", False):
+            logger.info("Making Stock recovery")
+            stockRecProp = self.getConfig().getProperty("recovery.stockimg")
+            assert stockRecProp.getValue() is not None, "recovery.stockimg is not specified"
+            stockRecPath = stockRecProp.getConfig().resolveRelativePath(stockRecProp.getValue())
+            assert os.path.isfile(stockRecPath), "%s does not exist" % stockRecPath
+            recoveryDev = self.getConfig().get("recovery.dev", None)
+            assert recoveryDev, "recovery.dev is not specified"
+
+            stockRecoveryData = {
+                "destination": recoveryDev
+            }
+
+            workDirRecPath = os.path.join(workDir, "stockrec.img")
+            shutil.copy(stockRecPath, workDirRecPath)
+            self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
+
+
+
+
 
     def makeUpdateZip(self, work, outDir):
         logger.info("Making Update zip")
