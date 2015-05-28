@@ -9,6 +9,5 @@ class InceptionConstants:
     OUT_NAME_RECOVERY = "recovery.img"
     FS_DIR  = "fs"
     LOOKUP_REPOS = [
-        "https://github.com/tgalal",
         "https://github.com/inception-android"
     ]
