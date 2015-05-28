@@ -1,5 +1,5 @@
 from .submaker import Submaker
-from inception.tools import SignApk
+from inception.tools.signapk import SignApk
 import shutil
 import os
 from inception.constants import InceptionConstants

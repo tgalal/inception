@@ -3,8 +3,8 @@ from .make import MakeArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
 from inception.configurator import Configurator, ConfigNotFoundException
-from inception.tools import Heimdall
-from inception.tools import RkFlashTool
+from inception.tools.heimdall import Heimdall
+from inception.tools.rkflashtool import RkFlashTool
 import os
 import logging
 
