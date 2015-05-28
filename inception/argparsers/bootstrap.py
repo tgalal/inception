@@ -41,14 +41,14 @@ class BootstrapArgParser(InceptionArgParser):
         unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
         unpacker = unpackerProperty.getConfig().resolveRelativePath(unpackerProperty.getValue())
         bootImg = self.config.getProperty("boot.img", None)
-        if bootImg:
+        if bootImg and self.config.get("boot.make", False):
             if type(bootImg.getValue()) is str:
                 self.d("Unpacking boot img")
                 self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
 
 
         recoveryImg = self.config.getProperty("recovery.img", None)
-        if recoveryImg:
+        if recoveryImg and self.config.get("recovery.make", False):
             if type(recoveryImg.getValue()) is str:
                 self.d("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
@@ -120,8 +120,6 @@ class BootstrapArgParser(InceptionArgParser):
         self.bootDir            = self.createPathString(self.imgDir, "boot")
         self.recoveryDir        = self.createPathString(self.imgDir, "recovery")
         self.fsDir              = self.createPathString(self.variantDir, InceptionConstants.FS_DIR)
-
-
 
     def createDirs(self):
         # self.createDir(self.variantDir)
