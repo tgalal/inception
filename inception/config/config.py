@@ -17,6 +17,7 @@ class Config(object):
             "name":  None
         },
         "update": {
+            "make": True,
             "network": {
                 "aps": []
             }
