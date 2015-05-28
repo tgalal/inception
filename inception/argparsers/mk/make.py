@@ -44,17 +44,12 @@ class MakeArgParser(InceptionArgParser):
 
         self.makersMap = [
             ("update", UpdateMaker),
-            # ("boot", BootImageMaker),
+            ("boot", BootImageMaker),
             ("recovery", RecoveryImageMaker),
             ("cache", CacheMaker),
         ]
 
-
-
-
         self.threads = []
-
-
 
     def process(self):
         super(MakeArgParser, self).process()
