@@ -66,5 +66,11 @@ This will generate:
 
 Which is an OTA android update that you can install in several ways.
 
+** Hint **
+You will find the full config that generated the OTA package at:
+
+ > ~/.inception/out/inception/device/myconfig/config.json
+
+Inspect that file, override any properties in your own config, run make again and see your changes easily going through.
 
 
