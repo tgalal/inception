@@ -2,7 +2,20 @@ Inception
 =========
 Inception is a set of tools for quick, easy modification and deployment of android roms.
 
-## Usage:
+#In short
+
+For a brand new device Inception helps you automate the following:
+
+- Generate all device settings
+- Include any apps to be be (pre)installed
+- Remove any stock apps
+- Root the device
+- Configure Wifi networks
+- Patch APKs
+- Replace Kernel, and/or ramdisk data in both boot and recovery imgs
+- Place your adb keys
+
+# Usage:
 ```python incept.py ACTION [args]```
 
 Where ACTION is one of:
@@ -14,22 +27,47 @@ Where ACTION is one of:
 
 Explanation of each action and its arguments are found under "[Actions](#actions)"
 
-## Use Cases
+# Use Cases
 
-### Business which use tablets
-It has been recently trending in some businesses that they provide their customers with devices through which they can use their services. For example, some restaurants provide their guests with a tablet on each table, using which they can browse the food menu and order. It would be handy for such bussiness to have access to tools that allow them to configure their devices in the quickest and simplest method possible.
-
-### Mass production
+## Business which distribute devices
 For business which rely on tablets/phone customization and distribution. For example those that provide restaurants and hotels with devices for their guests and customers to use. It's important that they are able to easily have a custom build configuration per target. And with the hierarichal configuration approach Inception uses, it eliminates all redundant information that are common across those different devices, reducing the complexity to a high degree
 
-### Company devices
-This tool allows quick setup of work phones/tablets provided to employees in a company. In a few seconds the company can prepare a newly out of the box device with the company's applications, wifi settings, security settings.
+## Company devices
+This tool allows quick setup of work phones/tablets provided to employees in a company. In a few seconds the company can prepare a newly out of the box device with the company's apps, wifi settings, security settings.. etc
 
-## How it works
-Inception uses a set of base devices. A base device is just a directory which consists of at least a JSON file containing base device configuration. It might also contain a "fs" directory which has files that will be deployed on the associated device.
-If the configuration is standalone (does not extend any other configuration), then it must also have an "imgs" directory containing at least "boot.img" and "recovery.img".
+# How it works
 
-Inception creates devices (called variants) based on those base devices. A variant contains at least a JSON configuration, inside which it indicates which config it extends, and an unpacked boot and recovery images from base devices.
+## config.json
+
+You specify your configuration in JSON format. Your configuration can extend another configuration, and so you can have common parent configurations.
+
+### base configs dir
+
+This dir contains base configurations. It should ideally contain purely device-specific configs, or configurations that are generic and are meant to be only extended and not used directly.
+```
+
+samsung
+    samsung.json
+
+tab3
+    tab3.json
+```
+
+### variant configs dir
+
+This is where all target product-specific configs would go. A variant must extend a base config, or another variant.
+
+```
+samsung
+    tab3
+        restaurant_mainbranch
+            restaurant_mainbranch.json
+        restaurant_southbranch
+            restaurant_southbranch.json
+    tab4
+        ...
+```
+
 
 You only need to modify the variant directory:
  - Add files to its fs directory
@@ -44,7 +82,16 @@ You only need to modify the variant directory:
 
 Basically however you want your device to be like when it boots the first time you can setup that in the variant dir.
 
-Once done, Inception compiles your changes, and creates 3 images: Boot, Recovery, Cache. You then need to flash the 3 images to your device (doable through Inception too), which usually takes about an average of 10-15 seconds, depending on size of files added to fs. Once done, your android device will boot into recovery, apply some changes and then reboots to normal mode with all your changes in place.
+Once done, Inception compiles your config and generates an "update.zip", which is basically and Android OTA update that applies your config to the device.
+Optionally inception could also generate the following:
+    - cache.img
+        - This bundles the previously generated update.zip inside, and instructions for the device to apply this update once flashed with it.
+    - recovery.img
+        - Typically a custom recovery, since stock recovery won't accept our generated update.zip unless you have manufacturer's signing keys
+    - boot.img
+        - In case you're modifying the boot kernel or ramdisk
+
+You can toggle each of those generated stuff separately depending on what you need.
 
 ## Getting started
 ### Directory structure
@@ -87,10 +134,12 @@ Once done, Inception compiles your changes, and creates 3 images: Boot, Recovery
                     - boot.img
                     - cache.img
                     - recovery.img
+                    - update.zip
                 - Variant_B_Name
                     - boot.img
                     - cache.img
                     - recovery.img
+                    - update.zip
                 - ...
         - Model_B_Name/Identifier
             - ...
