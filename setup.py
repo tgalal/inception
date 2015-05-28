@@ -1,14 +1,15 @@
-deps = ['dulwich', 'argparse']
+deps = ['dulwich', 'argparse', 'adb']
 from setuptools import setup, find_packages
 import inception
 setup(
     name='inception-android',
     version=inception.__version__,
-    url='http://github.com/tgalal/yowsup/',
+    url='http://github.com/tgalal/inception/',
     license='GPL-3+',
     author='Tarek Galal',
     tests_require=[],
     install_requires = deps,
+    dependency_links = ['https://github.com/tgalal/python-adb/tarball/master#egg=adb-1.1.0'],
     scripts = ['incept'],
     author_email='tare2.galal@gmail.com',
     description='Auto config tools for android devices',
