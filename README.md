@@ -19,11 +19,9 @@ incept bootstrap --base inception.device --variant myconfig
 
 Edit ~/.inception/variants/inception/device/myconfig/myconfig.json
 
-For example:
+Override device settings, add wifi settings, or add some apps
 
-- Add wifi settings
-- Override device settings
-- Add some apps
+For example:
 
 ```json
 {
