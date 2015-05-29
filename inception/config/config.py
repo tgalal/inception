@@ -16,6 +16,15 @@ class Config(object):
         "device": {
             "name":  None
         },
+        "boot": {
+            "make": False
+        },
+        "recovery": {
+            "make": False
+        },
+        "cache": {
+            "make": False
+        },
         "update": {
             "make": True,
             "keys": None,
@@ -39,6 +48,13 @@ class Config(object):
         config = Config(identifier, sourceTemplate, base)
         config.set("device.name", name)
         config.set("__extends__", base.getIdentifier() if base else None)
+        if base:
+            config.set("boot.make", base.get("boot.make", False))
+            config.set("recovery.make", base.get("recovery.make", False))
+            config.set("cache.make", base.get("cache.make", False))
+
+            config.set("recovery.restore_stock", base.get("recovery.restore_stock", False))
+            config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config
 
