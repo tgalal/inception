@@ -80,3 +80,6 @@ You will find the full config that generated the OTA package at:
 Inspect that file, override any properties in your own config, run make again and see your changes easily going through.
 
 
+# License:
+
+inception is licensed under the GPLv3+: http://www.gnu.org/licenses/gpl-3.0.html.
