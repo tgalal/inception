@@ -42,7 +42,11 @@ class UpdatescriptSubmaker(Submaker):
         #### apply our FS permissions
 
         extractedDirs = []
-        for path, pathData in self.getConfigValue("files.add", {}).items():
+
+        addFilesDict = self.getConfigValue("files.add", {})
+        paths = sorted(addFilesDict.keys())
+        for path in paths:
+            pathData = addFilesDict[path]
             destPath = pathData["destination"]
             if not destPath.startswith("/"):
                 destPath = "/" + destPath

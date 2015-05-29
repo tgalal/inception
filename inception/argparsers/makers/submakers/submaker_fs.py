@@ -19,7 +19,12 @@ class FsSubmaker(Submaker):
 
         currConfig = self.getMaker().getConfig()
         for path in lookupFPaths:
-            fsSourcePaths.append((os.path.join(currConfig.getFSPath(), path), currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))))
+            appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else path
+            pathInfo = currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))
+            if not "destination" in pathInfo and path[0] == "/":
+                pathInfo["destination"] = path
+                currConfig.set("update.files.add.%s" % (path.replace(".", "\.")), pathInfo)
+            fsSourcePaths.append((appendPath, pathInfo))
 
         while not currConfig.isOrphan():
             currConfig = currConfig.getParent()
@@ -27,7 +32,11 @@ class FsSubmaker(Submaker):
                 key = "update.files.add.%s" % (path.replace(".", "\."))
                 pathInfo = currConfig.get(key, None)
                 if pathInfo:
-                    fsSourcePaths.append((os.path.join(currConfig.getFSPath(), path), pathInfo))
+                    appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else path
+                    if not "destination" in pathInfo and path[0] == "/":
+                        pathInfo["destination"] = path
+                        currConfig.set(key, pathInfo)
+                    fsSourcePaths.append((appendPath, pathInfo))
 
         fsSourcePaths.reverse()
         # print("Going to merge the following dirs")
@@ -58,6 +67,8 @@ class FsSubmaker(Submaker):
                 else:
                     print("Error destination for %s is not set" % srcPath)
                     sys.exit(1)
+            elif not "__depend__" in pathInfo or not pathInfo["__depend__"]:
+                raise Exception("%s does not exits " % srcPath)
 
 
     def _recursiveOverwrite(self, src, dest, ignore=None):
