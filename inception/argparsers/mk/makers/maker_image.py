@@ -1,6 +1,8 @@
 from .maker import Maker
 from inception.generators.bootimg import BootImgGenerator
 import os
+import shutil
+
 class ImageMaker(Maker):
 
     def __init__(self, config, key, imageName):
@@ -8,6 +10,13 @@ class ImageMaker(Maker):
         self.imageName = imageName
 
     def make(self, workDir, outDir):
+        bootConfigProp = self.getMakeConfigProperty("img")
+        bootConfig = bootConfigProp.getValue()
+
+        if type(bootConfig) is str: #path to packed image
+            shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
+            return
+
         mkbootprop = self.getCommonConfigProperty("tools.mkbootimg.bin")
         assert mkbootprop.getValue(), "tools.mkbootimg.bin is not set"
         mkbootbin = mkbootprop.getConfig().resolveRelativePath(mkbootprop.getValue())
@@ -16,7 +25,6 @@ class ImageMaker(Maker):
         gen.setOutDir(outDir)
 
 
-        bootConfig = self.getMakeConfigValue("img")
         ramdisk = self.getMakeConfigProperty("img.ramdisk_dir").resolveAsRelativePath()
         if ramdisk is None:
             ramdisk = self.getMakeConfigProperty("img.ramdisk").resolveAsRelativePath()
@@ -44,4 +52,4 @@ class ImageMaker(Maker):
         gen.setSignature(signature)
         gen.setRamdiskAddr(ramdiskaddr)
 
-        gen.generate(os.path.join(outDir, self.imageName + ".img"))
+        gen.generate(os.path.join(outDir, self.imageName))
