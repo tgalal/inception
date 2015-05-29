@@ -29,7 +29,15 @@ class UpdatescriptSubmaker(Submaker):
         #     else:
         #         u.extractFile(target[1:], target)
 
+        for path in self.getConfigValue("files.rm", []):
+            if not path.startswith("/"):
+                path = "/" + path
+            u.rm(path)
 
+        for path in self.getConfigValue("files.rmdir", []):
+            if not path.startswith("/"):
+                path = "/" + path
+            u.rm(path, recursive = True)
 
         #### apply our FS permissions
 
