@@ -7,6 +7,8 @@ class InceptionConstants:
     OUT_DIR = os.path.join(INCEPTION_DIR, "out")
     OUT_NAME_UPDATE = "update.zip"
     OUT_NAME_RECOVERY = "recovery.img"
+    OUT_NAME_BOOT     = "boot.img"
+    OUT_NAME_CACHE    = "cache.img"
     FS_DIR  = "fs"
     LOOKUP_REPOS = [
         "https://github.com/inception-android"
