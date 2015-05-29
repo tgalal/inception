@@ -40,12 +40,10 @@ For example:
                     "key": "CE3000FEED"
                 }
             ]
-        }
-    },
-    "files": {
-        "add": {
-            "data/whatsapp.apk": {
-                "destination": "/data/app"
+        },
+        "apps": {
+            "com.whatsapp": {
+                "apk": "myapps/whatsapp.apk"
             }
         }
     }
