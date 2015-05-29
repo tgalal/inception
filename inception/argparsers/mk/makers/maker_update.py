@@ -62,10 +62,10 @@ class UpdateMaker(Maker):
         smaker.make(workDir)
 
     def makeStockRecovery(self, workDir):
-        if self.getMakeConfigValue("recovery_restore", False):
+        if self.getMakeConfigValue("restore_stock", False):
             logger.info("Making Stock recovery")
-            stockRecProp = self.getConfig().getProperty("recovery.stockimg")
-            assert stockRecProp.getValue() is not None, "recovery.stockimg is not specified"
+            stockRecProp = self.getConfig().getProperty("recovery.stock")
+            assert stockRecProp.getValue() is not None, "recovery.stock is not specified"
             stockRecPath = stockRecProp.getConfig().resolveRelativePath(stockRecProp.getValue())
             assert os.path.isfile(stockRecPath), "%s does not exist" % stockRecPath
             recoveryDev = self.getConfig().get("recovery.dev", None)
@@ -78,10 +78,6 @@ class UpdateMaker(Maker):
             workDirRecPath = os.path.join(workDir, "stockrec.img")
             shutil.copy(stockRecPath, workDirRecPath)
             self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
-
-
-
-
 
     def makeUpdateZip(self, work, outDir):
         logger.info("Making Update zip")
