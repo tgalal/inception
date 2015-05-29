@@ -55,7 +55,7 @@ class ExecWrapper(InceptionObject):
         return self.preArgs + args + self.postArgs
 
     def run(self, preview = False):
-        cmd = (self.bin,) + self.createArgs()
+        cmd = tuple(self.bin.split(" ")) + self.createArgs()
         result = self.execCmd(*cmd, cwd = self.cwd, stdin = self.stdin, preview = preview)
         if self.stdin:
             self.stdin.close()

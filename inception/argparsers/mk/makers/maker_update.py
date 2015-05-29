@@ -6,6 +6,7 @@ from .submakers.submaker_keyvaldb_settings import SettingsKeyValDBSubmaker
 from .submakers.submaker_property import PropertySubmaker
 from .submakers.submaker_updatezip import UpdatezipSubmaker
 from .submakers.submaker_adbkeys import AdbKeysSubmaker
+from .submakers.submaker_apps import AppsSubmaker
 import shutil
 import os
 import logging
@@ -24,6 +25,7 @@ class UpdateMaker(Maker):
         self.makeSettings(rootFS)
         self.makeAdbKeys(rootFS)
         self.makeStockRecovery(rootFS)
+        self.makeApps(rootFS)
         self.makeUpdateScript(rootFS)
         self.makeUpdateZip(rootFS, outDir)
 
@@ -78,6 +80,11 @@ class UpdateMaker(Maker):
             workDirRecPath = os.path.join(workDir, "stockrec.img")
             shutil.copy(stockRecPath, workDirRecPath)
             self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
+
+    def makeApps(self, workDir):
+        logger.info("Making Apps")
+        smaker = AppsSubmaker(self, "apps")
+        smaker.make(workDir)
 
     def makeUpdateZip(self, work, outDir):
         logger.info("Making Update zip")

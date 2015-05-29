@@ -26,11 +26,11 @@ class Submaker(object):
             key = self.key + "." + key if not key == "." else self.key
         return self.maker.getMakeConfigValue(key, default, directOnly)
 
-    def getConfigProperty(self, key, default = None, directyOnly = False):
+    def getConfigProperty(self, key, default = None, directOnly = False):
 
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
-        return self.maker.getMakeConfigProperty(key, default, directyOnly)
+        return self.maker.getMakeConfigProperty(key, default, directOnly)
 
     def setConfigValue(self, key, value):
         return self.maker.setConfigValue(key, value)

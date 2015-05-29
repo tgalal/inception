@@ -255,7 +255,10 @@ class ConfigProperty(object):
         return self.config
 
     def resolveAsRelativePath(self):
-        return self.getConfig().resolveRelativePath(self.getValue()) if type(self.getValue()) is str else None
+        return self.resolveRelativePath(self.getValue()) if type(self.getValue()) is str else None
+
+    def resolveRelativePath(self, path):
+        return self.getConfig().resolveRelativePath(path)
 
     def __str__(self):
         return "%s:\t%s" % (self.getKey(), self.getValue())
