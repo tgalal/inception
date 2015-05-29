@@ -3,7 +3,7 @@ from inception.generators.wpasupplicantconf import WPASupplicantConfGenerator
 import os
 class WifiSubmaker(Submaker):
     def make(self, workDir):
-        aps = self.getConfigValue("aps")
+        aps = self.getConfigValue("aps", [])
 
 
         if not len(aps):

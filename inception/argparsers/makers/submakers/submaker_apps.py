@@ -13,7 +13,7 @@ class AppsSubmaker(Submaker):
         self.patchTool = Patch()
 
     def make(self, workDir):
-        apps = self.getConfigValue(".")
+        apps = self.getConfigValue(".", {})
         for pkgName, data in apps.items():
             apkPath = self.getConfigProperty(pkgName.replace(".", "\.") + ".apk").resolveAsRelativePath()
             patchesProp = self.getConfigProperty(pkgName.replace(".", "\.") + ".patches", [], directOnly=True) #direct patches for now
