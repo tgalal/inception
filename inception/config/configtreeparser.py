@@ -8,6 +8,7 @@ from dulwich import index
 import dulwich
 import logging
 import shutil
+from inception.config.sourcesparser import SourcesConfig
 
 logger = logging.getLogger("ConfigTree")
 
@@ -19,6 +20,7 @@ class ConfigTreeParser(object):
     def __init__(self, identifierResolver):
         self.identifierResolver = identifierResolver
         self.notes = []
+        self.sourcesConfig = SourcesConfig.parseDefaultSourcesFile()
 
     def parseJSON(self, identifier):
         self.notes = []
@@ -47,7 +49,9 @@ class ConfigTreeParser(object):
     def _parseJSON(self, identifier, isFresh = False):
         jsonFilePath = self.identifierResolver.resolve(identifier)
         if not jsonFilePath:
-            if self.fetchConfig(identifier.replace(".", "_")):
+            sources = self.sourcesConfig.getSources(identifier)
+
+            if self.fetchConfig(identifier.replace(".", "_"), sources):
                 return self._parseJSON(identifier, True)
             raise ValueError("Couldn't resolve %s" % identifier)
         elif not os.path.exists(jsonFilePath):
@@ -67,18 +71,20 @@ class ConfigTreeParser(object):
 
             return result
 
-    def fetchConfig(self, name):
+    def fetchConfig(self, name, lookupRepos):
         dissectedName = name.split("_")
         if len(dissectedName) == 2:
-            return self.fetchBase(name)
+            return self.fetchBase(name, lookupRepos)
         elif len(dissectedName) == 3:
-            return self.fetchVariant(name)
+            return self.fetchVariant(name, lookupRepos)
         else:
             raise ValueError("%s is not a valid name" % name)
 
-    def fetchRepo(self, repoName, targetPath):
+    def fetchRepo(self, repoName, targetPath, lookupRepos):
         repoPath = repoName + ".git"
-        for address in InceptionConstants.LOOKUP_REPOS:
+        for address in lookupRepos:
+            if not address.startswith("https://") and not address.startswith("http://"):
+                address = "https://github.com/" + address
             try:
                 client = HttpGitClient(address)
                 if os.path.exists(targetPath):
@@ -102,19 +108,19 @@ class ConfigTreeParser(object):
 
         return False
 
-    def fetchVariant(self, variantRepoName):
+    def fetchVariant(self, variantRepoName, lookupRepos):
         base, variant, target = variantRepoName.split("_")
 
         repoName = "inception_variant_%s" % variantRepoName
         targetDir = os.path.join(InceptionConstants.VARIANTS_DIR, base, variant, target)
 
-        return self.fetchRepo(repoName, targetDir)
+        return self.fetchRepo(repoName, targetDir, lookupRepos)
 
-    def fetchBase(self, baseRepoName):
+    def fetchBase(self, baseRepoName, lookupRepo):
         base, target = baseRepoName.split("_")
         repoName = "inception_base_%s" % baseRepoName
         targetDir = os.path.join(InceptionConstants.BASE_DIR, base, target)
 
-        return self.fetchRepo(repoName, targetDir)
+        return self.fetchRepo(repoName, targetDir, lookupRepo)
 
 
