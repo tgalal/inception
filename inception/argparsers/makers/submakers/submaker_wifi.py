@@ -10,13 +10,12 @@ class WifiSubmaker(Submaker):
             return
 
         wpaSupplicantData= {
-            "destination": "/data/misc/wifi/wpa_supplicant.conf",
             "mode": "0660",
             "gid": "1010",
             "uid": "1000"
         }
 
-        self.setConfigValue("update.files.add.data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
+        self.setConfigValue("update.files.add./data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
 
 
         gen = WPASupplicantConfGenerator()
