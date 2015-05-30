@@ -47,7 +47,12 @@ class UpdatescriptSubmaker(Submaker):
         paths = sorted(addFilesDict.keys())
         for path in paths:
             pathData = addFilesDict[path]
-            destPath = pathData["destination"]
+            if "destination" in pathData:
+                destPath = pathData["destination"]
+            elif path[0] == "/":
+                destPath = path
+            else:
+                raise Exception("No desitination specified for %s" % path)
             if not destPath.startswith("/"):
                 destPath = "/" + destPath
 
