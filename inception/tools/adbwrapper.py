@@ -1,38 +1,29 @@
 from .execwrapper import ExecWrapper
 import os
-from adb import adb_commands
+from adb.adb_commands import AdbCommands, M2CryptoSigner
+import stat
+import sys
 class Adb(ExecWrapper):
-
-    def __init__(self, bin):
-        super(Adb, self).__init__(bin)
+    def __init__(self):
+        super(Adb, self).__init__(None)
         self.busybox = False
+        self.connection = None
+        self.rsaKeys =  [M2CryptoSigner(os.path.expanduser("~/.android/adbkey"))]
 
-    def _setAction(self, action):
-        self.clearArgs()
-        self.addPreArg(action)
+    def getConnection(self):
+        if self.connection is None:
+            self.connection = AdbCommands.ConnectDevice(rsa_keys = self.rsaKeys)
+        return self.connection
 
     def setBusyBoxCmds(self, busybox):
         self.busybox = busybox
 
     def push(self, src, dest):
-        self._setAction("push")
-        self.addPostArg(src)
-        self.addPostArg(dest)
-
-        return self.run()
+        return self.getConnection().Push(src, dest)
 
     def pull(self, src, dest, requireSu = False):
-
-        if requireSu:
-            tmpDir = "/sdcard/inceptiontmp"
-            self.mkdir(tmpDir)
-            self.cmd("cp", "-r", src, tmpDir, su = True)
-            src = tmpDir + "/" + os.path.basename(src)
-        self._setAction("pull")
-        self.addPostArg(src)
-        self.addPostArg(dest)
-
-        return self.run() and self.rmdir(tmpDir)
+        conn = self.getConnection()
+        conn.Pull(src, dest)
 
     def rmdir(self, dirname):
         return self.cmd("rm", "-r", dirname)
@@ -51,7 +42,6 @@ class Adb(ExecWrapper):
         return devices
 
     def cmd(self, *cmd, **kwargs):
-        self._setAction("shell")
         if self.busybox:
             cmd = ("busybox",) + cmd
         if "su" in kwargs and kwargs["su"] is True:
@@ -61,3 +51,8 @@ class Adb(ExecWrapper):
         self.addPostArg("\"%s\"" % cmdFlat)
 
         return self.run()
+
+
+    def run(self, preview = False):
+        cmd = tuple(self.bin.split(" ")) + self.createArgs()
+        return self.getConnection().Shell(" ".join(cmd))

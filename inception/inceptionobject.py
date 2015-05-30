@@ -22,10 +22,10 @@ class InceptionObject(object):
     def d(self, *messages):
         print("%s:\t%s" % (self.__class__.__name__, "\t".join(messages) ))
 
-    def getAdb(self, adbBin, busybox = False):
+    def getAdb(self, busybox = False):
         if not InceptionObject.ADB_INSTANCE:
-            from tools import Adb
-            InceptionObject.ADB_INSTANCE = Adb(adbBin)
+            from tools.adbwrapper import Adb
+            InceptionObject.ADB_INSTANCE = Adb()
         InceptionObject.ADB_INSTANCE.setBusyBoxCmds(busybox)
         return InceptionObject.ADB_INSTANCE
 
