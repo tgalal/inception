@@ -42,6 +42,15 @@ class SettingsDatabaseFactory(object):
     def getIterable(self, name):
         return SettingsDatabaseFactory.SettingsDatabase(self.conn, name, readonly = self.readonly)
 
+    def getSchema(self):
+        out = ""
+        for row in self.conn.execute("SELECT sql FROM sqlite_master where sql is not null").fetchall():
+            out += row[0] + ";"
+        return out
+
+    def getVersion(self):
+        return self.conn.execute("pragma user_version").fetchone()[0]
+
     def close(self):
         if self.conn:
             self.conn.close()

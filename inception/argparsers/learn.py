@@ -83,7 +83,7 @@ class LearnArgParser(InceptionArgParser):
         for identifier, data in currSettings.items():
             path = data["path"]
             settingsResult[identifier] = {
-                "path": path
+                "path": path,
             }
 
             adb.pull(path, dbPath)
@@ -91,6 +91,9 @@ class LearnArgParser(InceptionArgParser):
             adb.pull(path + "-wal", dbPathWal)
 
             settingsFactory = SettingsDatabaseFactory(dbPath)
+            settingsResult[identifier]["version"] = settingsFactory.getVersion()
+            settingsResult[identifier]["schema"] = settingsFactory.getSchema()
+
             tablesKey = "update.settings.%s.data" % (identifier.replace(".", "\\."))
             tablesDict = self.config.get(tablesKey)
             settingsResult[identifier]["data"] = {}
