@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys, time
-from inception.argparsers import BootstrapArgParser, PlantArgParser, LearnArgParser, DeployArgParser, SyncArgParser
+from inception.argparsers import BootstrapArgParser, PlantArgParser, LearnArgParser, SyncArgParser
 from inception.argparsers.make import MakeArgParser
 from inception.argparsers.exceptions import InceptionArgParserException
 import logging
@@ -18,7 +18,6 @@ if __name__ == "__main__":
         "make": MakeArgParser,
         "plant": PlantArgParser,
         "learn": LearnArgParser,
-        "deploy": DeployArgParser,
         "sync": SyncArgParser
     }
 

@@ -2,7 +2,6 @@ from .argparser import InceptionArgParser
 from .make import MakeArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
-from inception.configurator import Configurator, ConfigNotFoundException
 from inception.tools.heimdall import Heimdall
 from inception.tools.rkflashtool import RkFlashTool
 import os
@@ -34,6 +33,8 @@ class PlantArgParser(InceptionArgParser):
         return self.flashers
 
     def process(self):
+        print("plant is still WIP")
+        return True
         super(PlantArgParser, self).process()
         try:
             configurator = Configurator(self.args["variant"])
