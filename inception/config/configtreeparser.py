@@ -5,9 +5,11 @@ from inception.constants import InceptionConstants
 from dulwich.repo import Repo
 from dulwich.client import HttpGitClient
 from dulwich import index
+from dulwich.client import get_transport_and_path
 import dulwich
 import logging
 import shutil
+import sys
 from inception.config.sourcesparser import SourcesConfig
 
 logger = logging.getLogger("ConfigTree")
@@ -84,29 +86,62 @@ class ConfigTreeParser(object):
         repoPath = repoName + ".git"
         for address in lookupRepos:
             if not address.startswith("https://") and not address.startswith("http://"):
-                address = "https://github.com/" + address
-            try:
-                client = HttpGitClient(address)
-                if os.path.exists(targetPath):
-                    shutil.rmtree(targetPath)
-                os.makedirs(targetPath)
-                local = Repo.init(targetPath)
-                logger.info("Trying %s/%s" % (address, repoPath))
-                remoteRefs = client.fetch(repoPath, local)
-                local["HEAD"] = remoteRefs["refs/heads/master"]
-                indexFile = local.index_path()
-                tree = local["HEAD"].tree
-                index.build_index_from_tree(local.path, indexFile, local.object_store, tree)
-                logger.info("Fetched %s from %s to %s" % (repoName, address, targetPath))
-
-                if os.path.exists(os.path.join(targetPath, os.path.basename(targetPath) + ".json")):
+                address = "https://github.com/" + address + "/" + repoPath
+                if self.syncRepo(targetPath, address):
                     return True
-                else:
-                    shutil.rmtree(targetPath)
-            except dulwich.errors.GitProtocolError:
-               continue
 
         return False
+
+    def syncRepo(self, targetPath, repoUrl = None):
+        assert os.path.exists(targetPath) or repoUrl, "Either repo should exist or supply remote origin"
+
+
+        if os.path.exists(targetPath):
+            try:
+                localRepo = Repo(targetPath)
+                config = localRepo.get_config()
+                remoteUrl = config.get(("remote", "origin"), "url")
+
+                if not remoteUrl:
+                    raise dulwich.errors.NotGitRepository()
+
+                if repoUrl and repoUrl != remoteUrl:
+                    print("Error: Supplied remote URL does not match remote url in repo config!")
+                    sys.exit(1)
+
+            except dulwich.errors.NotGitRepository:
+                print("Error: %s will be overwritten, delete or move it." % targetPath)
+                sys.exit(1)
+        else:
+            remoteUrl = repoUrl
+            os.makedirs(targetPath)
+            localRepo = Repo.init(targetPath)
+
+        logger.info("Trying syncing %s to %s" % (remoteUrl, targetPath))
+
+        client, hostPath = get_transport_and_path(remoteUrl)
+        try:
+            remoteRefs = client.fetch(hostPath, localRepo)
+            logger.info("Synced %s to %s" % (remoteUrl, targetPath))
+            localRepo["HEAD"] = remoteRefs["HEAD"]
+            localRepo.reset_index()
+
+            config = localRepo.get_config()
+            config.set(("remote", "origin"), "url", remoteUrl)
+            config.write_to_path()
+
+        except (dulwich.errors.NotGitRepository,dulwich.errors.GitProtocolError):
+            shutil.rmtree(targetPath)
+            return False
+        except KeyError:
+            # Handle wild KeyError appearing.
+            # in an ugly way for now
+            shutil.rmtree(targetPath)
+            return self.syncRepo(targetPath, remoteUrl)
+
+        return True
+
+
 
     def fetchVariant(self, variantRepoName, lookupRepos):
         base, variant, target = variantRepoName.split("_")

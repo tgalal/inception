@@ -238,6 +238,9 @@ class Config(object):
     def getParent(self):
         return self.parent
 
+    def isBase(self):
+        return len(self.getIdentifier().split(".")) == 2
+
 
 class ConfigProperty(object):
     def __init__(self, config, key, value):

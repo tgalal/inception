@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys, time
-from inception.argparsers import BootstrapArgParser, PlantArgParser, LearnArgParser, DeployArgParser
+from inception.argparsers import BootstrapArgParser, PlantArgParser, LearnArgParser, DeployArgParser, SyncArgParser
 from inception.argparsers.make import MakeArgParser
 from inception.argparsers.exceptions import InceptionArgParserException
 import logging
@@ -18,7 +18,8 @@ if __name__ == "__main__":
         "make": MakeArgParser,
         "plant": PlantArgParser,
         "learn": LearnArgParser,
-        "deploy": DeployArgParser
+        "deploy": DeployArgParser,
+        "sync": SyncArgParser
     }
 
     if(len(args) == 0 or args[0] not in modeDict):
