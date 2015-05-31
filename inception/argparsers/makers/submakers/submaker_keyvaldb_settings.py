@@ -17,7 +17,7 @@ class SettingsKeyValDBSubmaker(KeyValDBSubmaker):
             os.makedirs(os.path.dirname(path))
 
             db = dbData["data"]
-            self.apply(path, dbData["version"], db, schema = schema, colKey = colKey, colVal = colVal)
+            self.apply(path, str(dbData["version"]), db, schema = schema, colKey = colKey, colVal = colVal)
 
             super(SettingsKeyValDBSubmaker, self).make(path)
 
