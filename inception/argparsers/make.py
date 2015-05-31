@@ -23,19 +23,13 @@ class MakeArgParser(InceptionArgParser):
         targetOpts.add_argument('-v', '--variant',action = "store")
 
         optionalOpts = self.add_argument_group("Optional opts")
-        optionalOpts.add_argument('-x', '--no-cache',
-            required = False,
-            action = "store_true")
-        optionalOpts.add_argument('-u', '--no-updatepkg',
-            required = False,
-            action = "store_true")
         optionalOpts.add_argument("-t", '--threaded',
             required = False,
             action = "store_true")
 
-        optionalOpts.add_argument("-m", '--write-manifest',
-            required = False,
-            action = "store_true")
+        # optionalOpts.add_argument("-m", '--write-manifest',
+        #     required = False,
+        #     action = "store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -63,8 +57,7 @@ class MakeArgParser(InceptionArgParser):
             return self.makeAll()
 
         return self.make(self.args["variant"],
-            writeManifest = self.args["write_manifest"],
-            makeUpdatePkg = not self.args["no_updatepkg"]
+            writeManifest = False, #self.args["write_manifest"],
             )
 
 
@@ -96,9 +89,9 @@ class MakeArgParser(InceptionArgParser):
                         self.threads.append(thread)
                         thread.start()
                     else:
-                        self.make(variantCode, noCache = self.args["no_cache"],
-                            writeManifest = self.args["write_manifest"],
-                            makeUpdatePkg = not self.args["no_updatepkg"])
+                        self.make(variantCode,
+                            writeManifest = False, #self.args["write_manifest"],
+                            )
 
         for thread in self.threads:
             thread.join()
@@ -111,7 +104,7 @@ class MakeArgParser(InceptionArgParser):
         return True
 
 
-    def make(self, code, noCache = False, writeManifest = False, makeUpdatePkg = True, newFrontend = True):
+    def make(self, code, writeManifest = False):
         try:
             self.vendor, self.model, self.variant = code.split('.')
         except ValueError as e:
