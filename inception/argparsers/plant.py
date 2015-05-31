@@ -2,6 +2,8 @@ from .argparser import InceptionArgParser
 from .make import MakeArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
+from inception.config.dotidentifierresolver import DotIdentifierResolver
+from inception.config.configtreeparser import ConfigTreeParser
 from inception.tools.heimdall import Heimdall
 from inception.tools.rkflashtool import RkFlashTool
 import os
@@ -29,6 +31,9 @@ class PlantArgParser(InceptionArgParser):
         imageOptions.add_argument('-c', '--cache', required = False, action = "store_false")
         imageOptions.add_argument('-r', '--recovery', required = False, action = "store_false")
 
+        identifierResolver = DotIdentifierResolver([InceptionConstants.VARIANTS_DIR, InceptionConstants.BASE_DIR])
+        self.configTreeParser = ConfigTreeParser(identifierResolver)
+
     def getFlashers(self):
         return self.flashers
 
@@ -36,31 +41,19 @@ class PlantArgParser(InceptionArgParser):
         print("plant is still WIP")
         return True
         super(PlantArgParser, self).process()
-        try:
-            configurator = Configurator(self.args["variant"])
-            vendor, model, variant = self.args["variant"].split('.')
-        except ConfigNotFoundException as e:
-            raise InceptionArgParserException(e)
-        except ValueError as e:
-            raise InceptionArgParserException("Code must me in the format vendor.model.variant")
 
-
-        self.config = configurator.getConfig()
-        self.setOutDir(os.path.join(InceptionConstants.OUT_DIR, vendor, model, variant))
+        self.config = self.configTreeParser.parseJSON(self.args["variant"])
+        self.setOutDir(self.config.getOutPath())
 
         argImgs = (self.args[img] for img in self.__class__.IMGS)
         if not all(argImgs):
             for img in argImgs:
-                self.ags[img] = not self.args
+                self.args[img] = not self.args
 
         if self.args["make"]:
             m = MakeArgParser()
             if not m.make(self.args["variant"]):
                 raise InceptionArgParserException("Make failed")
-
-
-
-
 
         if self.args["through"] == "heimdall":
             return self.processHeimdall()
