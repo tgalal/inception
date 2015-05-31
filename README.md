@@ -70,7 +70,7 @@ This will generate:
 
  > ~/.inception/out/inception/device/myconfig/update.zip
 
-Which is an OTA android update that you can install in several ways.
+Which is an OTA android update that you can install in [several ways](https://github.com/tgalal/inception/wiki/Prerequisites#for-installing-the-update-package).
 
 **Hint**
 You will find the full config that generated the OTA package at:
