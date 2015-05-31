@@ -241,6 +241,13 @@ class Config(object):
     def isBase(self):
         return len(self.getIdentifier().split(".")) == 2
 
+    def getOutPath(self):
+        if self.isBase():
+            raise ValueError("Base configs have no out paths: %s "% self.getIdentifier())
+
+        a,b,c = self.getIdentifier().split(".")
+        return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
+
 
 class ConfigProperty(object):
     def __init__(self, config, key, value):
