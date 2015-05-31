@@ -139,6 +139,11 @@ class MakeArgParser(InceptionArgParser):
         #     raise InceptionArgParserException(e)
 
         self.config = self.configTreeParser.parseJSON(code)
+
+        if self.config.get("__abstract__", False, directOnly=True):
+            print("Won't make abstract config %s" % code)
+            return True
+
         self.configDir = os.path.dirname(self.config.getSource())
         # self.config = self.configurator.getConfig()
         # self.configDir = os.path.dirname(self.configurator.getConfigPath())
