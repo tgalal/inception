@@ -8,7 +8,11 @@ class CacheMaker(Maker):
         super(CacheMaker, self).__init__(config, "cache")
 
     def make(self, workDir, outDir):
-        make_ext4fsBin = self.getCommonConfigValue("tools.make_ext4fs.bin")
+        make_ext4fsBinProp = self.getCommonConfigProperty("tools.make_ext4fs.bin")
+        assert make_ext4fsBinProp.getValue(), "must set common.tools.make_ext4fs.bin to create cache img"
+
+        make_ext4fsBin = make_ext4fsBinProp.resolveAsRelativePath()
+
         cacheSize = self.getMakeConfigValue("size")
         assert cacheSize, "cache.size is not set, can't create cache img"
         cacheSparsed= self.getMakeConfigValue("sparsed", False)
