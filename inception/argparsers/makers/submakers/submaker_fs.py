@@ -49,12 +49,17 @@ class FsSubmaker(Submaker):
 
         for src in fsSourcePaths:
             srcPath, pathInfo = src
+
+            if not "destination" in pathInfo:
+                print("Error destination for %s is not set" % srcPath)
+                sys.exit(1)
+
+            destPath = pathInfo["destination"]
+            if destPath.startswith("/"):
+                destPath = destPath[1:]
+
             if os.path.exists(srcPath):
-                if "destination" in pathInfo:
-                    destPath = pathInfo["destination"]
-                    if destPath.startswith("/"):
-                        destPath = destPath[1:]
-                    target = os.path.join(workDir, destPath)
+                target = os.path.join(workDir, destPath)
 
                     # if not os.path.exists(srcPath):
                     #     if destPath not in written:
@@ -62,12 +67,9 @@ class FsSubmaker(Submaker):
                     #         sys.exit(1)
                     #     else:
                     #         continue
-                    self._recursiveOverwrite(srcPath, target)
-                    written.append(destPath)
-                else:
-                    print("Error destination for %s is not set" % srcPath)
-                    sys.exit(1)
-            elif not "__depend__" in pathInfo or not pathInfo["__depend__"]:
+                self._recursiveOverwrite(srcPath, target)
+                written.append(destPath)
+            elif not destPath in written and (not "__depend__" in pathInfo or not pathInfo["__depend__"]):
                 raise Exception("%s does not exits " % srcPath)
 
 
