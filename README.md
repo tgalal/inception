@@ -81,7 +81,9 @@ Inspect that file, override any properties in your own config, run make again an
 
 # Installation
 
-req: swig, libssl-dev
+req:
+for m2crypto: swig, libssl-dev and missing openssl headers error : see https://github.com/martinpaljak/M2Crypto/issues/62
+
 
 # License:
 
