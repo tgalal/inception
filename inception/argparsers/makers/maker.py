@@ -1,5 +1,4 @@
 import abc
-from inception.config.config import ConfigProperty
 class Maker(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, config, key):
@@ -28,9 +27,7 @@ class Maker(object):
         return self.config.getProperty(key, default)
 
     def getMakeConfigValue(self, key, default = None, directOnly = False):
-        res = self.getMakeConfigProperty(key, default, directOnly)
-        if res and res.__class__ == ConfigProperty:
-                return res.getValue()
+        res = self.config.get(self.getKey() + "." + key, default, directOnly)
         return res
 
     def getMakeConfigProperty(self, key, default = None, directyOnly = False):

@@ -1,5 +1,4 @@
 import subprocess, os
-from constants import InceptionConstants
 
 class InceptionExecCmdFailedException(Exception):
     pass

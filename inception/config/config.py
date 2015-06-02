@@ -3,6 +3,14 @@ import os
 import re
 from inception.constants import InceptionConstants
 import sys
+from inception.argparsers.makers.maker_cache import CacheMaker
+from inception.argparsers.makers.maker_update import UpdateMaker
+from inception.argparsers.makers.maker_odin import OdinMaker
+from inception.argparsers.makers.maker_image_boot import BootImageMaker
+from inception.argparsers.makers.maker_image_recovery import RecoveryImageMaker
+import logging
+
+logger = logging.getLogger(__name__)
 
 if sys.version_info >= (3,0):
     unicode = str
@@ -266,6 +274,24 @@ class Config(object):
 
         a,b,c = self.getIdentifier().split(".")
         return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
+
+    def make(self, workDir):
+        makersMap = [
+            ("update", UpdateMaker),
+            ("boot", BootImageMaker),
+            ("recovery", RecoveryImageMaker),
+            ("cache", CacheMaker),
+            ("odin", OdinMaker)
+         ]
+
+        for makerItem in makersMap:
+            key, Maker = makerItem
+            if self.get(key + ".__make__", True):
+                m = Maker(self)
+                m.make(workDir, self.getOutPath())
+            else:
+                logger.info("Skipping '%s' as it's disabled in config" % key)
+
 
 
 class ConfigProperty(object):

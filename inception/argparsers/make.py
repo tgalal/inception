@@ -2,14 +2,7 @@ from inception.argparsers.argparser import InceptionArgParser
 from inception.argparsers.exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
 from inception.constants import InceptionConstants
 from inception.config import ConfigTreeParser, DotIdentifierResolver
-
-from .makers.maker_image_boot import BootImageMaker
-from .makers.maker_image_recovery import RecoveryImageMaker
-from .makers.maker_update import UpdateMaker
-from .makers.maker_cache import CacheMaker
-from .makers.maker_odin import OdinMaker
-
-import sys, os, json, shutil, threading, logging
+import os, shutil, threading, logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,25 +29,12 @@ class MakeArgParser(InceptionArgParser):
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
         self.configTreeParser = ConfigTreeParser(identifierResolver)
-
-        self.makersMap = [
-            ("update", UpdateMaker),
-            ("boot", BootImageMaker),
-            ("recovery", RecoveryImageMaker),
-            ("cache", CacheMaker),
-            ("odin", OdinMaker)
-        ]
-
         self.threads = []
 
     def process(self):
         super(MakeArgParser, self).process()
         self.threaded = self.args["threaded"]
 
-
-        # if self.args["threaded"]:
-        #     print "Threading not implemented yet"
-        #     sys.exit(1)
         if self.args["all"]:
             return self.makeAll()
 
@@ -72,7 +52,7 @@ class MakeArgParser(InceptionArgParser):
             maker = MakeArgParser()
 
             try:
-                result[code] = maker.make(code, noCache = self.args["no_cache"])
+                result[code] = maker.make(code)
             except:
                 result[code] = False
 
@@ -128,11 +108,6 @@ class MakeArgParser(InceptionArgParser):
             self.model,
             self.variant))
         self.workDir = self.getWorkDir()
-        # try:
-        #     self.configurator = Configurator(code)
-        # except ConfigNotFoundException as e:
-        #     raise InceptionArgParserException(e)
-
         self.config = self.configTreeParser.parseJSON(code)
 
         if self.config.get("__abstract__", False, directOnly=True):
@@ -140,9 +115,6 @@ class MakeArgParser(InceptionArgParser):
             return True
 
         self.configDir = os.path.dirname(self.config.getSource())
-        # self.config = self.configurator.getConfig()
-        # self.configDir = os.path.dirname(self.configurator.getConfigPath())
-
 
         self.d("Cleaning work dir " + self.workDir)
         if os.path.exists(self.workDir):
@@ -154,15 +126,7 @@ class MakeArgParser(InceptionArgParser):
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
         os.makedirs(outDir)
-
-
-        for makerItem in self.makersMap:
-            key, Maker = makerItem
-            if self.config.get(key + ".__make__", True):
-                m = Maker(self.config)
-                m.make(self.workDir, outDir)
-            else:
-                self.d("Skipping '%s' as it's disabled in config" % key)
+        self.config.make(self.workDir)
 
         self.writeUsedConfig()
 
