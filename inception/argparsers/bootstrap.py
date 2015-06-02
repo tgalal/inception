@@ -73,7 +73,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig = self.createNewConfig(self.args["variant"], self.args["variant"], self.config)
 
 
-        self.setupDirPaths(self.args["variant"])
+        self.setupDirPaths()
         self.d("Creating dirs")
         self.createDirs()
         
@@ -220,9 +220,9 @@ class BootstrapArgParser(InceptionArgParser):
                 self.newConfig.set("%s.img.dt_size" % imgType, int(value))
 
 
-        self.newConfig.set("%s.img.kernel" % imgType, kernel)
-        self.newConfig.set("%s.img.ramdisk" % imgType, ramdiskDir)
-        self.newConfig.set("%s.img.dt" % imgType, dt)
+        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(kernel, self.variantDir))
+        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(ramdiskDir, self.variantDir))
+        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(dt, self.variantDir))
 
 
 
