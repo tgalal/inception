@@ -79,6 +79,9 @@ You will find the full config that generated the OTA package at:
 
 Inspect that file, override any properties in your own config, run make again and see your changes easily going through.
 
+# Installation
+
+req: swig, libssl-dev
 
 # License:
 
