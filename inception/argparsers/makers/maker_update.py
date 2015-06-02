@@ -32,7 +32,7 @@ class UpdateMaker(Maker):
         self.makeUpdateZip(rootFS, outDir)
 
     def isMakeTrue(self, key):
-        return self.getMakeConfigValue(key + ".make", True)
+        return self.getMakeConfigValue(key + ".__make__", True)
 
     def makeFS(self, fsPath):
         logger.info("Making FS")

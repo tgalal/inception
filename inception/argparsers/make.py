@@ -156,7 +156,7 @@ class MakeArgParser(InceptionArgParser):
 
         for makerItem in self.makersMap:
             key, Maker = makerItem
-            if self.config.get(key + ".make", True):
+            if self.config.get(key + ".__make__", True):
                 m = Maker(self.config)
                 m.make(self.workDir, outDir)
             else:

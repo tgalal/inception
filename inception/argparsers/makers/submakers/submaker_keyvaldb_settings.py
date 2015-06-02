@@ -6,6 +6,10 @@ class SettingsKeyValDBSubmaker(KeyValDBSubmaker):
     def make(self, workDir):
         allSettings = self.getConfigValue(".")
         for name, dbData in allSettings.items():
+            if name == "__make__":
+                continue
+            elif "__make__" in dbData and dbData["__make__"] is False:
+                continue
             path = workDir + dbData["path"]
 
             if not "version" in dbData:

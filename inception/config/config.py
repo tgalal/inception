@@ -17,16 +17,16 @@ class Config(object):
             "name":  None
         },
         "boot": {
-            "make": False
+            "__make__": False
         },
         "recovery": {
-            "make": False
+            "__make__": False
         },
         "cache": {
-            "make": False
+            "__make__": False
         },
         "update": {
-            "make": True,
+            "__make__": True,
             "keys": None,
             "network": {
                 "aps": []
@@ -49,9 +49,9 @@ class Config(object):
         config.set("device.name", name)
         config.set("__extends__", base.getIdentifier() if base else None)
         if base:
-            config.set("boot.make", base.get("boot.make", False))
-            config.set("recovery.make", base.get("recovery.make", False))
-            config.set("cache.make", base.get("cache.make", False))
+            config.set("boot.__make__", base.get("boot.__make__", False))
+            config.set("recovery.__make__", base.get("recovery.__make__", False))
+            config.set("cache.__make__", base.get("cache.__make__", False))
 
             config.set("update.restore_stock", base.get("update.restore_stock", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
