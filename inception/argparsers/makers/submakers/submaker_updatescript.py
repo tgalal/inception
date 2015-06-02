@@ -70,7 +70,7 @@ class UpdatescriptSubmaker(Submaker):
                 extractedDirs.append(destPath)
             else:
                 dirname = os.path.dirname(destPath)
-                if dirname not in extractedDirs:
+                if not dirname.startswith("/dev/") and dirname not in extractedDirs:
                     u.extractDir(os.path.dirname(path), dirname)
                     extractedDirs.append(dirname)
                 u.extractFile(path, destPath)
