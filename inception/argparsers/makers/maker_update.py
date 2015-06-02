@@ -29,6 +29,9 @@ class UpdateMaker(Maker):
         self.makeUpdateScript(rootFS)
         self.makeUpdateZip(rootFS, outDir)
 
+    def isMakeTrue(self, key):
+        return self.getMakeConfigValue(key + ".make", True)
+
     def makeFS(self, fsPath):
         logger.info("Making FS")
         if not os.path.exists(fsPath):
@@ -38,15 +41,19 @@ class UpdateMaker(Maker):
         smaker.make(fsPath)
 
     def makeSettings(self, workDir):
-        logger.info("Making Settings databases")
-        smaker = SettingsKeyValDBSubmaker(self, "settings")
-        smaker.make(workDir)
+        if self.isMakeTrue("settings"):
+            logger.info("Making Settings databases")
+            smaker = SettingsKeyValDBSubmaker(self, "settings")
+            smaker.make(workDir)
+        else:
+            self.setConfigValue("update.settings", {"__override__": True})
 
     def makeWPASupplicant(self, workDir):
-        logger.info("Making WPASupplicant")
-        wpaSupplicantDir = os.path.join(workDir, "data", "misc", "wifi")
-        smaker = WifiSubmaker(self, "network")
-        smaker.make(wpaSupplicantDir)
+        if self.isMakeTrue("network"):
+            logger.info("Making WPASupplicant")
+            wpaSupplicantDir = os.path.join(workDir, "data", "misc", "wifi")
+            smaker = WifiSubmaker(self, "network")
+            smaker.make(wpaSupplicantDir)
 
     def makeUpdateScript(self, updatePkgDir):
         logger.info("Making Update script")
@@ -54,14 +61,16 @@ class UpdateMaker(Maker):
         smaker.make(updatePkgDir)
 
     def makeProps(self, workDir):
-        logger.info("Making /data/property")
-        smaker = PropertySubmaker(self, "property")
-        smaker.make(workDir)
+        if self.isMakeTrue("property"):
+            logger.info("Making /data/property")
+            smaker = PropertySubmaker(self, "property")
+            smaker.make(workDir)
 
     def makeAdbKeys(self, workDir):
-        logger.info("Making ADB keys")
-        smaker = AdbKeysSubmaker(self, "adb")
-        smaker.make(workDir)
+        if self.isMakeTrue("adb"):
+            logger.info("Making ADB keys")
+            smaker = AdbKeysSubmaker(self, "adb")
+            smaker.make(workDir)
 
     def makeStockRecovery(self, workDir):
         if self.getMakeConfigValue("restore_stock", False):
@@ -82,9 +91,10 @@ class UpdateMaker(Maker):
             self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
 
     def makeApps(self, workDir):
-        logger.info("Making Apps")
-        smaker = AppsSubmaker(self, "apps")
-        smaker.make(workDir)
+        if self.isMakeTrue("apps"):
+            logger.info("Making Apps")
+            smaker = AppsSubmaker(self, "apps")
+            smaker.make(workDir)
 
     def makeUpdateZip(self, work, outDir):
         logger.info("Making Update zip")

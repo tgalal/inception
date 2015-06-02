@@ -47,6 +47,9 @@ class FsSubmaker(Submaker):
 
         written = []
 
+        # import json
+        # print(json.dumps(fsSourcePaths, indent=4))
+
         for src in fsSourcePaths:
             srcPath, pathInfo = src
 
@@ -69,9 +72,13 @@ class FsSubmaker(Submaker):
                     #         continue
                 self._recursiveOverwrite(srcPath, target)
                 written.append(destPath)
-            elif not destPath in written and (not "__depend__" in pathInfo or not pathInfo["__depend__"]):
-                raise Exception("%s does not exits " % srcPath)
+            elif not destPath in written:
 
+                if "__depend__" in pathInfo and pathInfo["__depend__"]:
+                    if self.getConfigValue(pathInfo["__depend__"]):
+                        raise Exception("%s does not exits " % srcPath)
+                else:
+                    raise Exception("%s does not exits " % srcPath)
 
     def _recursiveOverwrite(self, src, dest, ignore=None):
         if os.path.isdir(src):
