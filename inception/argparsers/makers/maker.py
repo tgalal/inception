@@ -40,6 +40,9 @@ class Maker(object):
     def setConfigValue(self, key, value):
         return self.config.set(key, value)
 
+    def deleteConfigProperty(self, key):
+        return self.config.delete(key)
+
     @abc.abstractmethod
     def make(self, workDir, outDir):
         pass

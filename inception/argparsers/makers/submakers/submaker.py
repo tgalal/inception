@@ -41,6 +41,9 @@ class Submaker(object):
     def setConfigValue(self, key, value):
         return self.maker.setConfigValue(key, value)
 
+    def deleteConfigProperty(self, key):
+        return self.maker.deleteConfigProperty(key)
+
 class TmpWorkDir(object):
     def __enter__(self):
         self.__path = tempfile.mkdtemp()

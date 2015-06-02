@@ -182,8 +182,12 @@ class Config(object):
 
         return False
 
+
     def set(self, key, value):
         self.__setProperty(key, value)
+
+    def delete(self, key):
+        self.__delProperty(key)
 
     def c__setProperty(self, keys, item, d = None):
         d = d if d is not None else self.__contextData
@@ -194,6 +198,21 @@ class Config(object):
             self.__setProperty(rest, item, d[key])
         else:
             d[keys] = item
+
+    def __delProperty(self, keys, d):
+        d = d if d is not None else self.__contextData
+        dissect = re.split(r'(?<!\\)\.', keys, 1)
+
+        if len(dissect) > 1:
+            key, rest = dissect
+            key = key.replace("\.", ".")
+            if key not in d or type(d[key]) is not dict:
+                d[key] = {}
+            self.__delProperty(rest, d[key])
+        else:
+            del d[keys.replace("\.", ".")]
+            if not self.isOrphan():
+                self.getParent().delete(keys)
 
     def __setProperty(self, keys, item, d = None):
         d = d if d is not None else self.__contextData
