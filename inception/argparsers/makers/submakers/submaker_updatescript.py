@@ -21,13 +21,6 @@ class UpdatescriptSubmaker(Submaker):
         if  self.getConfigValue("script.format_data", False):
             u.rm("/data", recursive=True)
 
-        #### extract our FS
-        # for f in os.listdir(updatePkgDir):
-        #     target = "/" + f
-        #     if os.path.isdir(os.path.join(updatePkgDir,f)):
-        #         u.extractDir(target[1:], target)
-        #     else:
-        #         u.extractFile(target[1:], target)
 
         for path in self.getConfigValue("files.rm", []):
             if not path.startswith("/"):
@@ -52,7 +45,7 @@ class UpdatescriptSubmaker(Submaker):
             elif path[0] == "/":
                 destPath = path
             else:
-                raise Exception("No desitination specified for %s" % path)
+                raise Exception("No destination specified for %s" % path)
             if not destPath.startswith("/"):
                 destPath = "/" + destPath
 
@@ -101,26 +94,34 @@ class UpdatescriptSubmaker(Submaker):
             u.setPostExecutionWait(wait)
 
         #### post, pre install scripts
-        pre, post = self.getConfigProperty("script.pre", None), self.getConfigProperty("script.post", None)
-        preScript = postScript = ""
-        if pre.getValue():
-            preFile = pre.getConfig().resolveRelativePath(pre.getValue())
-            with open(preFile, "r") as preFileHandler:
-                preScript = preFileHandler.read()
 
-        if post.getValue():
-            postFile = post.getConfig().resolveRelativePath(post.getValue())
-            with open(postFile, "r") as postFileHandler:
-                postScript = postFileHandler.read()
+        postscripts = self.__getFullResolvedInstScriptList("post")
+        prescripts = self.__getFullResolvedInstScriptList("pre")
 
         updateScriptDir = os.path.join(updatePkgDir, "META-INF", "com","google","android")
         os.makedirs(updateScriptDir)
         with open(os.path.join(updateScriptDir, "updater-script"), "w") as updateScriptFile:
-            if preScript:
-                updateScriptFile.write(preScript)
-                updateScriptFile.write("\n")
+            for script in prescripts:
+                with open(script, "r") as prescriptFile:
+                    updateScriptFile.write("\n")
+                    updateScriptFile.write(prescriptFile.read())
+
             updateScriptFile.write(u.generate(showProgress=self.getConfigValue("script.progress", True)))
 
-            if postScript:
-                updateScriptFile.write("\n")
-                updateScriptFile.write(postScript)
+            for script in postscripts:
+                with open(script, "r") as postscriptFile:
+                    updateScriptFile.write("\n")
+                    updateScriptFile.write(postscriptFile.read())
+
+    def __getFullResolvedInstScriptList(self, key):
+        result = []
+        currConfig = self.getConfigProperty("script." + key).getConfig()
+        result.extend(self.__getResolvedInstScriptsList(key, currConfig))
+        while not currConfig.isOrphan():
+            currConfig = currConfig.getParent()
+            result.extend(self.__getResolvedInstScriptsList(key, currConfig))
+        return result
+
+    def __getResolvedInstScriptsList(self, key, config):
+        curr = config.getProperty("update.script." + key, [], directOnly=True)
+        return [curr.resolveRelativePath(script) for script in curr.getValue()]
