@@ -7,6 +7,7 @@ from .submakers.submaker_property import PropertySubmaker
 from .submakers.submaker_updatezip import UpdatezipSubmaker
 from .submakers.submaker_adbkeys import AdbKeysSubmaker
 from .submakers.submaker_apps import AppsSubmaker
+from .submakers.submaker_supersu import SuperSuSubmaker
 import shutil
 import os
 import logging
@@ -25,6 +26,7 @@ class UpdateMaker(Maker):
         self.makeSettings(rootFS)
         self.makeAdbKeys(rootFS)
         self.makeStockRecovery(rootFS)
+        self.makeRoot(rootFS)
         self.makeApps(rootFS)
         self.makeUpdateScript(rootFS)
         self.makeUpdateZip(rootFS, outDir)
@@ -39,6 +41,24 @@ class UpdateMaker(Maker):
 
         smaker = FsSubmaker(self, "files")
         smaker.make(fsPath)
+
+
+    def makeRoot(self, fsPath):
+        rootMethod = self.getMakeConfigValue("root_method", None)
+
+        if rootMethod:
+            logger.info("Selected root method: %s" % rootMethod)
+            if rootMethod == "supersu":
+                return self.makeSuperSu(fsPath)
+
+            raise ValueError("Unknown root method %s" % rootMethod)
+
+
+    def makeSuperSu(self, fsPath):
+        if self.isMakeTrue("supersu"):
+            logger.info("Making SuperSU")
+            smaker = SuperSuSubmaker(self, ".")
+            smaker.make(fsPath)
 
     def makeSettings(self, workDir):
         if self.isMakeTrue("settings"):
