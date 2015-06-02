@@ -88,3 +88,16 @@ for m2crypto: swig, libssl-dev and missing openssl headers error : see https://g
 # License:
 
 inception is licensed under the GPLv3+: http://www.gnu.org/licenses/gpl-3.0.html.
+
+---
+
+```
+ui_print("");
+ui_print(".__                            __             .___");
+ui_print("|__| ____   ____  ____ _______/  |_  ____   __| _/");
+ui_print("|  |/    \_/ ___\/ __ \____ \   __\/ __ \ / __ | ");
+ui_print("|  |   |  \  \__\  ___/|  |_> >  | \  ___// /_/ | ");
+ui_print("|__|___|  /\___  >___  >   __/|__|  \___  >____ | ");
+ui_print("        \/     \/    \/|__|             \/     \/ ");
+ui_print("");
+```
