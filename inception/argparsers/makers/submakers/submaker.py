@@ -1,4 +1,7 @@
 import abc
+import tempfile
+import shutil
+import os
 class Submaker(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, maker, key):
@@ -11,6 +14,9 @@ class Submaker(object):
     @abc.abstractmethod
     def make(self, workDir):
         pass
+
+    def newtmpWorkDir(self):
+        return TmpWorkDir()
 
     def getFSPath(self):
         return self.maker.getFSPath()
@@ -34,3 +40,12 @@ class Submaker(object):
 
     def setConfigValue(self, key, value):
         return self.maker.setConfigValue(key, value)
+
+class TmpWorkDir(object):
+    def __enter__(self):
+        self.__path = tempfile.mkdtemp()
+        return self.__path
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if os.path.exists(self.__path):
+            shutil.rmtree(self.__path)
