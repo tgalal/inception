@@ -7,6 +7,7 @@ from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 import os
 import tempfile
+import adb as _adb
 logger = logging.getLogger(__name__)
 
 class LearnArgParser(InceptionArgParser):
@@ -81,14 +82,23 @@ class LearnArgParser(InceptionArgParser):
             logger.warning("Config does not contain settings data, or overrides settings with no data")
 
         for identifier, data in currSettings.items():
+            if identifier == "__make__":
+                continue
             path = data["path"]
             settingsResult[identifier] = {
                 "path": path,
             }
 
             adb.pull(path, dbPath)
-            adb.pull(path + "-shm", dbPathShm)
-            adb.pull(path + "-wal", dbPathWal)
+            try:
+                adb.pull(path + "-shm", dbPathShm)
+            except _adb.usb_exceptions.AdbCommandFailureException:
+                pass
+
+            try:
+                adb.pull(path + "-wal", dbPathWal)
+            except (_adb.usb_exceptions.AdbCommandFailureException, _adb.usb_exceptions.ReadFailedError):
+                pass
 
             settingsFactory = SettingsDatabaseFactory(dbPath)
             settingsResult[identifier]["version"] = settingsFactory.getVersion()
