@@ -57,6 +57,10 @@ class UpdatescriptSubmaker(Submaker):
             if "__depend__" in pathData:
                 if self.getMaker().getConfig().get(pathData["__depend__"]) is None:
                     continue
+                else:
+                    dependTargetMake = self.getMaker().getConfig().get(pathData["__depend__"] + ".__make__", True)
+                    if not dependTargetMake:
+                        continue
             if not os.path.exists(localPath):
                     raise Exception("Cannot set permissions for a missing file: " + localPath)
 
