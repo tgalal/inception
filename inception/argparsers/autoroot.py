@@ -15,8 +15,10 @@ class AutorootArgParser(InceptionArgParser):
     def __init__(self):
         super(AutorootArgParser, self).__init__(description = "Autoroot mode cmd")
 
-        requiredOpts = self.add_argument_group("Required args")
-        requiredOpts.add_argument('-b', '--base', required = True, action = "store")
+        requiredOpts = self.add_argument_group("Required args").add_mutually_exclusive_group(required=True)
+        requiredOpts.add_argument('-b', '--base', action = "store")
+        requiredOpts.add_argument('-v', "--variant", action = "store")
+
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -26,9 +28,14 @@ class AutorootArgParser(InceptionArgParser):
 
     def process(self):
         super(AutorootArgParser, self).process()
-        config = self.configTreeParser.parseJSON(self.args["base"])
 
-        config = Config.new(self.args["base"] + ".autoroot", "autoroot", config)
+        identifier = self.args["base"] or self.args["variant"]
+
+        config = self.configTreeParser.parseJSON(identifier)
+
+        autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
+
+        config = Config.new(autorootBase + ".autoroot", "autoroot", config)
         if os.path.exists(config.getOutPath()):
             shutil.rmtree(config.getOutPath())
 
@@ -46,7 +53,7 @@ class AutorootArgParser(InceptionArgParser):
         config.set("update.script.format_data", False)
 
         if not config.get("recovery.stock"):
-            print("Autoroot requires having recovery.stock set, and it's not for %s" % self.args["base"])
+            print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
             sys.exit(1)
 
         with FileTools.newTmpDir() as workDir:
