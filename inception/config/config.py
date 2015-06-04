@@ -61,7 +61,7 @@ class Config(object):
             config.set("recovery.__make__", base.get("recovery.__make__", False))
             config.set("cache.__make__", base.get("cache.__make__", False))
 
-            config.set("update.restore_stock", base.get("update.restore_stock", False))
+            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config

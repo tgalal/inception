@@ -93,7 +93,7 @@ class UpdateMaker(Maker):
             smaker.make(workDir)
 
     def makeStockRecovery(self, workDir):
-        if self.getMakeConfigValue("restore_stock", False):
+        if self.getMakeConfigValue("restore_stock_recovery", False):
             logger.info("Making Stock recovery")
             stockRecProp = self.getConfig().getProperty("recovery.stock")
             assert stockRecProp.getValue() is not None, "recovery.stock is not specified"
