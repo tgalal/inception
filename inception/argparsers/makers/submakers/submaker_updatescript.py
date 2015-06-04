@@ -54,7 +54,7 @@ class UpdatescriptSubmaker(Submaker):
 
             localPath = updatePkgDir + "/" + path
 
-            if "__depend__" in pathData:
+            if "__depend__" in pathData and pathData["__depend__"]:
                 if self.getMaker().getConfig().get(pathData["__depend__"]) is None:
                     continue
                 else:
