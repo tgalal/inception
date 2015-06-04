@@ -16,8 +16,21 @@ class AppsSubmaker(Submaker):
         apps = self.getConfigValue(".", {})
         for pkgName, data in apps.items():
             apkPath = self.getConfigProperty(pkgName.replace(".", "\.") + ".apk").resolveAsRelativePath()
-            patchesProp = self.getConfigProperty(pkgName.replace(".", "\.") + ".patches", [], directOnly=True) #direct patches for now
-            patches = patchesProp.getValue()
+            patchesList = []
+
+            curr = self.getMaker().getConfig()
+            patchesKey = "update.apps." + pkgName.replace(".", "\.") + ".patches"
+            currPatches = curr.get(patchesKey, [], directOnly=True)
+            patchesList.extend([curr.resolveRelativePath(patch) for patch in currPatches if patch != "__override__"])
+            if not "__override__" in currPatches:
+                while not curr.isOrphan():
+                    curr = curr.getParent()
+                    currPatches = curr.get(patchesKey, [], directOnly=True)
+                    patchesList.extend([curr.resolveRelativePath(patch) for patch in currPatches if patch != "__override__"])
+                    if "__override__" in currPatches:
+                        break
+
+
             dest = "/data/app"
             if "destination" in data:
                 dest = data["destination"]
@@ -31,7 +44,7 @@ class AppsSubmaker(Submaker):
             if not os.path.exists(os.path.dirname(localDest)):
                 os.makedirs(os.path.dirname(localDest))
 
-            if len(patches):
+            if len(patchesList):
                 if not self.patchTools:
                     apkTool = self.getCommonConfigProperty("tools.apktool.bin", None)
                     assert apkTool.getValue(), "Can't patch APK without apktool. Please set common.tools.apktool.bin"
@@ -52,7 +65,7 @@ class AppsSubmaker(Submaker):
                               self.patchTools.apkTool,
                               self.patchTools.frameworks,
                               apkPath,
-                              [patchesProp.resolveRelativePath(patch) for patch in patches],
+                              patchesList,#[patchesProp.resolveRelativePath(patch) for patch in patches],
                               localDest
                 )
             else:
