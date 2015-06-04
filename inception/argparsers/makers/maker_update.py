@@ -2,12 +2,13 @@ from .maker import Maker
 from .submakers.submaker_wifi import WifiSubmaker
 from .submakers.submaker_fs import FsSubmaker
 from .submakers.submaker_updatescript import UpdatescriptSubmaker
-from .submakers.submaker_keyvaldb_settings import SettingsKeyValDBSubmaker
 from .submakers.submaker_property import PropertySubmaker
 from .submakers.submaker_updatezip import UpdatezipSubmaker
 from .submakers.submaker_adbkeys import AdbKeysSubmaker
 from .submakers.submaker_apps import AppsSubmaker
 from .submakers.submaker_supersu import SuperSuSubmaker
+from .submakers.submaker_databases import DatabasesSubmaker
+from .submakers.submaker_settings import SettingsSubmaker
 import shutil
 import os
 import logging
@@ -24,6 +25,7 @@ class UpdateMaker(Maker):
         self.makeProps(rootFS)
         self.makeWPASupplicant(rootFS)
         self.makeSettings(rootFS)
+        self.makeDatabases(rootFS)
         self.makeAdbKeys(rootFS)
         self.makeStockRecovery(rootFS)
         self.makeRoot(rootFS)
@@ -62,11 +64,19 @@ class UpdateMaker(Maker):
 
     def makeSettings(self, workDir):
         if self.isMakeTrue("settings"):
-            logger.info("Making Settings databases")
-            smaker = SettingsKeyValDBSubmaker(self, "settings")
+            logger.info("Making Settings")
+            smaker = SettingsSubmaker(self, "settings")
             smaker.make(workDir)
         else:
             self.setConfigValue("update.settings", {"__override__": True})
+
+    def makeDatabases(self, workDir):
+        if self.isMakeTrue("databases"):
+            logger.info("Making databases")
+            smaker = DatabasesSubmaker(self, "databases")
+            smaker.make(workDir)
+        else:
+            self.setConfigValue("update.databases", {"__override__": True})
 
     def makeWPASupplicant(self, workDir):
         if self.isMakeTrue("network"):
