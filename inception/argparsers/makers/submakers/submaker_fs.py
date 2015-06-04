@@ -19,7 +19,7 @@ class FsSubmaker(Submaker):
 
         currConfig = self.getMaker().getConfig()
         for path in lookupFPaths:
-            appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else path
+            appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else currConfig.resolveRelativePath(path)
             pathInfo = currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))
             if not "destination" in pathInfo and path[0] == "/":
                 pathInfo["destination"] = path
@@ -32,7 +32,7 @@ class FsSubmaker(Submaker):
                 key = "update.files.add.%s" % (path.replace(".", "\."))
                 pathInfo = currConfig.get(key, None)
                 if pathInfo:
-                    appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else path
+                    appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else currConfig.resolveRelativePath(path)
                     if not "destination" in pathInfo and path[0] == "/":
                         pathInfo["destination"] = path
                         currConfig.set(key, pathInfo)
