@@ -7,6 +7,7 @@ from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 import os
 import tempfile
+from inception.common.configsyncer import ConfigSyncer
 import adb as _adb
 logger = logging.getLogger(__name__)
 
@@ -66,9 +67,19 @@ class LearnArgParser(InceptionArgParser):
 
         return propsDict
 
-
-
     def learnSettings(self):
+        syncer = ConfigSyncer(self.config)
+        diff = syncer.pullAndDiff()
+        return diff
+
+
+
+
+
+
+
+
+    def _learnSettings(self):
         adb = self.getAdb(self.config.get("common.tools.adb.bin"))
         settingsResult = {}
         currSettings = self.config.get("update.settings", {})
