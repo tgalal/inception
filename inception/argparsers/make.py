@@ -3,6 +3,7 @@ from inception.argparsers.exceptions import InceptionArgParserException, MakeUpd
 from inception.constants import InceptionConstants
 from inception.config import ConfigTreeParser, DotIdentifierResolver
 import os, shutil, threading, logging
+from inception.common.configsyncer import ConfigSyncer
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class MakeArgParser(InceptionArgParser):
         targetOpts.add_argument('-v', '--variant',action = "store")
 
         optionalOpts = self.add_argument_group("Optional opts")
+        optionalOpts.add_argument('--learn-settings', action="store_true")
         optionalOpts.add_argument("-t", '--threaded',
             required = False,
             action = "store_true")
@@ -126,6 +128,12 @@ class MakeArgParser(InceptionArgParser):
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
         os.makedirs(outDir)
+
+
+        if self.args["learn_settings"]:
+            syncer = ConfigSyncer(self.config)
+            syncer.applyDiff(syncer.pullAndDiff())
+
         self.config.make(self.workDir)
 
         self.writeUsedConfig()
