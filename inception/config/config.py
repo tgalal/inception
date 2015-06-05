@@ -194,6 +194,14 @@ class Config(object):
     def set(self, key, value):
         self.__setProperty(key, value)
 
+
+    def setRecursive(self, key, val):
+        if type(val) is dict:
+            for k,v in val.items():
+                self.setRecursive(key + "." + k, v)
+        else:
+            self.set(key, val)
+
     def delete(self, key):
         self.__delProperty(key)
 
