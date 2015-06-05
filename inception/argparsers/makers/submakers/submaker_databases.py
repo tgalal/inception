@@ -12,6 +12,11 @@ class DatabasesSubmaker(Submaker):
                 continue
             elif "__make__" in dbData and dbData["__make__"] is False:
                 continue
+            elif "__depend__" in dbData:
+                targetDep = self.getMaker().getConfig().get(dbData["__depend__"], None)
+                if not targetDep or ("__make__" in targetDep and targetDep["__make__"] == False):
+                    continue
+
             path = workDir + dbData["path"]
             if not "version" in dbData:
                raise ValueError("Must specify db version for %s " % name)
