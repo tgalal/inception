@@ -14,32 +14,35 @@ class SettingsSubmaker(Submaker):
             if not "schema" in dbData:
                 raise ValueError("Must specify db schema for %s" % name)
 
+            schemaPath = self.getConfigProperty(name.replace(".", "\.") + ".schema").resolveAsRelativePath()
+
             targetDatabaseConfigItem = {
                 "path": dbData["path"],
-                "schema": dbData["schema"],
+                "schema": schemaPath,
                 "version": dbData["version"],
                 "data": {}
             }
             colKey = "name" if "col_key" not in dbData else dbData["col_key"]
             colVal = "value" if "col_val" not in dbData else dbData["col_val"]
 
-            db = Database(dbData["schema"])
+            with open(schemaPath, "r") as schemaFile:
+                db = Database(schemaFile.read())
 
-            for tableName, data in dbData["data"].items():
-                table = db.getTable(tableName)
-                assert table, "Table %s is not in supplied schema" % tableName
-                if tableName not in targetDatabaseConfigItem["data"]:
-                    targetDatabaseConfigItem["data"][tableName] = []
+                for tableName, data in dbData["data"].items():
+                    table = db.getTable(tableName)
+                    assert table, "Table %s is not in supplied schema" % tableName
+                    if tableName not in targetDatabaseConfigItem["data"]:
+                        targetDatabaseConfigItem["data"][tableName] = []
 
-                for key, val in data.items():
-                    if key.startswith("__") and key.endswith("__"):
-                        continue
-                    targetDatabaseConfigItem["data"][tableName].append({
-                        colKey: key,
-                        colVal: val
-                    })
+                    for key, val in data.items():
+                        if key.startswith("__") and key.endswith("__"):
+                            continue
+                        targetDatabaseConfigItem["data"][tableName].append({
+                            colKey: key,
+                            colVal: val
+                        })
 
-            self.setConfigValue("update.databases.%s" % name.replace(".", "\."), targetDatabaseConfigItem)
+                self.setConfigValue("update.databases.%s" % name.replace(".", "\."), targetDatabaseConfigItem)
 
 
 

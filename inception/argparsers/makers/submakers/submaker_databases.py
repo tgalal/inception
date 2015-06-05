@@ -1,9 +1,9 @@
 from .submaker import Submaker
 import logging
-logger = logging.getLogger(__name__)
 import os
 import sqlite3
 from inception.common.database import Database
+logger = logging.getLogger(__name__)
 class DatabasesSubmaker(Submaker):
     def make(self, workDir):
         allSettings = self.getConfigValue(".")
@@ -16,26 +16,32 @@ class DatabasesSubmaker(Submaker):
             if not "version" in dbData:
                raise ValueError("Must specify db version for %s " % name)
             logger.debug("Making %s" % dbData["path"])
-            schema = None if "schema" not in dbData else dbData["schema"]
 
-            db = Database(schema)
+            schemaPath = self.getConfigProperty(name.replace(".", "\.") + ".schema").resolveAsRelativePath()
 
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path))
+            with open(schemaPath, 'r') as schemaFile:
+                schemaData = schemaFile.read()
+                db = Database(schemaData)
 
-            conn = sqlite3.connect(path)
+                if not os.path.exists(os.path.dirname(path)):
+                    os.makedirs(os.path.dirname(path))
 
-            for tableName, data in dbData["data"].items():
-                table = db.getTable(tableName)
-                assert table, "Table %s is not in supplied schema" % tableName
-                for row in data:
-                    table.createRow(**row)
+                if os.path.exists(path):
+                    os.remove(path)
 
-            conn.executescript("PRAGMA user_version = %s;" % dbData["version"])
-            conn.executescript(dbData["schema"])
-            queries = db.getQueries()
-            for q in queries:
-                conn.execute(q)
+                conn = sqlite3.connect(path)
 
-            conn.commit()
-            conn.close()
+                for tableName, data in dbData["data"].items():
+                    table = db.getTable(tableName)
+                    assert table, "Table %s is not in supplied schema" % tableName
+                    for row in data:
+                        table.createRow(**row)
+
+                conn.executescript("PRAGMA user_version = %s;" % dbData["version"])
+                conn.executescript(schemaData)
+                queries = db.getQueries()
+                for q in queries:
+                    conn.execute(q)
+
+                conn.commit()
+                conn.close()
