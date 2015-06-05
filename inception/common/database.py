@@ -33,6 +33,9 @@ class TableColumn(object):
             else:
                 raise ValueError("Unsupported type %s" % type_)
 
+    def __eq__(self, other):
+        return self.name == other.name and self.type == other.type
+
     def addIndex(self, indexName):
         self.indices.append(TableIndex(self, indexName))
 
@@ -130,6 +133,17 @@ class Table(object):
         for item in self.database.execute(sql).fetchall():
             self.columns.append(TableColumn(self, item[1], item[2]))
 
+    def __eq__(self, other):
+        if len(self.columns) != len(other.columns):
+            return False
+
+        for col in self.columns:
+            if col not in other.columns:
+                return False
+
+        return True
+
+
     def addIndex(self, columnName, indexName):
         self.getColumn(columnName).addIndex(indexName)
 
@@ -208,15 +222,37 @@ class Database(object):
             self.conn.close()
             self.conn = sqlite3.connect(schemaOrDbPath)
 
+        self.setVersion(self._getVersion())
+
         tableNames = [data[0] for data in self.conn.execute(self.__class__.SQL_TABLES).fetchall()]
         for tableName in tableNames:
             self.tables.append(Table(self, tableName))
+
+    def isEqualSchema(self, database):
+        if len(self.getTables()) != len(database.getTables()):
+            return False
+
+        dbTables = database.getTables()
+        for table in self.getTables():
+            if not table in dbTables:
+                return False
+
+        return True
+
+    def getSchema(self):
+        out = ""
+        for row in self.execute("SELECT sql FROM sqlite_master where sql is not null").fetchall():
+            out += row[0] + ";"
+        return out
 
     def setVersion(self, version):
         self.version = version
 
     def getVersion(self):
         return self.version
+
+    def _getVersion(self):
+        return self.conn.execute("pragma user_version").fetchone()[0]
 
     def getQueries(self):
         #return self.queries
