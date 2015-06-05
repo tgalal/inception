@@ -66,6 +66,21 @@ class TableRow(object):
 
             self.cells.append(TableCell(self, col, val))
 
+    def toDict(self):
+        out = {}
+        for cell in self.cells:
+            out[cell.tableColumn.name] = cell.getValue()
+
+        return out
+
+    def getValueFor(self, colName):
+        for cell in self.cells:
+            if cell.tableColumn.name == colName:
+                return cell.getValue()
+
+        raise ValueError("Invalid column name %s" % colName)
+
+
     def toSql(self):
         columns = []
         values = []
@@ -79,6 +94,9 @@ class TableRow(object):
             vals = ",".join(values)
             )
 
+    def __str__(self):
+        return self.toSql()
+
 
 class TableCell(object):
     def __init__(self, tableRow, tableColumn, value):
@@ -86,8 +104,14 @@ class TableCell(object):
         self.tableColumn = tableColumn
         self.value = value
 
+
+    def getValue(self):
+        return self.value
+
     def getSqlValue(self):
         if self.tableColumn.type is str:
+            if self.value is None:
+                return "NULL"
             return "'%s'" % self.value.replace("'", "\'")
         return str(self.value)
 
@@ -95,6 +119,7 @@ class Table(object):
     SQL_INSERT = "INSERT INTO {tableName}({cols}) VALUES({vals});"
     SQL_TABLE_COLS = "PRAGMA table_info({tableName});"
     SQL_TABLE_INDEX = "PRAGMA index_info({indexName});"
+    SQL_SELECT = "SELECT {cols} from {tableName};"
     def __init__(self, database, name):
         self.database = database
         self.name = name
@@ -130,6 +155,19 @@ class Table(object):
     def getRows(self):
         return self.rows
 
+    def selectRows(self, getQuery = False):
+        cols = [col.name for col in self.columns]
+        sql = self.__class__.SQL_SELECT.format(cols = ",".join(cols), tableName = self.name)
+        if getQuery:
+            return sql
+        rows = []
+        for row in self.database.execute(sql).fetchall():
+            dataDict = {}
+            for i in range(0, len(cols)):
+                dataDict[cols[i]] = row[i]
+            rows.append(TableRow(self, **dataDict))
+
+        return rows
 
     def insert(self, **kwargs):
         for key in kwargs.keys():
@@ -154,7 +192,7 @@ class Table(object):
 
 class Database(object):
     SQL_TABLES = "SELECT  name from sqlite_master where type = 'table' and name <> 'sqlite_sequence';"
-    def __init__(self, schema):
+    def __init__(self, schemaOrDbPath):
         self.tables = []
         self.queries = []
         self.version = 0
@@ -162,7 +200,13 @@ class Database(object):
         db = tempfile.mkstemp()[1]
 
         self.conn = sqlite3.connect(db)
-        self.conn.executescript(schema)
+        try:
+            self.conn.executescript(schemaOrDbPath)
+        except sqlite3.OperationalError:
+            if not os.path.exists(schemaOrDbPath):
+                raise
+            self.conn.close()
+            self.conn = sqlite3.connect(schemaOrDbPath)
 
         tableNames = [data[0] for data in self.conn.execute(self.__class__.SQL_TABLES).fetchall()]
         for tableName in tableNames:
@@ -183,6 +227,8 @@ class Database(object):
 
         return queries
 
+    def getTables(self):
+        return self.tables
 
     def execute(self, script):
         return self.conn.execute(script)
