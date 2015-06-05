@@ -2,6 +2,7 @@ from .argparser import InceptionArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
 from inception.inceptionobject import InceptionExecCmdFailedException
+from inception.common.configsyncer import ConfigSyncer
 import os, shutil
 from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
 
@@ -16,6 +17,7 @@ class BootstrapArgParser(InceptionArgParser):
         #requiredOpts.add_argument('-m', '--model', required = True, action = "store")
 
         optionalOpts = self.add_argument_group("Optional args")
+        optionalOpts.add_argument('--learn-settings', action="store_true")
         optionalOpts.add_argument("-f", "--force", required = False, action = "store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -53,53 +55,16 @@ class BootstrapArgParser(InceptionArgParser):
                 self.d("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
+
+        if self.args["learn_settings"]:
+            syncer = ConfigSyncer(self.newConfig)
+            syncer.applyDiff(syncer.pullAndDiff())
         self.writeNewConfig(self.args["variant"])
 
         self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
 
 
         return True
-
-    def _process(self):
-        super(BootstrapArgParser, self).process()
-        self.createDir(self.deviceDir)
-
-        self.config = self.configTreeParser.parseJSON(self.args["base"])
-        self.configDir = self.config.getSource(getDir=True)
-
-        vendor,model = self.args["base"].split(".")
-
-        self.d("Writing new config")
-        self.newConfig = self.createNewConfig(self.args["variant"], self.args["variant"], self.config)
-
-
-        self.setupDirPaths()
-        self.d("Creating dirs")
-        self.createDirs()
-        
-        #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
-
-        unpacker = self.config.get("common.tools.unpackbootimg.bin")
-        bootImg = self.config.getProperty("boot.img", None)
-        if bootImg:
-            if type(bootImg.getValue()) is str:
-                self.d("Unpacking boot img")
-                self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
-
-
-        recoveryImg = self.config.getProperty("recovery.img", None)
-        if recoveryImg:
-            if type(recoveryImg.getValue()) is str:
-                self.d("Unpacking recovery img")
-                self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
-
-        self.writeNewConfig(self.args["variant"])
-
-        self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
-
-
-        return True
-
 
     def createNewConfig(self, identifier, name, baseConfig):
         return Config.new(identifier, name, baseConfig)
