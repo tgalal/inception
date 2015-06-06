@@ -13,7 +13,7 @@ class OdinMaker(Maker):
             InceptionConstants.OUT_NAME_BOOT
         ]
 
-        outTarPath = os.path.join(outDir, InceptionConstants.OUT_NAME_ODIN)
+        outTarPath = os.path.join(outDir, InceptionConstants.OUT_NAME_ODIN.format(identifier = self.config.getIdentifier().replace(".", "-")))
         checksummedOutTar = outTarPath + ".md5"
         with tarfile.TarFile(outTarPath, "w", format = tarfile.USTAR_FORMAT) as outTarFile:
             for inc in allIncludes:

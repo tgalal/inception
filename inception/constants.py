@@ -6,7 +6,7 @@ class InceptionConstants:
     BASE_DIR = os.path.join(INCEPTION_DIR, "base")
     WORK_DIR = os.path.join(INCEPTION_DIR, "work")
     OUT_DIR = os.path.join(INCEPTION_DIR, "out")
-    OUT_NAME_ODIN = "odin_flashable.tar"
+    OUT_NAME_ODIN = "inception-{identifier}.tar"
     OUT_NAME_UPDATE = "update.zip"
     OUT_NAME_RECOVERY = "recovery.img"
     OUT_NAME_BOOT     = "boot.img"
