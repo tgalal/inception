@@ -15,7 +15,7 @@ class OdinMaker(Maker):
 
         outTarPath = os.path.join(outDir, InceptionConstants.OUT_NAME_ODIN)
         checksummedOutTar = outTarPath + ".md5"
-        with tarfile.TarFile(outTarPath, "w") as outTarFile:
+        with tarfile.TarFile(outTarPath, "w", format = tarfile.USTAR_FORMAT) as outTarFile:
             for inc in allIncludes:
                 incPath = os.path.join(outDir, inc)
                 if os.path.exists(incPath):
@@ -26,6 +26,6 @@ class OdinMaker(Maker):
                 md5sum = hashlib.md5(outTarFile.read()).hexdigest()
 
             with open(outTarPath, "ab") as outTarFile:
-                outTarFile.write(md5sum + " " + os.path.basename(checksummedOutTar) + "\n")
+                outTarFile.write(md5sum + "  " + os.path.basename(outTarPath) + "\n")
 
             os.rename(outTarPath, checksummedOutTar)
