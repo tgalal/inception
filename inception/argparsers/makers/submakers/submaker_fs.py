@@ -3,7 +3,6 @@ import os, shutil, sys
 class FsSubmaker(Submaker):
     def make(self, workDir):
         fsSourcePaths = []
-        fsSourceMap = {}
         lookupFPaths = []
 
         configProp = self.getConfigProperty("add", {})
@@ -18,13 +17,14 @@ class FsSubmaker(Submaker):
                     lookupFPaths.append(path)
 
         currConfig = self.getMaker().getConfig()
-        for path in lookupFPaths:
-            appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else currConfig.resolveRelativePath(path)
-            pathInfo = currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))
-            if not "destination" in pathInfo and path[0] == "/":
-                pathInfo["destination"] = path
-                currConfig.set("update.files.add.%s" % (path.replace(".", "\.")), pathInfo)
-            fsSourcePaths.append((appendPath, pathInfo))
+        if currConfig.getSource():
+            for path in lookupFPaths:
+                appendPath = os.path.join(currConfig.getFSPath(), path[1:]) if path[0] == "/" else currConfig.resolveRelativePath(path)
+                pathInfo = currConfig.get("update.files.add.%s" % (path.replace(".", "\.")))
+                if not "destination" in pathInfo and path[0] == "/":
+                    pathInfo["destination"] = path
+                    currConfig.set("update.files.add.%s" % (path.replace(".", "\.")), pathInfo)
+                fsSourcePaths.append((appendPath, pathInfo))
 
         while not currConfig.isOrphan():
             currConfig = currConfig.getParent()
