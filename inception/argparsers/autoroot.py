@@ -45,6 +45,7 @@ class AutorootArgParser(InceptionArgParser):
         config.set("odin.__make__", True)
         config.set("odin.checksum", True)
         config.set("cache.__make__", True)
+        config.set("update.databases.__make__", False)
         config.set("update.settings.__make__", False)
         config.set("update.adb.__make__", False)
         config.set("update.property.__make__", False)
@@ -52,10 +53,13 @@ class AutorootArgParser(InceptionArgParser):
         config.set("update.network.__make__", False)
         config.set("update.script.format_data", False)
         config.set("update.root_method", "supersu")
+        config.set("update.busybox.__make__", False)
+        config.set("update.files.__override__", True)
         config.set("recovery.__make__", True)
         config.set("boot.__make__", False)
         config.set("common.root.methods.supersu.include_apk", True)
         config.set("commont.root.methods.supersu.include_archs", [])
+
 
         if not config.get("recovery.stock"):
             print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
