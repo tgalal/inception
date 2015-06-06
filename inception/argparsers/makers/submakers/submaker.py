@@ -12,7 +12,7 @@ class Submaker(object):
         return self.maker
 
     @abc.abstractmethod
-    def make(self, workDir):
+    def make(self, workDir, updatescriptgen = None):
         pass
 
     def newtmpWorkDir(self):
