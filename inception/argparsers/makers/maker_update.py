@@ -9,6 +9,9 @@ from .submakers.submaker_apps import AppsSubmaker
 from .submakers.submaker_supersu import SuperSuSubmaker
 from .submakers.submaker_databases import DatabasesSubmaker
 from .submakers.submaker_settings import SettingsSubmaker
+from .submakers.submaker_updatescriptinit import UpdatescriptInitSubmaker
+from .submakers.submaker_busybox import BusyboxSubmaker
+from inception.generators.updatescript import UpdateScriptGenerator
 import shutil
 import os
 import logging
@@ -17,13 +20,16 @@ class UpdateMaker(Maker):
     def __init__(self, config):
         super(UpdateMaker, self).__init__(config, "update")
         self.rootFs = "fs"
+        self.updatescriptGen = UpdateScriptGenerator()
 
     def make(self, workDir, outDir):
         logger.info("Making update package")
         rootFS = os.path.join(workDir, self.rootFs)
+        self.makeUpdateScriptInit(rootFS)
         self.makeFS(rootFS)
         self.makeProps(rootFS)
         self.makeWPASupplicant(rootFS)
+        self.makeBusyBox(rootFS)
         self.makeSettings(rootFS)
         self.makeDatabases(rootFS)
         self.makeAdbKeys(rootFS)
@@ -44,6 +50,12 @@ class UpdateMaker(Maker):
         smaker = FsSubmaker(self, "files")
         smaker.make(fsPath)
 
+
+    def makeBusyBox(self, fsPath):
+        if self.isMakeTrue("busybox"):
+            logger.info("Making Busybox")
+            smaker = BusyboxSubmaker(self, "busybox")
+            smaker.make(fsPath, self.updatescriptGen)
 
     def makeRoot(self, fsPath):
         rootMethod = self.getMakeConfigValue("root_method", None)
@@ -85,10 +97,16 @@ class UpdateMaker(Maker):
             smaker = WifiSubmaker(self, "network")
             smaker.make(wpaSupplicantDir)
 
+
+    def makeUpdateScriptInit(self, updatePkgDir):
+        logger.info("Init Update script")
+        smaker = UpdatescriptInitSubmaker(self, ".")
+        smaker.make(updatePkgDir, self.updatescriptGen)
+
     def makeUpdateScript(self, updatePkgDir):
         logger.info("Making Update script")
         smaker = UpdatescriptSubmaker(self, ".")
-        smaker.make(updatePkgDir)
+        smaker.make(updatePkgDir, self.updatescriptGen)
 
     def makeProps(self, workDir):
         if self.isMakeTrue("property"):

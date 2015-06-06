@@ -1,27 +1,10 @@
 from .submaker import Submaker
-from inception.generators.updatescript import UpdateScriptGenerator
 import os
 class UpdatescriptSubmaker(Submaker):
-    def make(self, updatePkgDir):
-        u = UpdateScriptGenerator()
-        u.setVerbose(self.getConfigValue("script.verbose", True))
-
-        #### mount needed FS
-        u.mount("/system")
-        u.mount("/data")
+    def make(self, updatePkgDir, updatescriptgen = None):
+        u = updatescriptgen
 
         #### remove files
-        for f in self.getConfigValue("files.rm", []):
-            u.rm(f)
-
-        for f in self.getConfigValue("files.rmdir", []):
-            u.rm(f, True)
-
-        #### format?
-        if  self.getConfigValue("script.format_data", False):
-            u.rm("/data", recursive=True)
-
-
         for path in self.getConfigValue("files.rm", []):
             if not path.startswith("/"):
                 path = "/" + path
@@ -31,6 +14,10 @@ class UpdatescriptSubmaker(Submaker):
             if not path.startswith("/"):
                 path = "/" + path
             u.rm(path, recursive = True)
+
+        #### format?
+        if  self.getConfigValue("script.format_data", False):
+            u.rm("/data", recursive=True)
 
         #### apply our FS permissions
 
@@ -85,6 +72,9 @@ class UpdatescriptSubmaker(Submaker):
                     u.setPermissions(destPath, pathData["uid"], pathData["gid"], pathData["mode"], pathData["mode_dirs"])
                 else:
                     u.setPermissions(destPath, pathData["uid"], pathData["gid"], pathData["mode"])
+                    if "symlinks" in pathData:
+                        u.symlink(destPath, pathData["symlinks"])
+
 
         #### misc
         header, footer = self.getConfigValue("script.header", None), self.getConfigValue("script.footer", None)
