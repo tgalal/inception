@@ -73,7 +73,12 @@ class UpdatescriptSubmaker(Submaker):
                 else:
                     u.setPermissions(destPath, pathData["uid"], pathData["gid"], pathData["mode"])
                     if "symlinks" in pathData:
-                        u.symlink(destPath, pathData["symlinks"])
+                        for i in range(0, len(pathData["symlinks"]), 5):
+                            edge = i + 5
+                            if edge >= len(pathData["symlinks"]):
+                                edge = len(pathData["symlinks"]) - 1
+
+                            u.symlink(destPath, pathData["symlinks"][i:edge])
 
 
         #### misc
