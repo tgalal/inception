@@ -55,6 +55,7 @@ class AutorootArgParser(InceptionArgParser):
         config.set("update.root_method", "supersu")
         config.set("update.busybox.__make__", False)
         config.set("update.files.__override__", True)
+        config.set("update.keys", "test")
         config.set("recovery.__make__", True)
         config.set("boot.__make__", False)
         config.set("common.root.methods.supersu.include_apk", True)
