@@ -59,6 +59,9 @@ class UpdateScriptGenerator(Generator):
         else:
             self._add("delete", self._quote(path))
 
+    def symlink(self, target, links):
+        self._add("symlink", self._quote(target), *tuple([self._quote(link) for link in links]))
+
     def run(self, *args):
         if not args[0].endswith("/mount"):
             self.dirty = True
