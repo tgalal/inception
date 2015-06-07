@@ -28,4 +28,5 @@ class CacheMaker(Maker):
         updatePkgPath = os.path.join(outDir, InceptionConstants.OUT_NAME_UPDATE)
         if os.path.exists(updatePkgPath):
             gen.update(updatePkgPath)
-        gen.generate(os.path.join(outDir, InceptionConstants.OUT_NAME_CACHE))
+
+        gen.generate(os.path.join(outDir, self.getCacheOutName()))

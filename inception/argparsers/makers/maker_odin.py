@@ -8,7 +8,7 @@ class OdinMaker(Maker):
         super(OdinMaker, self).__init__(config, "odin")
     def make(self, workDir, outDir):
         allIncludes = [
-            InceptionConstants.OUT_NAME_CACHE,
+            self.getCacheOutName(),
             InceptionConstants.OUT_NAME_RECOVERY,
             InceptionConstants.OUT_NAME_BOOT
         ]

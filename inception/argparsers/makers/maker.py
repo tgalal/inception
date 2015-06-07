@@ -1,4 +1,5 @@
 import abc
+from inception.constants import InceptionConstants
 class Maker(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, config, key):
@@ -39,6 +40,9 @@ class Maker(object):
 
     def deleteConfigProperty(self, key):
         return self.config.delete(key)
+
+    def getCacheOutName(self):
+        return self.config.get("cache.out", InceptionConstants.OUT_NAME_CACHE)
 
     @abc.abstractmethod
     def make(self, workDir, outDir):
