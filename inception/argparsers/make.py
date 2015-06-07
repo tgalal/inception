@@ -2,11 +2,10 @@ from inception.argparsers.argparser import InceptionArgParser
 from inception.argparsers.exceptions import InceptionArgParserException, MakeUpdatePkgFailedException
 from inception.constants import InceptionConstants
 from inception.config import ConfigTreeParser, DotIdentifierResolver
-import os, shutil, threading, logging
+import os, shutil, logging
 from inception.common.configsyncer import ConfigSyncer
 
 logger = logging.getLogger(__name__)
-
 
 class MakeArgParser(InceptionArgParser):
 
@@ -14,92 +13,28 @@ class MakeArgParser(InceptionArgParser):
         super(MakeArgParser, self).__init__(description = description)
 
         targetOpts = self.add_mutually_exclusive_group(required = True)
-        targetOpts.add_argument('-a', '--all',  action = "store_true")
-        targetOpts.add_argument('-v', '--variant',action = "store")
+        targetOpts.add_argument('-v', '--variant',action = "store", help="variant config code to use, in the format A.B.C")
 
         optionalOpts = self.add_argument_group("Optional opts")
-        optionalOpts.add_argument('--learn-settings', action="store_true")
-        optionalOpts.add_argument("-t", '--threaded',
-            required = False,
-            action = "store_true")
-
-        # optionalOpts.add_argument("-m", '--write-manifest',
-        #     required = False,
-        #     action = "store_true")
+        optionalOpts.add_argument('--learn-settings', action="store_true",
+                                  help= "Learn settings from a connected device, and use in generated update package")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
         self.configTreeParser = ConfigTreeParser(identifierResolver)
-        self.threads = []
 
     def process(self):
         super(MakeArgParser, self).process()
-        self.threaded = self.args["threaded"]
 
-        if self.args["all"]:
-            return self.makeAll()
+        code = self.args["variant"]
 
-        return self.make(self.args["variant"],
-            writeManifest = False, #self.args["write_manifest"],
-            )
-
-
-    def makeAll(self):
-        result = {}
-        probeDir = InceptionConstants.VARIANTS_DIR
-        vendors = os.listdir(probeDir)
-
-        def deferredMake(code):
-            maker = MakeArgParser()
-
-            try:
-                result[code] = maker.make(code)
-            except:
-                result[code] = False
-
-        for v in vendors:
-            models = os.listdir(os.path.join(probeDir, v))
-            for m in models:
-                variants = os.listdir(os.path.join(probeDir, v, m))
-                for c in variants:
-                    if not os.path.exists(os.path.join(probeDir, v, m, c, c + ".json")):
-                        continue
-                    variantCode = "%s.%s.%s" % (v,m,c)
-                    if self.threaded:
-                        thread = threading.Thread(
-                            target = lambda: deferredMake(variantCode)
-                            )
-                        self.threads.append(thread)
-                        thread.start()
-                    else:
-                        self.make(variantCode,
-                            writeManifest = False, #self.args["write_manifest"],
-                            )
-
-        for thread in self.threads:
-            thread.join()
-
-        print("\n=================\n\nResult:\n")
-        for k,v in result.items():
-            print("%s\t\t%s" % ("OK" if v else "Failed", k))
-
-
-        return True
-
-
-    def make(self, code, writeManifest = False):
         try:
             self.vendor, self.model, self.variant = code.split('.')
         except ValueError as e:
             raise InceptionArgParserException(
                 "Code must me in the format vendor.model.variant"
                 )
-
-        self.d("MAKING")
-        self.d("VENDOR:", self.vendor)
-        self.d("MODEL", self.model)
-        self.d("VARIANT", self.variant)
 
         self.setWorkDir(os.path.join(InceptionConstants.WORK_DIR,
             self.vendor,
@@ -118,12 +53,12 @@ class MakeArgParser(InceptionArgParser):
 
         self.configDir = os.path.dirname(self.config.getSource())
 
-        self.d("Cleaning work dir " + self.workDir)
+        logger.info("Cleaning work dir " + self.workDir)
         if os.path.exists(self.workDir):
             shutil.rmtree(self.workDir)
         os.makedirs(self.workDir)
 
-        self.d("Cleaning out dir")
+        logger.info("Cleaning out dir")
         outDir = self.getOutDir()
         if os.path.exists(outDir):
             shutil.rmtree(outDir)

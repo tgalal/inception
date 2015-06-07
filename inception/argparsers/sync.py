@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 class SyncArgParser(InceptionArgParser):
 
     def __init__(self):
-        super(SyncArgParser, self).__init__(description = "Sync mode cmd")
+        super(SyncArgParser, self).__init__(description = "Sync config tree")
 
         requiredOpts = self.add_argument_group("Required args")
-        requiredOpts.add_argument('-v', '--variant', required = True, action = "store")
+        requiredOpts.add_argument('-v', '--variant', required = True, action = "store", help="variant config code to use, in the format A.B.C")
         requiredOpts.add_argument('-f', '--force', required = False, action="store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR

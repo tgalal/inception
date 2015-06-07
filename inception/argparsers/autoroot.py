@@ -13,11 +13,13 @@ import sys
 class AutorootArgParser(InceptionArgParser):
 
     def __init__(self):
-        super(AutorootArgParser, self).__init__(description = "Autoroot mode cmd")
+        super(AutorootArgParser, self).__init__(description = "Creates Inception Auto-Root package that you can flash to your device. "
+                                                              "An Inception Auto-Root package will install root and supersu on your device, "
+                                                              "and then reinstalls stock recovery back.")
 
         requiredOpts = self.add_argument_group("Required args").add_mutually_exclusive_group(required=True)
-        requiredOpts.add_argument('-b', '--base', action = "store")
-        requiredOpts.add_argument('-v', "--variant", action = "store")
+        requiredOpts.add_argument('-b', '--base', action = "store", help="base config code to use, in the format A.B")
+        requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
 
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR

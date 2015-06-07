@@ -13,11 +13,12 @@ import sys
 class BusyboxArgParser(InceptionArgParser):
 
     def __init__(self):
-        super(BusyboxArgParser, self).__init__(description = "Autoroot mode cmd")
+        super(BusyboxArgParser, self).__init__(description = "Create a Busybox update package that you can flash/intall on your device. "
+                                                             "This would install Busybox, and by default will    restore the device's stock recovery back in place.")
 
         requiredOpts = self.add_argument_group("Required args").add_mutually_exclusive_group(required=True)
-        requiredOpts.add_argument('-b', '--base', action = "store")
-        requiredOpts.add_argument('-v', "--variant", action = "store")
+        requiredOpts.add_argument('-b', '--base', action = "store", help="base config code to use, in the format A.B")
+        requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
 
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR

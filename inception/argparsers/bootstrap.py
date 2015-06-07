@@ -9,16 +9,18 @@ from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
 class BootstrapArgParser(InceptionArgParser):
 
     def __init__(self):
-        super(BootstrapArgParser, self).__init__(description = "Bootstrap mode cmd")
+        super(BootstrapArgParser, self).__init__(description = "Bootstrap a variant config, based on an existing base "
+                                                               "config, or based on another variant config")
         requiredOpts = self.add_argument_group("Required args")
-        requiredOpts.add_argument('-b', '--base', required = True, action = "store")
-        requiredOpts.add_argument('-v', '--variant', required = True, action = "store")
+        requiredOpts.add_argument('-b', '--base', required = True, action = "store", help="base config code to use, in the format A.B")
+        requiredOpts.add_argument('-v', '--variant', required = True, action = "store", help="variant config code to use, in the format A.B.C")
         #requiredOpts.add_argument('-v', '--vendor', required = True, action = "store")
         #requiredOpts.add_argument('-m', '--model', required = True, action = "store")
 
         optionalOpts = self.add_argument_group("Optional args")
-        optionalOpts.add_argument('--learn-settings', action="store_true")
-        optionalOpts.add_argument("-f", "--force", required = False, action = "store_true")
+        optionalOpts.add_argument('--learn-settings', action="store_true",
+                                  help="Learn settings from a connected device, and set in the bootstrapped config file" )
+        optionalOpts.add_argument("-f", "--force", required = False, action = "store_true", help="Overwrite an existing variant bootstrap directory if exists")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
