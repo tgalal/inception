@@ -241,7 +241,7 @@ class Database(object):
 
     def getSchema(self):
         out = ""
-        for row in self.execute("SELECT sql FROM sqlite_master where sql is not null").fetchall():
+        for row in self.execute("SELECT sql FROM sqlite_master where sql is not null and name <> 'sqlite_sequence'").fetchall():
             out += row[0] + ";"
         return out
 
