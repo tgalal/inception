@@ -22,6 +22,13 @@ Inception is a set of tools for auto configuring android devices. You can do the
 
 Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes. This results in update packages that are substantially smaller than when flashing a whole ROM.
 
+===
+# DISCLAIMER
+
+**USE AT YOUR OWN RISK, I'M NOT RESPONSIBLE FOR BRICKING YOUR DEVICE.**
+
+==
+
 # Quick start:
 
 ```bash
