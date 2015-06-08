@@ -18,6 +18,7 @@ Inception is a set of tools for auto configuring android devices. You can do the
 - inception will compile your config into an Android OTA update package
 - Install the update package to your device in recovery mode
 - Or optionally let inception generate a cache partition img for your device, allowing you to deploy your update in bootloader/download mode
+- No ROM compilation is involved.
 
 Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes. This results in update packages that are substantially smaller than when flashing a whole ROM.
 
