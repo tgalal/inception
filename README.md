@@ -14,12 +14,12 @@ Inception is a set of tools for auto configuring android devices. You can do the
 # How it works
 
 - You bootstrap a new device configuration
-- Update the config, which is a JSON file, with all the changes you need
+- Update the bootstrapped config, which is a JSON file, with all the changes you need
 - inception will compile your config into an Android OTA update package
-- Install the update package on your tablet in recovery mode
+- Install the update package to your device in recovery mode
 - Or optionally let inception generate a cache partition img for your device, allowing you to deploy your update in bootloader/download mode
 
-Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes.
+Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes. This results in update packages that are substantially smaller than when flashing a whole ROM.
 
 # Quick start:
 
