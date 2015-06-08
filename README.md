@@ -83,12 +83,17 @@ Inspect that file, override any properties in your own config, run make again an
 
 ## Requirements:
 
-- python-setuptools
-- For m2crypto:
+- For installation:
+  - python < 3.0
+  - python-setuptools
+  - dulwich
+  - argparse
+- For [incept learn](https://github.com/tgalal/inception/wiki/incept-learn) (optional):
+  - [adb](https://pypi.python.org/pypi/adb) >= 1.1.1 
   - swig
   - libssl-dev
   - dpkg-dev on debian distros, because: https://github.com/martinpaljak/M2Crypto/issues/62
--For some 32bit binaries:
+- For some 32bit binaries that are included in base configs (namely make_ext4s), unless overridden:
   - gcc-multilib
   - lib32z1
 
