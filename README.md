@@ -81,13 +81,27 @@ Inspect that file, override any properties in your own config, run make again an
 
 # Installation
 
-req:
-for m2crypto: swig, libssl-dev and missing openssl headers error : see https://github.com/martinpaljak/M2Crypto/issues/62
+## Requirements:
 
-gcc-multilib
-lib32z1
-python-setuptools
+- python-setuptools
+- For m2crypto:
+  - swig
+  - libssl-dev
+  - dpkg-dev on debian distros, because: https://github.com/martinpaljak/M2Crypto/issues/62
+-For some 32bit binaries:
+  - gcc-multilib
+  - lib32z1
 
+## Install
+
+```
+git clone https://github.com/tgalal/inception.git
+python setup.py install
+```
+or
+```
+pip install inception-android
+```
 
 # License:
 
