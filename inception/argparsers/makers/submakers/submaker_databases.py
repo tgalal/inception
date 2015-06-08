@@ -22,31 +22,36 @@ class DatabasesSubmaker(Submaker):
                raise ValueError("Must specify db version for %s " % name)
             logger.debug("Making %s" % dbData["path"])
 
-            schemaPath = self.getConfigProperty(name.replace(".", "\.") + ".schema").resolveAsRelativePath()
 
-            with open(schemaPath, 'r') as schemaFile:
-                schemaData = schemaFile.read()
-                db = Database(schemaData)
+            schemaProp = self.getConfigProperty(name.replace(".", "\.") + ".schema")
+            schemaPath = schemaProp.resolveAsRelativePath()
+            if schemaPath and os.path.exists(schemaPath):
+                with open(schemaPath, "r") as schemaFile:
+                    schemaData = schemaFile.read()
+            else:
+                schemaData = schemaProp.getValue()
 
-                if not os.path.exists(os.path.dirname(path)):
-                    os.makedirs(os.path.dirname(path))
+            db = Database(schemaData)
 
-                if os.path.exists(path):
-                    os.remove(path)
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
 
-                conn = sqlite3.connect(path)
+            if os.path.exists(path):
+                os.remove(path)
 
-                for tableName, data in dbData["data"].items():
-                    table = db.getTable(tableName)
-                    assert table, "Table %s is not in supplied schema" % tableName
-                    for row in data:
-                        table.createRow(**row)
+            conn = sqlite3.connect(path)
 
-                conn.executescript("PRAGMA user_version = %s;" % dbData["version"])
-                conn.executescript(schemaData)
-                queries = db.getQueries()
-                for q in queries:
-                    conn.execute(q)
+            for tableName, data in dbData["data"].items():
+                table = db.getTable(tableName)
+                assert table, "Table %s is not in supplied schema" % tableName
+                for row in data:
+                    table.createRow(**row)
 
-                conn.commit()
-                conn.close()
+            conn.executescript("PRAGMA user_version = %s;" % dbData["version"])
+            conn.executescript(schemaData)
+            queries = db.getQueries()
+            for q in queries:
+                conn.execute(q)
+
+            conn.commit()
+            conn.close()
