@@ -1,13 +1,14 @@
 from .argparser import InceptionArgParser
 from inception.constants import InceptionConstants
 from inception.config import configtreeparser
+from inception.common.moduletools import ModuleTools
 import json
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 import os
 import tempfile
 from inception.common.configsyncer import ConfigSyncer
-import adb as _adb
+
 logger = logging.getLogger(__name__)
 
 class LearnArgParser(InceptionArgParser):
@@ -28,6 +29,9 @@ class LearnArgParser(InceptionArgParser):
 
     def process(self):
         super(LearnArgParser, self).process()
+
+        ModuleTools.adb(True)
+        from inception.tools.adbwrapper import Adb
         resultDict = {
             "update": {}
         }
@@ -40,7 +44,7 @@ class LearnArgParser(InceptionArgParser):
         return True
 
     def learnProps(self):
-        adb = self.getAdb(self.config.get("common.tools.adb.bin"))
+        adb = Adb()
         propsDict = {}
         propsDir = os.path.join(self.tmpDir, "props")
         adb.pull("/data/property", propsDir)

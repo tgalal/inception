@@ -1,14 +1,15 @@
-from inception.tools.adbwrapper import Adb
 from inception.common.filetools import FileTools
 from inception.common.database import Database
 import os
 import logging
-import adb
-import json
+from inception.common.moduletools import ModuleTools
 logger = logging.getLogger(__file__)
 class ConfigSyncer(object):
     def __init__(self, config):
         self.config = config
+
+        ModuleTools.adb(True)
+        from inception.tools.adbwrapper import Adb
         self.adb = Adb()
 
     def pullAndDiff(self):

@@ -18,13 +18,6 @@ class InceptionObject(object):
     def d(self, *messages):
         print("%s:\t%s" % (self.__class__.__name__, "\t".join(messages) ))
 
-    def getAdb(self, busybox = False):
-        if not InceptionObject.ADB_INSTANCE:
-            from tools.adbwrapper import Adb
-            InceptionObject.ADB_INSTANCE = Adb()
-        InceptionObject.ADB_INSTANCE.setBusyBoxCmds(busybox)
-        return InceptionObject.ADB_INSTANCE
-
     def writeCmdLog(self, out):
         f = open(out, "w")
         f.write("\n".join(self.logCmd))
