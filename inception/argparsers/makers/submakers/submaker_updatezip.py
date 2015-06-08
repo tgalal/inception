@@ -31,7 +31,12 @@ class UpdatezipSubmaker(Submaker):
             signApkPathProp = self.getCommonConfigProperty("tools.signapk.bin")
 
             assert signApkPathProp.getValue(), "common.tools.signapk.bin is not set"
+
             signApkPath = signApkPathProp.getConfig().resolveRelativePath(signApkPathProp.getValue())
+
+
+            assert os.path.exists(signApkPath), "'%s' from common.tools.signapk.bin does not exist %s" % signApkPath
+            assert os.path.exists(javaPath), "'%s' from common.tools.java.bin does not exist %s" % javaPath
 
 
             signApk = SignApk(javaPath, signApkPath)
