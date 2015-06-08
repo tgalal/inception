@@ -22,6 +22,9 @@ class AutorootArgParser(InceptionArgParser):
         requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
 
 
+        optionalOpts = self.add_argument_group("Optional args")
+        optionalOpts.add_argument("-o", "--output", help="Override default output path")
+
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
@@ -38,6 +41,10 @@ class AutorootArgParser(InceptionArgParser):
         autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
 
         config = Config.new(autorootBase + ".autoroot", "autoroot", config)
+        if self.args["output"]:
+            config.setOutPath(self.args["output"])
+
+
         if os.path.exists(config.getOutPath()):
             shutil.rmtree(config.getOutPath())
 
