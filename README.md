@@ -25,7 +25,8 @@ Inception does not create a full system image or whole roms. It bundles only the
 ---
 # DISCLAIMER
 
-**USE AT YOUR OWN RISK, I'M NOT RESPONSIBLE FOR BRICKING YOUR DEVICE.**
+- **FLASHING DEVICES VOID THEIR WARRANTY**
+- **USE AT YOUR OWN RISK, I'M NOT RESPONSIBLE FOR BRICKING YOUR DEVICE.**
 
 ---
 
