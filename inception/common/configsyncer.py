@@ -13,6 +13,7 @@ class ConfigSyncer(object):
         self.adb = Adb()
 
     def pullAndDiff(self):
+        import adb
         fullDiff = {
                 "settings": {},
                 "databases": {}
