@@ -84,6 +84,10 @@ Inspect that file, override any properties in your own config, run make again an
 req:
 for m2crypto: swig, libssl-dev and missing openssl headers error : see https://github.com/martinpaljak/M2Crypto/issues/62
 
+gcc-multilib
+lib32z1
+python-setuptools
+
 
 # License:
 
