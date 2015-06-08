@@ -47,6 +47,7 @@ class Config(object):
         self.parent = parent if parent else None
         self.source = source
         self.__contextData = contextData
+        self.outPath = None
 
     @classmethod
     def new(cls, identifier, name = None, base = None, template = None):
@@ -276,7 +277,13 @@ class Config(object):
     def isBase(self):
         return len(self.getIdentifier().split(".")) == 2
 
+    def setOutPath(self, outPath):
+        self.outPath = outPath
+
     def getOutPath(self):
+        if self.outPath:
+            return self.outPath
+
         if self.isBase():
             raise ValueError("Base configs have no out paths: %s "% self.getIdentifier())
 

@@ -26,7 +26,7 @@ class ConfigTreeParser(object):
 
     def parseJSON(self, identifier):
         self.notes = []
-        result = self._parseJSON(identifier, False)
+        result = self._parseCode(identifier, False)
 
         if len(self.notes):
             print("\n=====================================================")
@@ -48,30 +48,41 @@ class ConfigTreeParser(object):
 
         return result
 
-    def _parseJSON(self, identifier, isFresh = False):
+    def _parseCode(self, identifier, isFresh = False):
         jsonFilePath = self.identifierResolver.resolve(identifier)
         if not jsonFilePath:
             sources = self.sourcesConfig.getSources(identifier)
 
             if self.fetchConfig(identifier.replace(".", "_"), sources):
-                return self._parseJSON(identifier, True)
+                return self._parseCode(identifier, True)
             raise ValueError("Couldn't resolve %s" % identifier)
-        elif not os.path.exists(jsonFilePath):
+
+        return self._parseJSONFile(jsonFilePath, code = identifier)
+
+
+
+    def parseJSONFile(self, jsonFilePath):
+        return self._parseJSONFile(jsonFilePath)
+
+    def _parseJSONFile(self, jsonFilePath, isFresh = False, code = "inception.current.out"):
+        if not os.path.exists(jsonFilePath):
             raise ValueError("Invalid config path %s" % jsonFilePath)
+
         with open(jsonFilePath, "r") as jsonFile:
             jsonData = jsonFile.read()
             parsedJSON = json.loads(jsonData)
             parentIdentifier = parsedJSON[self.__class__.KEY_INHERIT] if self.__class__.KEY_INHERIT in parsedJSON else None
             if isFresh and self.__class__.KEY_NOTES in parsedJSON:
-                self.notes.append((identifier, jsonFilePath, parsedJSON[self.__class__.KEY_NOTES]))
+                self.notes.append((code, jsonFilePath, parsedJSON[self.__class__.KEY_NOTES]))
 
-            result = Config(identifier,
+            result = Config(code,
                           parsedJSON,
-                          self._parseJSON(parentIdentifier) if parentIdentifier else None,
+                          self._parseCode(parentIdentifier) if parentIdentifier else None,
                           jsonFilePath
             )
 
             return result
+
 
     def fetchConfig(self, name, lookupRepos):
         dissectedName = name.split("_")

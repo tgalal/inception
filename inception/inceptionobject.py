@@ -6,9 +6,6 @@ class InceptionExecCmdFailedException(Exception):
 class NoWorkDirException(Exception):
     pass
 
-class NoOutDirException(Exception):
-    pass
-
 class InceptionObject(object):
 
     ADB_INSTANCE = None
@@ -76,16 +73,8 @@ class InceptionObject(object):
     def setWorkDir(self, workDir):
         self.workDir = workDir
 
-    def setOutDir(self, outDir):
-        self.outDir = outDir
 
     def getWorkDir(self, *append):
         if not self.workDir:
             raise NoWorkDirException()
         return os.path.join(self.workDir, *append)
-
-    def getOutDir(self):
-        if not self.outDir:
-            raise NoOutDirException()
-        return self.outDir
-
