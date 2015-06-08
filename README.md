@@ -49,8 +49,8 @@ For example:
         "name": "custom"
     },
     "update": {
+        "__make__": true,
         "keys": null,
-        "make": true,
         "network": {
             "aps": [
                 {
