@@ -81,9 +81,9 @@ Inspect that file, override any properties in your own config, run make again an
 
 # Installation
 
-Requirements:
+## Requirements:
 
--python-setuptools
+- python-setuptools
 - For m2crypto:
   - swig
   - libssl-dev
@@ -92,14 +92,16 @@ Requirements:
   - gcc-multilib
   - lib32z1
 
+## Install
 
-> git clone https://github.com/tgalal/inception.git
-> python setup.py install
-
+```
+git clone https://github.com/tgalal/inception.git
+python setup.py install
+```
 or
-
-> pip install inception-android
-
+```
+pip install inception-android
+```
 
 # License:
 
