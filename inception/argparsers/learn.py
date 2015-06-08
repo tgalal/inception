@@ -30,8 +30,7 @@ class LearnArgParser(InceptionArgParser):
     def process(self):
         super(LearnArgParser, self).process()
 
-        ModuleTools.adb(True)
-        from inception.tools.adbwrapper import Adb
+
         resultDict = {
             "update": {}
         }
@@ -44,6 +43,8 @@ class LearnArgParser(InceptionArgParser):
         return True
 
     def learnProps(self):
+        ModuleTools.adb(True)
+        from inception.tools.adbwrapper import Adb
         adb = Adb()
         propsDict = {}
         propsDir = os.path.join(self.tmpDir, "props")
