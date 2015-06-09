@@ -54,5 +54,5 @@ class Adb(ExecWrapper):
 
 
     def run(self, preview = False):
-        cmd = tuple(self.bin.split(" ")) + self.createArgs()
-        return self.getConnection().Shell(" ".join(cmd))
+        cmd = self.createArgs()
+        return self.getConnection().Shell( '"' + " ".join(cmd) + '"')
