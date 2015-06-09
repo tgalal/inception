@@ -68,7 +68,7 @@ class Config(object):
             config.set("update.adb.__make__", base.get("update.adb.__make__", False))
             config.set("update.apps.__make__", base.get("update.apps.__make__", False))
             config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
-            config.set("update.root_method", base.get("root_method", None))
+            config.set("update.root_method", base.get("update.root_method", None))
             config.set("update.property.__make__", base.get("update.property.__make__", False))
             config.set("update.network.__make__", base.get("update.network.__make__", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
