@@ -5,6 +5,15 @@ import os
 import logging
 from inception.common.moduletools import ModuleTools
 logger = logging.getLogger(__file__)
+
+
+def ensureDataMounted(fn):
+    def wrapped(self, *args):
+        self.adb.cmd("mount", "/data")
+        return fn(self, *args)
+
+    return wrapped
+
 class ConfigSyncer(object):
     def __init__(self, config):
         self.config = config
@@ -13,6 +22,7 @@ class ConfigSyncer(object):
         from inception.tools.adbwrapper import Adb
         self.adb = Adb()
 
+    @ensureDataMounted
     def pullAndDiff(self):
         import adb
 
@@ -157,7 +167,9 @@ class ConfigSyncer(object):
 
             return parsedRecoveryFstab
 
-    def getSizeFor(self, device):
+    def getSizeFor(self, device, resolveByName = False):
+        if resolveByName:
+            device = self.getDeviceByName(device)
         result = self.adb.cmd("cat", "/proc/partitions")
         grep = device.split("/")[-1]
         for l in result.split("\n"):
@@ -168,13 +180,20 @@ class ConfigSyncer(object):
             if l[3] == grep:
                 return int(l[2]) * 1024
 
+        if not resolveByName:
+            return self.getSizeFor(device, True)
         return None
+
+    def getDeviceByName(self, name):
+        result = self.adb.cmd("ls", "-l", name).strip()
+        if "->" in result:
+            return result.split("->")[1].strip()
+        return name
 
     def syncPartitions(self, apply = False):
         out = {
 
         }
-
         fstab = self.pullFstab()
         if not fstab:
             logger.critical("Could not parse fstab! Skipping partitions..")
@@ -214,6 +233,7 @@ class ConfigSyncer(object):
                 self.config.setRecursive(k, v)
         return out
 
+    @ensureDataMounted
     def syncProps(self, apply = False):
         propsDict = {}
         with FileTools.newTmpDir() as tmpDir:
