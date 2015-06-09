@@ -47,7 +47,7 @@ class BootstrapArgParser(InceptionArgParser):
 
         self.variantDir = os.path.join(self.deviceDir, baseCodePath, self.args["variant"])
 
-        self.d("Writing new config")
+        logger.info("Writing new config")
         self.newConfig = self.createNewConfig(self.args["base"] + "." + self.args["variant"], self.args["variant"], self.config)
         self.setupDirPaths()
         self.createDirs()
@@ -58,14 +58,14 @@ class BootstrapArgParser(InceptionArgParser):
         bootImg = self.config.getProperty("boot.img", None)
         if bootImg and self.config.get("boot.make", False):
             if type(bootImg.getValue()) is str:
-                self.d("Unpacking boot img")
+                logger.info("Unpacking boot img")
                 self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
 
 
         recoveryImg = self.config.getProperty("recovery.img", None)
         if recoveryImg and self.config.get("recovery.make", False):
             if type(recoveryImg.getValue()) is str:
-                self.d("Unpacking recovery img")
+                logger.info("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
 
@@ -112,16 +112,18 @@ class BootstrapArgParser(InceptionArgParser):
         newConfigFile.write(self.newConfig.dumpContextData())
         newConfigFile.close()
 
-
-
-    def createPathString(self, *args):
-        return "/".join(args)
+    def createDir(self, d):
+        if not os.path.exists(d):
+            logger.info("Creating: %s" % d)
+            os.makedirs(d)
+        else:
+            logger.info("Exists: %s" % d)
 
     def setupDirPaths(self):
-        self.imgDir             = self.createPathString(self.variantDir, "img")
-        self.bootDir            = self.createPathString(self.imgDir, "boot")
-        self.recoveryDir        = self.createPathString(self.imgDir, "recovery")
-        self.fsDir              = self.createPathString(self.variantDir, InceptionConstants.FS_DIR)
+        self.imgDir             = os.path.join(self.variantDir, "img")
+        self.bootDir            = os.path.join(self.imgDir, "boot")
+        self.recoveryDir        = os.path.join(self.imgDir, "recovery")
+        self.fsDir              = os.path.join(self.variantDir, InceptionConstants.FS_DIR)
 
     def createDirs(self):
         # self.createDir(self.variantDir)
@@ -139,32 +141,7 @@ class BootstrapArgParser(InceptionArgParser):
         return os.path.dirname(os.path.realpath(__file__)) + "/" + f 
 
     def getConfigPath(self, configName):
-        return self.createPathString(self.configDir, configName + ".config")
-
-    def setupConfigDirs(self):
-        self.createDir(self.configDir)
-        self.d("Creating build config")
-        buildConfig = open(self.getConfigPath("build"), "w")
-        buildConfigData = BootstrapArgParser.BUILD_DEFCONFIG.format(mkbootimg = "mkbootimg", unpackbootimg = self.args["unpacker"], make_ext4fs = "make_ext4fs")
-        buildConfig.write(buildConfigData)
-        buildConfig.close()
-
-        self.d("Creating wpa_supplicant template")
-        wpasupConfig = open(self.getConfigPath("wpa_supplicant"), "w")
-        wpasupConfig.write("#place here wpa_supplicant.conf header\n")
-        wpasupConfig.close()
-
-        self.d("Creating system apk rm config")
-        systemAppRmConfig = open(self.getConfigPath("system.app.rm"), "w")
-        systemAppRmConfig.write("#place here apks names to delete from system\n")
-        systemAppRmConfig.close()
-
-        self.d("Creating update-pkg permissions config")
-        permConfig = open(self.getConfigPath("permissions"), "w")
-        permConfig.write("#place here permissions to use when creating update-pkg\n")
-        permConfig.close()
-
-
+        return os.path.join(self.configDir, configName + ".config")
 
     def unpackimg(self, img, out, unpacker, imgType):
         if not os.path.isfile(img):
@@ -173,7 +150,7 @@ class BootstrapArgParser(InceptionArgParser):
         ramdisk = "%s/%s-ramdisk" % (out, filename)
         kernel = "%s/%s-zImage" % (out, filename)
         dt = "%s/%s-dt" % (out, filename)
-        ramdiskDir = self.createPathString(out, "ramdisk")
+        ramdiskDir = os.path.join(out, "ramdisk")
         ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
         os.makedirs(out)
         unpackResult = self.execCmd(unpacker, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))

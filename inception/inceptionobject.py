@@ -1,5 +1,5 @@
-import subprocess, os
-
+import subprocess, os, logging
+logger = logging.getLogger(__name__)
 class InceptionExecCmdFailedException(Exception):
     pass
 
@@ -32,7 +32,7 @@ class InceptionObject(object):
         preview = False if "preview" not in kwargs else kwargs["preview"]
 
         cmdStr = " ".join(cmd)
-        self.d(cmdStr)
+        logger.debug(cmdStr)
         self.logCmd.append(cmdStr)
         if not preview:
             try:
@@ -47,20 +47,11 @@ class InceptionObject(object):
 
             #if result != 0 and failMessage is not None:
             #    raise InceptionExecCmdFailedException(failMessage)
-            self.d(str(result))
+            logger.debug(str(result))
             return result
         else:
             return True
 
-    def createDir(self, d):
-        if not os.path.exists(d):
-            self.d("Creating:", d)
-            os.makedirs(d)
-        else:
-            self.d("Exists:", d)
-
-    def createPathString(self, *args):
-        return os.path.join(*args)
 
 
     def setWorkDir(self, workDir):

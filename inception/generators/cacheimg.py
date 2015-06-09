@@ -7,7 +7,8 @@ class CacheImgGenerator(Ext4FSGenerator):
         self.workingDir = workingDir
         self.commands = []
         self.recoveryDir = os.path.join(self.workingDir, "recovery")
-        self.createDir(self.recoveryDir)
+        if not os.path.exists(self.recoveryDir):
+            os.makedirs(self.recoveryDir)
 
     def _addCommand(self, command):
         self.commands.append(command)
