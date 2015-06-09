@@ -246,3 +246,9 @@ class ConfigSyncer(object):
 
         return propsDict
 
+    def syncImg(self, configKey, device, out, relativeTo):
+        remotePath = "/sdcard/synced_%s" % configKey
+        localPath =  os.path.join(relativeTo, out, os.path.basename(remotePath))
+        self.adb.cmd("dd if=%s of=%s" % (device, remotePath))
+        self.adb.pull(remotePath, localPath)
+        self.config.set(configKey, os.path.relpath(out + "/" + os.path.basename(localPath), relativeTo))

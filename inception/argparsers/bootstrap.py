@@ -3,9 +3,10 @@ from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
 from inception.inceptionobject import InceptionExecCmdFailedException
 from inception.common.configsyncer import ConfigSyncer
-import os, shutil
+import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
 
+logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
 
     def __init__(self):
@@ -26,6 +27,9 @@ class BootstrapArgParser(InceptionArgParser):
 
         optionalOpts.add_argument("--learn-partitions", action = "store_true",
                                   help="Learn information about partitions on device, and set in the bootstrapped config file")
+
+        optionalOpts.add_argument("--learn-imgs", action = "store_true",
+                                  help="Pull recovery and boot img from the device, and set in the bootstrapped config file")
 
         optionalOpts.add_argument("-f", "--force", required = False, action = "store_true", help="Overwrite an existing variant bootstrap directory if exists")
 
@@ -65,14 +69,32 @@ class BootstrapArgParser(InceptionArgParser):
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
 
-        if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"])):
+        if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"], self.args["learn_imgs"])):
             syncer = ConfigSyncer(self.newConfig)
             if self.args["learn_settings"]:
+                logger.info("pulling settings")
                 syncer.applyDiff(syncer.pullAndDiff())
             if self.args["learn_partitions"]:
+                logger.info("pulling partitions info")
                 syncer.syncPartitions(True)
             if self.args["learn_props"]:
+                logger.info("pulling props")
                 syncer.syncProps(True)
+
+            if self.args["learn_imgs"]:
+                imgsDir = os.path.join(self.variantDir, "imgs")
+                os.makedirs(imgsDir)
+                if self.newConfig.get("recovery.dev"):
+                    logger.info("pulling recovery.img")
+                    syncer.syncImg("recovery.img", self.newConfig.get("recovery.dev"), imgsDir, self.variantDir)
+                else:
+                    logger.warn("recovery.dev not set, not syncing recovery.img")
+
+                if self.newConfig.get("boot.dev"):
+                    logger.info("pulling boot.img")
+                    syncer.syncImg("boot.img", self.newConfig.get("boot.dev"), imgsDir, self.variantDir)
+                else:
+                    logger.warn("boot.dev not set, not syncing boot.img")
 
         self.writeNewConfig(self.args["variant"])
 
