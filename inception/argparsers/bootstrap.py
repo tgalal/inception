@@ -20,6 +20,13 @@ class BootstrapArgParser(InceptionArgParser):
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument('--learn-settings', action="store_true",
                                   help="Learn settings from a connected device, and set in the bootstrapped config file" )
+
+        optionalOpts.add_argument("--learn-props", action = "store_true",
+                                  help="Learn update.property from a connected device, and set in the bootstrapped config file")
+
+        optionalOpts.add_argument("--learn-partitions", action = "store_true",
+                                  help="Learn information about partitions on device, and set in the bootstrapped config file")
+
         optionalOpts.add_argument("-f", "--force", required = False, action = "store_true", help="Overwrite an existing variant bootstrap directory if exists")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -58,9 +65,15 @@ class BootstrapArgParser(InceptionArgParser):
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
 
-        if self.args["learn_settings"]:
+        if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"])):
             syncer = ConfigSyncer(self.newConfig)
-            syncer.applyDiff(syncer.pullAndDiff())
+            if self.args["learn_settings"]:
+                syncer.applyDiff(syncer.pullAndDiff())
+            if self.args["learn_partitions"]:
+                syncer.syncPartitions(True)
+            if self.args["learn_props"]:
+                syncer.syncProps(True)
+
         self.writeNewConfig(self.args["variant"])
 
         self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
