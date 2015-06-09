@@ -19,9 +19,10 @@ class TableIndex(object):
             )
 
 class TableColumn(object):
-    def __init__(self, table, name, type_):
+    def __init__(self, table, name, type_, auto = False):
         self.table = table
         self.name = name
+        self.auto = auto
         self.indices = []
         if not type(type_) is type:
             assert type(type_) in (str, unicode), "Invalid type %s" % type(type_)
@@ -35,6 +36,9 @@ class TableColumn(object):
 
     def __eq__(self, other):
         return self.name == other.name and self.type == other.type
+
+    def isAuto(self):
+        return self.auto
 
     def addIndex(self, indexName):
         self.indices.append(TableIndex(self, indexName))
@@ -68,6 +72,10 @@ class TableRow(object):
                 raise ValueError(table.name + " does not contain col %s" % key)
 
             self.cells.append(TableCell(self, col, val))
+
+        for col in table.getColumns():
+            if not col.isAuto() and col.name not in kwargs:
+                self.cells.append(TableCell(self, col, None))
 
     def toDict(self):
         out = {}
@@ -112,10 +120,16 @@ class TableCell(object):
         return self.value
 
     def getSqlValue(self):
-        if self.tableColumn.type is str:
-            if self.value is None:
+
+        if self.value is None:
+            if self.tableColumn.type is str:
                 return "NULL"
+            elif self.tableColumn.type is int:
+                return "0"
+
+        if self.tableColumn.type is str:
             return "'%s'" % self.value.replace("'", "\'")
+
         return str(self.value)
 
 class Table(object):
@@ -131,7 +145,7 @@ class Table(object):
 
         sql = self.__class__.SQL_TABLE_COLS.format(tableName = name)
         for item in self.database.execute(sql).fetchall():
-            self.columns.append(TableColumn(self, item[1], item[2]))
+            self.columns.append(TableColumn(self, item[1], item[2], auto= item[1] == "_id"))
 
     def __eq__(self, other):
         if len(self.columns) != len(other.columns):
