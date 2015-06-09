@@ -1,5 +1,6 @@
 from inception.common.filetools import FileTools
 from inception.common.database import Database
+from inception.common.fstabtools import Fstab
 import os
 import logging
 from inception.common.moduletools import ModuleTools
@@ -134,9 +135,114 @@ class ConfigSyncer(object):
                     key = row.getValueFor(colKeyName)
                     value = row.getValueFor(colValueName)
                     if not key in refSettingsTable or refSettingsTable[key] != value:
-                        diffSettings["data"][table.name][key.replace(".", "\.")] = value
+                        diffSettings["data"][table.name][key] = value
 
 
         return (diffSettings, databaseContent)
 
+    def pullFstab(self):
+        with FileTools.newTmpDir() as tmpDir:
+            recoveryFstabPath = os.path.join(tmpDir, "recovery.fstab")
+            self.adb.pull("/etc/recovery.fstab", recoveryFstabPath)
+            parsedRecoveryFstab = Fstab.parseFstab(recoveryFstabPath)
+
+            fstabPath = os.path.join(tmpDir, "fstab")
+            self.adb.pull("/etc/fstab", fstabPath)
+            parsedFstab = Fstab.parseFstab(fstabPath)
+
+            for entry in parsedFstab.getEntries():
+                recovFstabEntry = parsedRecoveryFstab.getByMountPoint(entry.getMountPoint())
+                recovFstabEntry.setDevice(entry.getDevice())
+
+
+            return parsedRecoveryFstab
+
+    def getSizeFor(self, device):
+        result = self.adb.cmd("cat", "/proc/partitions")
+        grep = device.split("/")[-1]
+        for l in result.split("\n"):
+            l = l.strip()
+            if not l:
+                continue
+            l = " ".join(l.split()).split(" ")
+            if l[3] == grep:
+                return int(l[2]) * 1024
+
+        return None
+
+    def syncPartitions(self, apply = False):
+        out = {
+
+        }
+
+        fstab = self.pullFstab()
+        if not fstab:
+            logger.critical("Could not parse fstab! Skipping partitions..")
+            return {}
+
+        cacheData = fstab.getByMountPoint("/cache")
+        if cacheData:
+            if self.config.get("cache.dev") != cacheData.getDevice():
+                out["cache"] = { "dev": cacheData.getDevice() }
+
+            cacheSize = self.getSizeFor(cacheData.getDevice())
+            if cacheSize:
+                if self.config.get("cache.size") != cacheSize:
+                    out["cache"]["size"] = cacheSize
+            else:
+                logger.warning("Wasn't able to detect Cache size")
+        else:
+            logger.warning("No cache partition data")
+
+        recoveryData = fstab.getByMountPoint("/recovery")
+        if recoveryData:
+            if self.config.get("recovery.dev") != recoveryData.getDevice():
+                out["recovery"] = { "dev": recoveryData.getDevice() }
+        else:
+            logger.warning("No recovery partition data")
+
+        bootData = fstab.getByMountPoint("/boot")
+        if bootData:
+            if self.config.get("boot.dev") != bootData.getDevice():
+                out["boot"] = { "dev": bootData.getDevice() }
+        else:
+            logger.warning("No boot partition data")
+
+
+        if apply:
+            for k, v in out.items():
+                self.config.setRecursive(k, v)
+        return out
+
+    def syncProps(self, apply = False):
+        propsDict = {}
+        with FileTools.newTmpDir() as tmpDir:
+            propsDir = os.path.join(tmpDir, "props")
+            self.adb.pull("/data/property", propsDir)
+            for f in os.listdir(propsDir):
+                if f.startswith("."):
+                    continue
+                fullPath = os.path.join(propsDir, f)
+                with open(fullPath, 'r') as fHandle:
+                    currFileVal = fHandle.read()
+                    keys = f.split(".")
+                    if keys[0] == "persist":
+                        keys = keys[1:]
+
+                    if currFileVal == self.config.get("update.property." + (".".join(keys)), None):
+                        continue
+
+                    subDict = propsDict
+                    for i in range(0, len(keys) - 1):
+                        k = keys[i]
+                        if not k in subDict:
+                            subDict[k] = {}
+                        subDict = subDict[k]
+
+                    subDict[keys[-1]] = currFileVal
+
+        if apply:
+            self.config.setRecursive("update.property", propsDict)
+
+        return propsDict
 
