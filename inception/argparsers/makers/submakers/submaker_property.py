@@ -5,6 +5,12 @@ import os
 class PropertySubmaker(Submaker):
     def make(self, workDir):
         props = self.getConfigValue(".", {})
+        if "__make__" in props:
+            del props["__make__"]
+
+        if "__depend__" in props:
+            del props["__depend__"]
+
         propsFlat = self.flatten(props)
         outDir = os.path.join("data", "property")
         localOutDir = os.path.join(workDir, outDir)

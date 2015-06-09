@@ -14,6 +14,10 @@ class AppsSubmaker(Submaker):
 
     def make(self, workDir):
         apps = self.getConfigValue(".", {})
+        if "__make__" in apps:
+            del apps["__make__"]
+        if "__depend__" in apps:
+            del apps["__depend__"]
         for pkgName, data in apps.items():
             apkPath = self.getConfigProperty(pkgName.replace(".", "\.") + ".apk").resolveAsRelativePath()
             patchesList = []
