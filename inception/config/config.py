@@ -63,6 +63,14 @@ class Config(object):
             config.set("cache.__make__", base.get("cache.__make__", False))
 
             config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", False))
+            config.set("update.settings.__make__", base.get("update.settings.__make__", False))
+            config.set("update.databases.__make__", base.get("update.databases.__make__", False))
+            config.set("update.adb.__make__", base.get("update.adb.__make__", False))
+            config.set("update.apps.__make__", base.get("update.apps.__make__", False))
+            config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
+            config.set("update.root_method", base.get("root_method", None))
+            config.set("update.property.__make__", base.get("update.property.__make__", False))
+            config.set("update.network.__make__", base.get("update.network.__make__", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config
@@ -205,16 +213,6 @@ class Config(object):
 
     def delete(self, key):
         self.__delProperty(key)
-
-    def c__setProperty(self, keys, item, d = None):
-        d = d if d is not None else self.__contextData
-        if "." in keys and not keys == ".":
-            key, rest = keys.split(".", 1)
-            if key not in d or type(d[key]) is not dict:
-                d[key] = {}
-            self.__setProperty(rest, item, d[key])
-        else:
-            d[keys] = item
 
     def __delProperty(self, keys, d):
         d = d if d is not None else self.__contextData
