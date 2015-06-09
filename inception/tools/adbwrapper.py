@@ -42,6 +42,7 @@ class Adb(ExecWrapper):
         return devices
 
     def cmd(self, *cmd, **kwargs):
+        self.clearArgs()
         if self.busybox:
             cmd = ("busybox",) + cmd
         if "su" in kwargs and kwargs["su"] is True:
