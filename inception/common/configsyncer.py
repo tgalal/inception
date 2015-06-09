@@ -257,7 +257,11 @@ class ConfigSyncer(object):
                         k = keys[i]
                         if not k in subDict:
                             subDict[k] = {}
+
+                        if type(subDict[k]) is not dict:
+                            subDict[k] = {"__val__": subDict[k]}
                         subDict = subDict[k]
+
 
                     subDict[keys[-1]] = currFileVal
 

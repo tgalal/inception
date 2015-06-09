@@ -27,6 +27,10 @@ class PropertySubmaker(Submaker):
         for fname, val in propsFlat.items():
             if not val:
                 continue
+
+            if fname.endswith("__val__"):
+                fname = fname.replace(".__val__", "")
+
             fname = "persist.%s" % fname
             with open(os.path.join(localOutDir, fname), "w") as propFile:
                 propFile.write(val)
