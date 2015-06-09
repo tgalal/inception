@@ -14,12 +14,21 @@ Inception is a set of tools for auto configuring android devices. You can do the
 # How it works
 
 - You bootstrap a new device configuration
-- Update the config, which is a JSON file, with all the changes you need
+- Update the bootstrapped config, which is a JSON file, with all the changes you need
 - inception will compile your config into an Android OTA update package
-- Install the update package on your tablet in recovery mode
+- Install the update package to your device in recovery mode
 - Or optionally let inception generate a cache partition img for your device, allowing you to deploy your update in bootloader/download mode
+- No ROM compilation is involved.
 
-Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes.
+Inception does not create a full system image or whole roms. It bundles only the required changes in an Android update package and generates an update script which applies those changes. This results in update packages that are substantially smaller than when flashing a whole ROM.
+
+---
+# DISCLAIMER
+
+- **FLASHING DEVICES VOID THEIR WARRANTY**
+- **USE AT YOUR OWN RISK, I'M NOT RESPONSIBLE FOR BRICKING YOUR DEVICE.**
+
+---
 
 # Quick start:
 
@@ -40,8 +49,8 @@ For example:
         "name": "custom"
     },
     "update": {
+        "__make__": true,
         "keys": null,
-        "make": true,
         "network": {
             "aps": [
                 {
@@ -83,12 +92,17 @@ Inspect that file, override any properties in your own config, run make again an
 
 ## Requirements:
 
-- python-setuptools
-- For m2crypto:
+- For installation:
+  - python < 3.0
+  - python-setuptools
+  - dulwich
+  - argparse
+- For [incept learn](https://github.com/tgalal/inception/wiki/incept-learn) (optional):
+  - [adb](https://pypi.python.org/pypi/adb) >= 1.1.1 
   - swig
   - libssl-dev
   - dpkg-dev on debian distros, because: https://github.com/martinpaljak/M2Crypto/issues/62
--For some 32bit binaries:
+- For some 32bit binaries that are included in base configs (namely make_ext4s), unless overridden:
   - gcc-multilib
   - lib32z1
 
