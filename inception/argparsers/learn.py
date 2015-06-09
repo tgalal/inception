@@ -35,8 +35,12 @@ class LearnArgParser(InceptionArgParser):
         }
 
         self.config = self.configTreeParser.parseJSON(self.args["variant"])
-        resultDict["update"]["settings"] = self.learnSettings()
+        self.learnPartitions()
+        learntSettings = self.learnSettings()
+        resultDict["update"]["settings"] = learntSettings["settings"]
+        resultDict["update"]["databases"] = learntSettings["databases"]
         resultDict["update"]["property"] = self.learnProps()
+        resultDict.update(self.learnPartitions())
         print(json.dumps(resultDict, indent = 4))
         logger.info("Printed new and different settings, manually add to your config json file if needed")
         return True
@@ -76,3 +80,10 @@ class LearnArgParser(InceptionArgParser):
         syncer = ConfigSyncer(self.config)
         diff = syncer.pullAndDiff()
         return diff
+
+    def learnPartitions(self):
+        syncer = ConfigSyncer(self.config)
+        return syncer.syncPartitions()
+
+
+
