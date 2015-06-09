@@ -30,7 +30,6 @@ class LearnArgParser(InceptionArgParser):
     def process(self):
         super(LearnArgParser, self).process()
 
-
         resultDict = {
             "update": {}
         }

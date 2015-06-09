@@ -14,6 +14,7 @@ class ConfigSyncer(object):
 
     def pullAndDiff(self):
         import adb
+
         fullDiff = {
                 "settings": {},
                 "databases": {}
@@ -49,12 +50,14 @@ class ConfigSyncer(object):
                 # databaseConfig = self.config.get("update.databases.%s" % identifier.replace(".", "\."), {"data": {}})
                 schemaProperty = self.config.getProperty("update.settings.%s.schema" % identifier.replace(".", "\."))
                 data["schema"] = schemaProperty.resolveAsRelativePath()
+                if data["schema"] and not os.path.exists(data["schema"]):
+                    data["schema"] = schemaProperty.getValue()
                 diffSettingsConfig, databaseConfig = self.diffSettings(data, dbPath)
 
                 databaseConfig["__depend__"] = "update.settings.%s" % identifier.replace(".", "\.")
 
-                fullDiff["settings"][identifier.replace(".", "\.")] = diffSettingsConfig
-                fullDiff["databases"][identifier.replace(".", "\.")] = databaseConfig
+                fullDiff["settings"][identifier] = diffSettingsConfig
+                fullDiff["databases"][identifier] = databaseConfig
         return fullDiff
 
 
@@ -62,16 +65,43 @@ class ConfigSyncer(object):
         databases = diffDict["databases"]
         settings = diffDict["settings"]
 
-        self.config.setRecursive("update.databases", databases)
-        self.config.setRecursive("update.settings", settings)
+        # self.config.setRecursive("update.databases", databases)
 
+        for key, val in settings.items():
+            key = "update.settings." + (key.replace(".", "\."))
+            self.config.set(key, {})
+            for prop, propVal in val.items():
+                if prop == "data":
+                    self.config.set(key + ".data", {})
+                    for table, tableData in propVal.items():
+                        self.config.set(key + ".data." + table, {})
+                        for k, v in tableData.items():
+                            self.config.set(key + ".data." + table + "." + (k.replace(".", "\.")), v)
+                else:
+                    self.config.set(key + "." + prop, propVal)
+
+        for key, val in databases.items():
+            key = "update.databases." + (key.replace(".", "\."))
+            self.config.setRecursive(key, val)
+
+        # self.config.setRecursive("update.settings", settings)
 
 
     def diffSettings(self, settings, refDbPath):
         refDb = Database(refDbPath)
-        cuffSchemaFile = open(settings["schema"])
-        currDb = Database(cuffSchemaFile.read())
-        cuffSchemaFile.close()
+        if "schema" in settings and settings["schema"]:
+            if os.path.exists(settings["schema"]):
+                cuffSchemaFile = open(settings["schema"])
+                currDb = Database(cuffSchemaFile.read())
+                cuffSchemaFile.close()
+            else:
+                currDb = Database(settings["schema"])
+
+            if "version" in settings:
+                currDb.setVersion(int(settings["version"]))
+
+        else:
+            currDb = None
         diffSettings = {
             "data": {}
         }
@@ -79,17 +109,13 @@ class ConfigSyncer(object):
             "data": {}
         }
 
-        if not refDb.isEqualSchema(currDb):
+        if not currDb or not refDb.isEqualSchema(currDb):
             diffSettings["schema"] = refDb.getSchema()
-
-        if not refDb.getVersion() == currDb.getVersion():
+        if not currDb or not refDb.getVersion() == currDb.getVersion():
             diffSettings["version"] = refDb.getVersion()
 
         colKeyName = settings["col_key"] if "col_key" in settings else "name"
         colValueName = settings["col_val"] if "col_val" in settings else "value"
-
-        diffSettings["col_key"] = colKeyName
-        diffSettings["col_val"] = colValueName
 
         refSettingsData = settings["data"]
 

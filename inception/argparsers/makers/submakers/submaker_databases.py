@@ -6,7 +6,7 @@ from inception.common.database import Database
 logger = logging.getLogger(__name__)
 class DatabasesSubmaker(Submaker):
     def make(self, workDir):
-        allSettings = self.getConfigValue(".")
+        allSettings = self.getConfigValue(".", {})
         for name, dbData in allSettings.items():
             if name == "__make__":
                 continue
