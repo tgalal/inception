@@ -70,7 +70,7 @@ class _FstabV2(Fstab):
                     self.valid = False
                     break
                 dissectedLine = " ".join(line.split()).split(" ")
-                if not len(dissectedLine) == 3:
+                if not len(dissectedLine) >= 3:
                     continue
                 self.addEntry(dissectedLine[2], dissectedLine[0], dissectedLine[1])
 
