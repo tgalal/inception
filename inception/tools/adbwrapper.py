@@ -1,8 +1,22 @@
 from .execwrapper import ExecWrapper
 import os
-from adb.adb_commands import AdbCommands, M2CryptoSigner
-import stat
 import sys
+import usb1
+import logging
+from adb.adb_commands import AdbCommands, M2CryptoSigner
+
+logger = logging.getLogger(__name__)
+
+def catchUsbBusy(fn):
+    def wrapped(*args):
+        try:
+            fn(*args)
+        except usb1.USBErrorBusy as e:
+            logger.error("Could not claim USB device, got LIBUSB_ERROR_BUSY.\nIf you have a running adb server, you'll need to stop it by running 'adb kill-server' and then try again")
+            sys.exit(1)
+
+    return wrapped
+
 class Adb(ExecWrapper):
     def __init__(self):
         super(Adb, self).__init__(None)
@@ -18,9 +32,11 @@ class Adb(ExecWrapper):
     def setBusyBoxCmds(self, busybox):
         self.busybox = busybox
 
+    @catchUsbBusy
     def push(self, src, dest):
         return self.getConnection().Push(src, dest)
 
+    @catchUsbBusy
     def pull(self, src, dest, requireSu = False):
         conn = self.getConnection()
         conn.Pull(src, dest)
@@ -31,6 +47,7 @@ class Adb(ExecWrapper):
     def mkdir(self, dirname):
         return self.cmd("mkdir", dirname)
 
+    @catchUsbBusy
     def devices(self):
         self._setAction("devices")
         devices = {}
@@ -53,7 +70,7 @@ class Adb(ExecWrapper):
 
         return self.run()
 
-
+    @catchUsbBusy
     def run(self, preview = False):
         cmd = self.createArgs()
         return self.getConnection().Shell( '"' + " ".join(cmd) + '"')
