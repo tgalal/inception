@@ -10,6 +10,8 @@ class CacheMaker(Maker):
     def make(self, workDir, outDir):
         make_ext4fsBinProp = self.getCommonConfigProperty("tools.make_ext4fs.bin")
         assert make_ext4fsBinProp.getValue(), "must set common.tools.make_ext4fs.bin to create cache img"
+        assert os.path.exists(make_ext4fsBinProp.resolveAsRelativePath()), \
+            "%s does not exist, please update common.tools.make.make_ext4fs.bin to the correct path" % make_ext4fsBinProp.getValue()
 
         make_ext4fsBin = make_ext4fsBinProp.resolveAsRelativePath()
 
