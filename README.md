@@ -6,6 +6,7 @@ Inception is a set of tools for auto configuring android devices. You can do the
 - Include any apps to be be (pre)installed
 - Remove any stock apps
 - Root the device
+- Install busybox
 - Configure Wifi networks
 - Patch APKs
 - Replace Kernel, and/or ramdisk data in both boot and recovery imgs
@@ -32,8 +33,25 @@ Inception does not create a full system image or whole roms. It bundles only the
 
 # Quick start:
 
+## [Bootstrap](https://github.com/tgalal/inception/wiki/incept-bootstrap)
 ```bash
 incept bootstrap --base inception.device --variant myconfig
+```
+
+This will generate a configuration file for your variant
+
+Use the following command to list current available variants
+
+```bash
+incept ls -l
+```
+
+Outputs:
+```
+Variants:
+=========
+inception.android.common    ~/.inception/variants/inception/android/common/common.json
+inception.device.myconfig   ~/.inception/variants/inception/device/myconfig/myconfig.json
 ```
 
 Edit ~/.inception/variants/inception/device/myconfig/myconfig.json
@@ -70,6 +88,8 @@ For example:
 
 ```
 then:
+
+## [Make](https://github.com/tgalal/inception/wiki/incept-make)
 
 ```bash
 incept make --variant inception.device.myconfig
