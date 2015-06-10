@@ -19,6 +19,9 @@ class BusyboxArgParser(InceptionArgParser):
         requiredOpts.add_argument('-b', '--base', action = "store", help="base config code to use, in the format A.B")
         requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
 
+        optionalOpts = self.add_argument_group("Optional args")
+        optionalOpts.add_argument("-o", "--output", action="store_true", help="Override default output path")
+
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
@@ -34,6 +37,9 @@ class BusyboxArgParser(InceptionArgParser):
         autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
 
         config = Config.new(autorootBase + ".busybox", "busybox", config)
+
+        if self.args["output"]:
+            config.setOutPath(self.args["output"])
 
         config.set("update.restore_stock_recovery", True)
         config.set("update.__make__", True)
