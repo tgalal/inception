@@ -42,7 +42,8 @@ if __name__ == "__main__":
         else:
             end = int(time.time())
             elapsed = end - start
-            print("Finished in %s seconds" % elapsed)
+            if parser.trackTime():
+                print("Finished in %s seconds" % elapsed)
     except InceptionArgParserException as e:
         print("ERROR!!\n%s" % e)
         sys.exit(1)
