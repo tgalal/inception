@@ -62,6 +62,7 @@ class Config(object):
             config.set("boot.__make__", base.get("boot.__make__", False))
             config.set("recovery.__make__", base.get("recovery.__make__", False))
             config.set("cache.__make__", base.get("cache.__make__", False))
+            config.set("odin.__make__", base.get("odin.__make__", False))
 
             config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", False))
             config.set("update.settings.__make__", base.get("update.settings.__make__", False))
@@ -311,6 +312,7 @@ class Config(object):
         for makerItem in makersMap:
             key, Maker = makerItem
             if self.get(key + ".__make__", True):
+                logger.info("Making %s" % key)
                 m = Maker(self)
                 m.make(workDir, self.getOutPath())
             else:
