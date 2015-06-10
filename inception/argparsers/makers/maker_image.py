@@ -22,8 +22,6 @@ class ImageMaker(Maker):
         mkbootbin = mkbootprop.getConfig().resolveRelativePath(mkbootprop.getValue())
         gen = BootImgGenerator(mkbootbin)
         gen.setWorkDir(workDir)
-        gen.setOutDir(outDir)
-
 
         ramdisk = self.getMakeConfigProperty("img.ramdisk_dir").resolveAsRelativePath()
         if ramdisk is None:

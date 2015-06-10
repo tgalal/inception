@@ -56,14 +56,14 @@ class BootstrapArgParser(InceptionArgParser):
         unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
         unpacker = unpackerProperty.getConfig().resolveRelativePath(unpackerProperty.getValue())
         bootImg = self.config.getProperty("boot.img", None)
-        if bootImg and self.config.get("boot.make", False):
+        if bootImg and self.config.get("boot.__make__", False):
             if type(bootImg.getValue()) is str:
                 logger.info("Unpacking boot img")
                 self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
 
 
         recoveryImg = self.config.getProperty("recovery.img", None)
-        if recoveryImg and self.config.get("recovery.make", False):
+        if recoveryImg and self.config.get("recovery.__make__", False):
             if type(recoveryImg.getValue()) is str:
                 logger.info("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
