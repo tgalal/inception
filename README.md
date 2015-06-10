@@ -97,7 +97,7 @@ Inspect that file, override any properties in your own config, run make again an
   - python-setuptools
   - dulwich
   - argparse
-- For [incept learn](https://github.com/tgalal/inception/wiki/incept-learn) and [incept bootstrap --learn](https://github.com/tgalal/inception/wiki/incept-bootstrap) (optional):
+- For [incept learn](https://github.com/tgalal/inception/wiki/incept-learn) and [incept bootstrap --learn-*](https://github.com/tgalal/inception/wiki/incept-bootstrap) (optional):
   - [adb](https://pypi.python.org/pypi/adb) >= 1.1.1 
   - swig
   - libssl-dev
