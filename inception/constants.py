@@ -1,6 +1,6 @@
 import os
 class InceptionConstants:
-    INCEPTION_DIR = os.path.expanduser("~/.inception")
+    INCEPTION_DIR = os.environ.get("INCEPTION_HOME") or os.path.expanduser("~/.inception")
     SOURCES_FILE = os.path.join(INCEPTION_DIR, "sources.json")
     VARIANTS_DIR = os.path.join(INCEPTION_DIR, "variants")
     BASE_DIR = os.path.join(INCEPTION_DIR, "base")
