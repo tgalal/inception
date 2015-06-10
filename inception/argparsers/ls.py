@@ -12,13 +12,13 @@ class LsArgParser(InceptionArgParser):
         super(LsArgParser, self).__init__(description = "list available configs")
         self.time = False
         viewOpts = self.add_argument_group("View mode").add_mutually_exclusive_group()
-        viewOpts.add_argument("-l", '--long', action="store_true")
+        viewOpts.add_argument("-l", '--long', action="store_true", help = "Long listing")
         # viewOpts.add_argument("-t", '--tree', action="store_true")
 
         requiredOpts = self.add_argument_group("Config types").add_mutually_exclusive_group()
-        requiredOpts.add_argument('-v', '--variants', action = "store_true")
-        requiredOpts.add_argument('-b', '--bases', action="store_true")
-        requiredOpts.add_argument('-a', '--all',  action="store_true")
+        requiredOpts.add_argument('-v', '--variants', action = "store_true", help = "List variant configs only")
+        requiredOpts.add_argument('-b', '--bases', action="store_true", help = "List base configs only")
+        requiredOpts.add_argument('-a', '--all',  action="store_true", help = "List all configs")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
