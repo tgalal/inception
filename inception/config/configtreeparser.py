@@ -57,7 +57,7 @@ class ConfigTreeParser(object):
                 return self._parseCode(identifier, True)
             raise ValueError("Couldn't resolve %s" % identifier)
 
-        return self._parseJSONFile(jsonFilePath, code = identifier)
+        return self._parseJSONFile(jsonFilePath, code = identifier, isFresh = isFresh)
 
 
 
