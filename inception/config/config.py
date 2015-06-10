@@ -3,6 +3,7 @@ import os
 import re
 from inception.constants import InceptionConstants
 import sys
+import shutil
 from inception.argparsers.makers.maker_cache import CacheMaker
 from inception.argparsers.makers.maker_update import UpdateMaker
 from inception.argparsers.makers.maker_odin import OdinMaker
@@ -288,7 +289,17 @@ class Config(object):
         a,b,c = self.getIdentifier().split(".")
         return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
 
+    def prepareOutDir(self):
+        outDir = self.getOutPath()
+        if not self.outPath and os.path.exists(outDir):
+            logger.info("Cleaning out dir")
+            shutil.rmtree(outDir)
+
+        if not os.path.exists(outDir):
+            os.makedirs(outDir)
+
     def make(self, workDir):
+        self.prepareOutDir()
         makersMap = [
             ("update", UpdateMaker),
             ("boot", BootImageMaker),

@@ -33,6 +33,7 @@ class MakeArgParser(InceptionArgParser):
         super(MakeArgParser, self).process()
 
         code = self.args["variant"]
+        outDir = self.args["output"]
         if code:
             self.config = self.configTreeParser.parseJSON(code)
 
@@ -50,17 +51,21 @@ class MakeArgParser(InceptionArgParser):
             )
         else:
             configPath = self.args["config"]
-            outputPath = self.args["output"]
-            if not outputPath:
+            if not outDir:
                 print("Must set --output when using --config")
                 sys.exit(1)
             self.config = self.configTreeParser.parseJSONFile(configPath)
-            self.config.setOutPath(outputPath)
             self.setWorkDir(tempfile.mkdtemp())
 
         if self.config.get("__abstract__", False, directOnly=True):
             print("Won't make abstract config %s" % code)
             sys.exit(1)
+
+
+        if outDir:
+            self.config.setOutPath(outDir)
+        else:
+            outDir = self.config.getOutPath()
 
         self.workDir = self.getWorkDir()
         self.configDir = os.path.dirname(self.config.getSource())
@@ -69,12 +74,6 @@ class MakeArgParser(InceptionArgParser):
         if os.path.exists(self.workDir):
             shutil.rmtree(self.workDir)
         os.makedirs(self.workDir)
-
-        logger.info("Cleaning out dir")
-        outDir = self.config.getOutPath()
-        if os.path.exists(outDir):
-            shutil.rmtree(outDir)
-        os.makedirs(outDir)
 
         if self.args["learn_settings"]:
             syncer = ConfigSyncer(self.config)

@@ -42,11 +42,6 @@ class AutorootArgParser(InceptionArgParser):
         if self.args["output"]:
             config.setOutPath(self.args["output"])
 
-
-        if os.path.exists(config.getOutPath()):
-            shutil.rmtree(config.getOutPath())
-
-        os.makedirs(config.getOutPath())
         config.set("update.restore_stock_recovery", True)
         config.set("update.__make__", True)
         config.set("odin.__make__", True)
