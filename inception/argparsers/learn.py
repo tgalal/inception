@@ -6,7 +6,6 @@ import json
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 import os
-import tempfile
 from inception.common.configsyncer import ConfigSyncer
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,6 @@ class LearnArgParser(InceptionArgParser):
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
         self.configTreeParser = configtreeparser.ConfigTreeParser(identifierResolver)
-        self.tmpDir = tempfile.mkdtemp()
 
     def process(self):
         super(LearnArgParser, self).process()

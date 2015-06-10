@@ -5,7 +5,6 @@ from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 from inception.config import Config
 logger = logging.getLogger(__name__)
-import tempfile
 from inception.common.filetools import FileTools
 import os
 import shutil
@@ -29,7 +28,6 @@ class AutorootArgParser(InceptionArgParser):
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
         self.configTreeParser = configtreeparser.ConfigTreeParser(identifierResolver)
-        self.tmpDir = tempfile.mkdtemp()
 
     def process(self):
         super(AutorootArgParser, self).process()

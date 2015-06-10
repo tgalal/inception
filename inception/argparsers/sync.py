@@ -3,7 +3,6 @@ from inception.constants import InceptionConstants
 from inception.config import configtreeparser
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
-import tempfile
 logger = logging.getLogger(__name__)
 
 class SyncArgParser(InceptionArgParser):
@@ -19,7 +18,6 @@ class SyncArgParser(InceptionArgParser):
         self.baseDir = InceptionConstants.BASE_DIR
         identifierResolver = DotIdentifierResolver([self.deviceDir, self.baseDir])
         self.configTreeParser = configtreeparser.ConfigTreeParser(identifierResolver)
-        self.tmpDir = tempfile.mkdtemp()
 
     def process(self):
         super(SyncArgParser, self).process()
