@@ -4,6 +4,7 @@ from inception.argparsers import BootstrapArgParser,PlantArgParser,\
     LearnArgParser, SyncArgParser, AutorootArgParser,\
     BusyboxArgParser, LsArgParser, MakeArgParser
 from inception.argparsers.exceptions import InceptionArgParserException
+from inception import __version__
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
@@ -22,7 +23,8 @@ if __name__ == "__main__":
         "sync": SyncArgParser,
         "autoroot": AutorootArgParser,
         "busybox": BusyboxArgParser,
-        "ls": LsArgParser
+        "ls": LsArgParser,
+        "version": None
     }
 
     if(len(args) == 0 or args[0] not in modeDict):
@@ -32,6 +34,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     mode = args[0]
+    if mode == "version":
+        print(__version__)
+        sys.exit(0)
     parser = modeDict[mode]()
     #args = vars(parser.parse_args())
     #if len(sys.argv) == 1:
