@@ -20,7 +20,7 @@ class BusyboxArgParser(InceptionArgParser):
         requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
 
         optionalOpts = self.add_argument_group("Optional args")
-        optionalOpts.add_argument("-o", "--output", action="store_true", help="Override default output path")
+        optionalOpts.add_argument("-o", "--output", action="store", help="Override default output path")
         optionalOpts.add_argument("--ignore-stock", action="store_true", help="Don't restore stock recovery when done")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
