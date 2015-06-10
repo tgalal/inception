@@ -21,6 +21,7 @@ class BusyboxArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", action="store_true", help="Override default output path")
+        optionalOpts.add_argument("--ignore-stock", action="store_true", help="Don't restore stock recovery when done")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -41,7 +42,6 @@ class BusyboxArgParser(InceptionArgParser):
         if self.args["output"]:
             config.setOutPath(self.args["output"])
 
-        config.set("update.restore_stock_recovery", True)
         config.set("update.__make__", True)
         config.set("odin.__make__", True)
         config.set("odin.checksum", True)
@@ -59,9 +59,10 @@ class BusyboxArgParser(InceptionArgParser):
         config.set("update.keys", "test")
         config.set("recovery.__make__", True)
         config.set("boot.__make__", False)
+        config.set("update.restore_stock_recovery", not self.args["ignore_stock"])
 
-        if not config.get("recovery.stock"):
-            print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
+        if not self.args["ignore_stock"] and not config.get("recovery.stock"):
+            logger.error("recovery.stock is not set, use --ignore-stock to not restore stock recovery when done." )
             sys.exit(1)
 
         with FileTools.newTmpDir() as workDir:
