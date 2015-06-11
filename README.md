@@ -113,7 +113,17 @@ You will find the full config that generated the OTA package at:
 
  > ~/.inception/out/inception/device/myconfig/config.json
 
-Inspect that file, override any properties in your own config, run make again and see your changes easily going through.
+Inspect that file to see how a full config looks like, override any properties in your original config, run make again and see your changes easily going through.
+
+# Do more
+
+- [Config file structure](https://github.com/tgalal/inception/wiki/Configuration-files)
+- [Support any device](https://github.com/tgalal/inception/wiki/Support-any-device)
+- [Create Auto-Root packages](https://github.com/tgalal/inception/wiki/incept-autoroot)
+- [Rooting devices](https://github.com/tgalal/inception/wiki/Rooting-devices)
+- [Config sources](https://github.com/tgalal/inception/wiki/sources.json)
+- [Makers/Submakers](https://github.com/tgalal/inception/wiki/Makers)
+- [FAQ](https://github.com/tgalal/inception/wiki/FAQ)
 
 # Installation
 
