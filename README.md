@@ -33,6 +33,10 @@ Inception does not create a full system image or whole roms. It bundles only the
 
 # Quick start:
 
+## Install
+
+[See installation](https://github.com/tgalal/inception#installation)
+
 ## [Bootstrap](https://github.com/tgalal/inception/wiki/incept-bootstrap)
 ```bash
 incept bootstrap --base inception.device --variant myconfig
@@ -56,7 +60,7 @@ inception.device.myconfig   ~/.inception/variants/inception/device/myconfig/myco
 
 Edit ~/.inception/variants/inception/device/myconfig/myconfig.json
 
-Override device settings, add wifi settings, or add some apps
+Override device settings, add wifi settings, add some apps, root the device and install busybox
 
 For example:
 
@@ -68,7 +72,10 @@ For example:
     },
     "update": {
         "__make__": true,
-        "keys": null,
+        "root_method": "supersu",
+        "busybox": {
+            "__make__": true
+        },
         "network": {
             "aps": [
                 {
@@ -125,6 +132,8 @@ Inspect that file, override any properties in your own config, run make again an
 - For some 32bit binaries that are included in base configs (namely make_ext4s), unless overridden:
   - gcc-multilib
   - lib32z1
+- For patching APKs
+  - libstdc++6 and/or lib32stdc++6 
 
 ## Install
 
