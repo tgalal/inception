@@ -61,8 +61,8 @@ class ConfigTreeParser(object):
 
 
 
-    def parseJSONFile(self, jsonFilePath):
-        return self._parseJSONFile(jsonFilePath)
+    def parseJSONFile(self, jsonFilePath, code = None):
+        return self._parseJSONFile(jsonFilePath, code = code)
 
     def _parseJSONFile(self, jsonFilePath, isFresh = False, code = "inception.current.out"):
         if not os.path.exists(jsonFilePath):
