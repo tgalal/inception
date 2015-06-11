@@ -73,6 +73,7 @@ class Config(object):
             config.set("update.root_method", base.get("update.root_method", None))
             config.set("update.property.__make__", base.get("update.property.__make__", False))
             config.set("update.network.__make__", base.get("update.network.__make__", False))
+            config.set("update.script.format_data", base.get("update.script.format_data", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config
