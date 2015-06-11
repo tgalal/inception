@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def catchUsbBusy(fn):
     def wrapped(*args):
         try:
-            fn(*args)
+            return fn(*args)
         except usb1.USBErrorBusy as e:
             logger.error("Could not claim USB device, got LIBUSB_ERROR_BUSY.\nIf you have a running adb server, you'll need to stop it by running 'adb kill-server' and then try again")
             sys.exit(1)
