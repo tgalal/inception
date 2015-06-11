@@ -2,7 +2,7 @@ Inception
 =========
 Inception is a set of tools for auto configuring android devices. You can do the following:
 
-- [Include any apps to be be (pre)installed](https://github.com/tgalal/inception/wiki/configkey:-update.apps)
+- [Include any apps to be (pre)installed](https://github.com/tgalal/inception/wiki/configkey:-update.apps)
 - [Remove any stock apps](https://github.com/tgalal/inception/wiki/configkey:-update.files)
 - [Root the device](https://github.com/tgalal/inception/wiki/Rooting-devices)
 - [Install busybox](https://github.com/tgalal/inception/wiki/configkey:-update.busybox)
