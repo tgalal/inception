@@ -77,7 +77,7 @@ class LsArgParser(InceptionArgParser):
         longestKey = max( len(x) for x in keys )
         self.longest = max(longestKey, self.longest)
         for key in keys:
-            flags = self.getFlags(d[key])
+            flags = self.getFlags(d[key]) if not d[key].isBase() else [" " for i in self.__class__.FLAGS_KEYS]
             formattedFlags = self.formatFlags(flags)
             print("%*s %*s %s" % (-self.longest, key, -len(self.__class__.FLAGS_KEYS) , formattedFlags, d[key].getSource()))
 
