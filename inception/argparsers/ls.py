@@ -4,9 +4,20 @@ from inception.config import configtreeparser
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
 import os
+
 logger = logging.getLogger(__name__)
 
 class LsArgParser(InceptionArgParser):
+    FLAGS_KEYS = ("cache", "odin", "boot", "recovery", "update")
+    KEY_OUTS_MAP = {
+        "cache":    InceptionConstants.OUT_NAME_CACHE,
+        "odin":     InceptionConstants.OUT_NAME_ODIN,
+        "boot":     InceptionConstants.OUT_NAME_BOOT,
+        "recovery": InceptionConstants.OUT_NAME_RECOVERY,
+        "update":   InceptionConstants.OUT_NAME_UPDATE
+    }
+
+    FLAGS_SEPARATOR = ""
 
     def __init__(self):
         super(LsArgParser, self).__init__(description = "list available configs")
@@ -66,7 +77,9 @@ class LsArgParser(InceptionArgParser):
         longestKey = max( len(x) for x in keys )
         self.longest = max(longestKey, self.longest)
         for key in keys:
-            print("%*s %s" % (-self.longest - 5, key, d[key]))
+            flags = self.getFlags(d[key])
+            formattedFlags = self.formatFlags(flags)
+            print("%*s %*s %s" % (-self.longest - 5, key, - 5 - len(self.__class__.FLAGS_KEYS) , formattedFlags, d[key].getSource()))
 
     def searchDir(self, path, depth, currDepth = 0):
         keysDict = {}
@@ -75,10 +88,31 @@ class LsArgParser(InceptionArgParser):
             configPath = os.path.join(path, os.path.basename(path) + ".json")
             if os.path.exists(configPath):
                 keys = path.split("/")[-depth:]
-                return {".".join(keys):  configPath}
+                code = ".".join(keys)
+                return {code:  self.configTreeParser.parseJSONFile(configPath, code)}
 
         elif os.path.isdir(path):
             for f in os.listdir(path):
                 keysDict.update(self.searchDir(os.path.join(path, f), depth, currDepth+1))
 
         return keysDict
+
+    def formatFlags(self, flags):
+        return self.__class__.FLAGS_SEPARATOR.join(flags)
+
+    def getFlags(self, config):
+        flags = []
+        for key in self.__class__.FLAGS_KEYS:
+            outPath = os.path.join(config.getOutPath(), self.__class__.KEY_OUTS_MAP[key])
+
+            if key == "odin":
+                outPath = outPath.format(identifier = config.getIdentifier().replace(".", "-"))
+                if config.get("odin.checksum", True):
+                    outPath += ".md5"
+
+            if os.path.exists(outPath):
+                flags.append(key[0].lower())
+            else:
+                flags.append("-")
+
+        return flags
