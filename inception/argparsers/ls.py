@@ -79,7 +79,7 @@ class LsArgParser(InceptionArgParser):
         for key in keys:
             flags = self.getFlags(d[key])
             formattedFlags = self.formatFlags(flags)
-            print("%*s %*s %s" % (-self.longest - 5, key, - 5 - len(self.__class__.FLAGS_KEYS) , formattedFlags, d[key].getSource()))
+            print("%*s %*s %s" % (-self.longest, key, -len(self.__class__.FLAGS_KEYS) , formattedFlags, d[key].getSource()))
 
     def searchDir(self, path, depth, currDepth = 0):
         keysDict = {}
