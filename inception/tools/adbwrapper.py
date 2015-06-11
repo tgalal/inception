@@ -4,6 +4,9 @@ import sys
 import usb1
 import logging
 from adb.adb_commands import AdbCommands, M2CryptoSigner
+from Crypto.PublicKey import RSA
+
+from inception.constants import InceptionConstants
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +25,17 @@ class Adb(ExecWrapper):
         super(Adb, self).__init__(None)
         self.busybox = False
         self.connection = None
-        self.rsaKeys =  [M2CryptoSigner(os.path.expanduser("~/.android/adbkey"))]
+        if not os.path.exists(InceptionConstants.PATH_RSA_KEY):
+            logger.warning("%s does not exist, going to generate RSA keys" % InceptionConstants.PATH_RSA_KEY)
+            private = RSA.generate(1024)
+            public  = private.publickey()
+            with open(InceptionConstants.PATH_RSA_KEY, 'w') as privateKeyFile:
+                privateKeyFile.write(private.exportKey())
+
+            with open(InceptionConstants.PATH_RSA_KEY + ".pub", "w") as publicKeyFile:
+                publicKeyFile.write(public.exportKey())
+
+        self.rsaKeys =  [M2CryptoSigner(os.path.expanduser(InceptionConstants.PATH_RSA_KEY))]
 
     def getConnection(self):
         if self.connection is None:

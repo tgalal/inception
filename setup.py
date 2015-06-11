@@ -1,4 +1,4 @@
-deps = ['dulwich', 'argparse']
+deps = ['dulwich', 'argparse', 'pycrypto']
 from setuptools import setup, find_packages
 import inception
 setup(
