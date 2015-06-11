@@ -2,15 +2,15 @@ Inception
 =========
 Inception is a set of tools for auto configuring android devices. You can do the following:
 
-- Generate all device settings
-- Include any apps to be be (pre)installed
-- Remove any stock apps
-- Root the device
-- Install busybox
-- Configure Wifi networks
-- Patch APKs
-- Replace Kernel, and/or ramdisk data in both boot and recovery imgs
-- Place your adb keys
+- [Generate all device settings](https://github.com/tgalal/inception/wiki/configkey:-update.settings)
+- [Include any apps to be be (pre)installed](https://github.com/tgalal/inception/wiki/configkey:-update.apps)
+- [Remove any stock apps](https://github.com/tgalal/inception/wiki/configkey:-update.files)
+- [Root the device](https://github.com/tgalal/inception/wiki/Rooting-devices)
+- [Install busybox](https://github.com/tgalal/inception/wiki/configkey:-update.busybox)
+- [Configure Wifi networks](https://github.com/tgalal/inception/wiki/configkey:-update.network)
+- [Patch APKs](https://github.com/tgalal/inception/wiki/configkey:-update.apps)
+- Replace Kernel, and/or ramdisk data in both [boot](https://github.com/tgalal/inception/wiki/configkey:-boot) and [recovery](https://github.com/tgalal/inception/wiki/configkey:-recovery) imgs
+- [Place your adb keys, configure USB debugging](https://github.com/tgalal/inception/wiki/configkey:-update.adb)
 
 # How it works
 
