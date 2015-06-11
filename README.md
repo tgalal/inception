@@ -126,8 +126,8 @@ Inspect that file to see how a full config looks like, override any properties i
 - [FAQ](https://github.com/tgalal/inception/wiki/FAQ)
 
 # Installation
-
-## Requirements:
+## On your system:
+### Requirements:
 
 - For installation:
   - python < 3.0
@@ -145,7 +145,7 @@ Inspect that file to see how a full config looks like, override any properties i
 - For patching APKs
   - libstdc++6 and/or lib32stdc++6 
 
-## Install
+### Install
 
 ```
 git clone https://github.com/tgalal/inception.git
@@ -154,6 +154,15 @@ python setup.py install
 or
 ```
 pip install inception-android
+```
+
+## Using docker
+
+Here is also a [docker container](https://registry.hub.docker.com/u/tgalal/inception/) for inception
+
+```
+docker pull tgalal/inception
+
 ```
 
 # License:
