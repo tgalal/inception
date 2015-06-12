@@ -132,11 +132,11 @@ Inspect that file to see how a full config looks like, override any properties i
 - For installation:
   - python < 3.0
   - python-setuptools
+  - swig
   - dulwich
   - argparse
 - For [incept learn](https://github.com/tgalal/inception/wiki/incept-learn) and [incept bootstrap --learn-*](https://github.com/tgalal/inception/wiki/incept-bootstrap) (optional):
   - [adb](https://pypi.python.org/pypi/adb) >= 1.1.1 
-  - swig
   - libssl-dev
   - dpkg-dev on debian distros, because: https://github.com/martinpaljak/M2Crypto/issues/62
 - For some 32bit binaries that are included in base configs (namely make_ext4s), unless overridden:
