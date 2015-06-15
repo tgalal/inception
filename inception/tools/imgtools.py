@@ -44,35 +44,23 @@ def unpackimg(unpackerBin, img, out):
 
         if key == "BOARD_KERNEL_CMDLINE":
             bootImgGenerator.setKernelCmdLine(value)
-            # self.newConfig.set("%s.img.cmdline" % imgType, value)
         elif key == "BOARD_KERNEL_BASE":
             bootImgGenerator.setBaseAddr("0x" + value)
-            # self.newConfig.set("%s.img.base" % imgType, "0x" + value)
         elif key == "BOARD_RAMDISK_OFFSET":
             bootImgGenerator.setRamdiskOffset("0x" + value)
-            # self.newConfig.set("%s.img.ramdisk_offset" % imgType, "0x" + value)
         elif key == "BOARD_SECOND_OFFSET":
             bootImgGenerator.setSecondOffset("0x" + value)
-            # self.newConfig.set("%s.img.second_offset" % imgType, "0x" + value)
         elif key == "BOARD_TAGS_OFFSET":
             bootImgGenerator.setTagsOffset("0x" + value)
-            # self.newConfig.set("%s.img.tags_offset" % imgType, "0x" + value)
         elif key == "BOARD_PAGE_SIZE":
             bootImgGenerator.setPageSize(int(value))
-            # self.newConfig.set("%s.img.pagesize" % imgType, int(value))
         elif key == "BOARD_SECOND_SIZE":
             bootImgGenerator.setSecondSize(int(value))
-            # self.newConfig.set("%s.img.second_size" % imgType, int(value))
         elif key == "BOARD_DT_SIZE":
             bootImgGenerator.setDeviceTreeSize(int(value))
-            # self.newConfig.set("%s.img.dt_size" % imgType, int(value))
 
     bootImgGenerator.setKernel(kernel)
     bootImgGenerator.setRamdisk(ramdiskDir)
     bootImgGenerator.setDeviceTree(dt)
-
-    # self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(kernel, self.variantDir))
-    # self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(ramdiskDir, self.variantDir))
-    # self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(dt, self.variantDir))
 
     return bootImgGenerator
