@@ -11,7 +11,8 @@ def unpackimg(unpackerBin, img, out):
     dt = "%s/%s-dt" % (out, filename)
     ramdiskDir = os.path.join(out, "ramdisk")
     ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
-    os.makedirs(out)
+    if not os.path.exists(out):
+        os.makedirs(out)
     unpackResult = cmdtools.execCmd(unpackerBin, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
     try:
         cmdtools.execCmd("gunzip", ramdisk + ".gz")
