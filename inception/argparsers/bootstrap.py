@@ -1,11 +1,10 @@
 from .argparser import InceptionArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
-from inception.inceptionobject import InceptionExecCmdFailedException
 from inception.common.configsyncer import ConfigSyncer
+from inception.tools import imgtools
 import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
-
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
 
@@ -144,68 +143,16 @@ class BootstrapArgParser(InceptionArgParser):
         return os.path.join(self.configDir, configName + ".config")
 
     def unpackimg(self, img, out, unpacker, imgType):
-        if not os.path.isfile(img):
-            raise ValueError("Coudn't find %s to unpack"  % img)
-        filename = img.split('/')[-1]
-        ramdisk = "%s/%s-ramdisk" % (out, filename)
-        kernel = "%s/%s-zImage" % (out, filename)
-        dt = "%s/%s-dt" % (out, filename)
-        ramdiskDir = os.path.join(out, "ramdisk")
-        ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
-        os.makedirs(out)
-        unpackResult = self.execCmd(unpacker, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
-        try:
-            self.execCmd("gunzip", ramdisk + ".gz") 
-        except InceptionExecCmdFailedException as e:
-            self.execCmd("mv", ramdisk + ".gz", ramdisk + ".xz")
-            self.execCmd("unxz", ramdisk + ".xz")
+        bootImgGenerator  = imgtools.unpackimg(unpacker, img, out)
 
-        self.createDir(ramdiskDir)
-        self.execCmd("mv", ramdisk, ramdiskDir)
-
-        f = open(ramdiskExtracted)
-        try:
-            self.execCmd("cpio", "-i", cwd = ramdiskDir, stdin = f)
-        finally:
-            f.close()
-        os.remove(ramdiskExtracted)
-
-        #process unpacker output
-        resultList = unpackResult.split('\n')
-        for l in resultList:
-            try:
-                dissect = l.split(' ')
-                key = dissect[0]
-                value = " ".join(dissect[1:]) or None
-            except ValueError:
-                key = l.split(' ')
-                value = None
-
-            if key == "BOARD_KERNEL_CMDLINE":
-                self.newConfig.set("%s.img.cmdline" % imgType, value)
-            elif key == "BOARD_KERNEL_BASE":
-                self.newConfig.set("%s.img.base" % imgType, "0x" + value)
-            elif key == "BOARD_RAMDISK_OFFSET":
-                self.newConfig.set("%s.img.ramdisk_offset" % imgType, "0x" + value)
-            elif key == "BOARD_SECOND_OFFSET":
-                self.newConfig.set("%s.img.second_offset" % imgType, "0x" + value)
-            elif key == "BOARD_TAGS_OFFSET":
-                self.newConfig.set("%s.img.tags_offset" % imgType, "0x" + value)
-            elif key == "BOARD_PAGE_SIZE":
-                self.newConfig.set("%s.img.pagesize" % imgType, int(value))
-            elif key == "BOARD_SECOND_SIZE":
-                self.newConfig.set("%s.img.second_size" % imgType, int(value))
-            elif key == "BOARD_DT_SIZE":
-                self.newConfig.set("%s.img.dt_size" % imgType, int(value))
-
-
-        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(kernel, self.variantDir))
-        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(ramdiskDir, self.variantDir))
-        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(dt, self.variantDir))
-
-
-
-       
-
-
-
+        self.newConfig.set("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
+        self.newConfig.set("%s.img.base" % imgType, bootImgGenerator.getBaseAddr())
+        self.newConfig.set("%s.img.ramdisk_offset" % imgType, bootImgGenerator.getRamdiskOffset())
+        self.newConfig.set("%s.img.second_offset" % imgType, bootImgGenerator.getSecondOffset())
+        self.newConfig.set("%s.img.tags_offset" % imgType, bootImgGenerator.getTagsOffset())
+        self.newConfig.set("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
+        self.newConfig.set("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
+        self.newConfig.set("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
+        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImgGenerator.getKernel(), self.variantDir))
+        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
+        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
