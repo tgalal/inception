@@ -1,5 +1,8 @@
-import abc
 from inception.constants import InceptionConstants
+import abc
+import tempfile
+import os
+import shutil
 class Maker(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, config, key):
@@ -44,6 +47,19 @@ class Maker(object):
     def getCacheOutName(self):
         return self.config.get("cache.out", InceptionConstants.OUT_NAME_CACHE)
 
+    def newTmpWorkDir(self):
+        return TmpWorkDir()
+
     @abc.abstractmethod
     def make(self, workDir, outDir):
         pass
+
+
+class TmpWorkDir(object):
+    def __enter__(self):
+        self.__path = tempfile.mkdtemp()
+        return self.__path
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if os.path.exists(self.__path):
+            shutil.rmtree(self.__path)
