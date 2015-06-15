@@ -291,6 +291,9 @@ class Config(object):
         a,b,c = self.getIdentifier().split(".")
         return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
 
+    def isMakeable(self, key):
+        return self.get(key + ".__make__", True)
+
     def prepareOutDir(self):
         outDir = self.getOutPath()
         if not self.outPath and os.path.exists(outDir):
