@@ -12,4 +12,5 @@ class InceptionConstants:
     OUT_NAME_BOOT     = "boot.img"
     OUT_NAME_CACHE    = "cache.img"
     FS_DIR  = "fs"
-    PATH_RSA_KEY = os.path.join(INCEPTION_DIR, "inception_adbkey")
+    # PATH_RSA_KEY = os.path.join(INCEPTION_DIR, "inception_adbkey")
+    PATH_RSA_KEY = os.path.expanduser("~/.android/adbkey")

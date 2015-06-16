@@ -20,7 +20,7 @@ class ConfigSyncer(object):
 
         ModuleTools.adb(True)
         from inception.tools.adbwrapper import Adb
-        self.adb = Adb(os.path.expanduser("~/.android/adbkey"))
+        self.adb = Adb()
 
     @ensureDataMounted
     def pullAndDiff(self):

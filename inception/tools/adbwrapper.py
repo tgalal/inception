@@ -23,17 +23,14 @@ def catchUsbBusy(fn):
     return wrapped
 
 class Adb(ExecWrapper):
-    def __init__(self, pathRsaKey = None):
+    def __init__(self):
         super(Adb, self).__init__(None)
         self.busybox = False
 
-        if pathRsaKey:
-            if not os.path.exists(pathRsaKey):
-                raise ValueError("%s does not exist" % pathRsaKey)
-
-        elif not os.path.exists(InceptionConstants.PATH_RSA_KEY):
-            pathRsaKey = InceptionConstants.PATH_RSA_KEY
+        if not os.path.exists(InceptionConstants.PATH_RSA_KEY):
             logger.warning("%s does not exist, going to generate RSA keys" % InceptionConstants.PATH_RSA_KEY)
+            if not os.path.exists(os.path.dirname(InceptionConstants.PATH_RSA_KEY)):
+                os.makedirs(os.path.dirname(InceptionConstants.PATH_RSA_KEY))
             private = RSA.generate(1024)
             public  = private.publickey()
             with open(InceptionConstants.PATH_RSA_KEY, 'w') as privateKeyFile:
@@ -42,7 +39,7 @@ class Adb(ExecWrapper):
             with open(InceptionConstants.PATH_RSA_KEY + ".pub", "w") as publicKeyFile:
                 publicKeyFile.write(public.exportKey())
 
-        self.rsaKeys =  [M2CryptoSigner(pathRsaKey)]
+        self.rsaKeys =  [M2CryptoSigner(InceptionConstants.PATH_RSA_KEY)]
 
     def getConnection(self):
         #maintaining just for some reason is not stable
