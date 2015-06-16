@@ -13,13 +13,13 @@ class AppsSubmaker(Submaker):
         self.patchTool = Patch()
 
     def make(self, workDir):
-        apps = self.getConfigValue(".", {})
+        apps = self.getValue(".", {})
         if "__make__" in apps:
             del apps["__make__"]
         if "__depend__" in apps:
             del apps["__depend__"]
         for pkgName, data in apps.items():
-            apkPath = self.getConfigProperty(pkgName.replace(".", "\.") + ".apk").resolveAsRelativePath()
+            apkPath = self.getProperty(pkgName.replace(".", "\.") + ".apk").resolveAsRelativePath()
             patchesList = []
 
             curr = self.getMaker().getConfig()
@@ -50,13 +50,13 @@ class AppsSubmaker(Submaker):
 
             if len(patchesList):
                 if not self.patchTools:
-                    apkTool = self.getCommonConfigProperty("tools.apktool.bin", None)
+                    apkTool = self.getCommonProperty("tools.apktool.bin", None)
                     assert apkTool.getValue(), "Can't patch APK without apktool. Please set common.tools.apktool.bin"
-                    frameworks = self.getCommonConfigProperty("tools.apktool.frameworks_dir", None)
+                    frameworks = self.getCommonProperty("tools.apktool.frameworks_dir", None)
                     assert frameworks.getValue(), "Can't patch APK without common.tools.apktool.frameworks_dir set. " \
                                                   "See http://ibotpeaches.github.io/Apktool/documentation/#frameworks"
 
-                    java = self.getCommonConfigProperty("tools.java.bin")
+                    java = self.getCommonProperty("tools.java.bin")
                     assert java.getValue(), "Can't use apktool without java. Please set common.tools.java.bin"
 
                     apkTool = apkTool.resolveAsRelativePath()
@@ -78,7 +78,7 @@ class AppsSubmaker(Submaker):
             self.registerApkFile(targetDest)
 
     def registerApkFile(self, path):
-        self.setConfigValue("update.files.add.%s" % (path.replace(".", "\.")), {"destination": "/" + path})
+        self.setValue("update.files.add.%s" % (path.replace(".", "\.")), {"destination": "/" + path})
 
     def patchApk(self, java, apkTool, frameworks, apk,  patches, dest):
         tmpDir = tempfile.mkdtemp()

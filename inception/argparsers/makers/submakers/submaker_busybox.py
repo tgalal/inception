@@ -31,11 +31,11 @@ class BusyboxSubmaker(Submaker):
 
         xbinPath = os.path.join(workDir,"system","xbin")
 
-        busyboxBinPath = self.getConfigProperty("bin").resolveAsRelativePath()
+        busyboxBinPath = self.getProperty("bin").resolveAsRelativePath()
 
         assert busyboxBinPath,"Must set update.busybox.bin to busybox path"
 
-        self.setConfigValue("update.files.add./system/xbin/busybox", {
+        self.setValue("update.files.add./system/xbin/busybox", {
             "uid":"0",
             "gid":"2000",
             "mode":"0755",

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class SettingsSubmaker(Submaker):
     def make(self, workDir):
-        allSettings = self.getConfigValue(".")
+        allSettings = self.getValue(".")
         for name, dbData in allSettings.items():
             if name == "__make__":
                 continue
@@ -18,7 +18,7 @@ class SettingsSubmaker(Submaker):
             if not "schema" in dbData:
                 raise ValueError("Must specify db schema for %s" % name)
 
-            schemaProp = self.getConfigProperty(name.replace(".", "\.") + ".schema")
+            schemaProp = self.getProperty(name.replace(".", "\.") + ".schema")
             schemaPath = schemaProp.resolveAsRelativePath()
             if schemaPath and os.path.exists(schemaPath):
                 with open(schemaPath, "r") as schemaFile:
@@ -57,7 +57,7 @@ class SettingsSubmaker(Submaker):
                         colVal: val
                     })
 
-            self.setConfigValue("update.databases.%s" % name.replace(".", "\."), targetDatabaseConfigItem)
+            self.setValue("update.databases.%s" % name.replace(".", "\."), targetDatabaseConfigItem)
 
 
 

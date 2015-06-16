@@ -60,7 +60,7 @@ class RecoveryImageMaker(ImageMaker):
         # recovery.img is dict
         #   if keys we're adding is test, warn, advice stock recovery restore, or generate own keys
         #   overwrite keys
-        if self.getMakeConfigProperty("inject_keys", True):
+        if self.getMakeProperty("inject_keys", True):
             keysName = self.config.get("update.keys", None)
             if not keysName:
                 raise ValueError("recovery.inject_keys is set to true, but update.keys is not set")
@@ -74,7 +74,7 @@ class RecoveryImageMaker(ImageMaker):
                                    "It's advised to use your own keys, "
                                    "otherwise anyone can install their own update packages through the modified recovery.\n\n========================")
 
-            signingKeysProp= self.getCommonConfigProperty("tools.signapk.keys.%s" % keysName)
+            signingKeysProp= self.getCommonProperty("tools.signapk.keys.%s" % keysName)
             if(signingKeysProp):
                 pub = signingKeysProp.getValue()["public"]
                 # priv = signingKeysProp.getValue()["private"]
@@ -83,7 +83,7 @@ class RecoveryImageMaker(ImageMaker):
 
                 keysVal = dumppublickey.print_rsa(pubPath)
 
-                recoveryImg = self.getMakeConfigProperty("img")
+                recoveryImg = self.getMakeProperty("img")
 
                 if type(recoveryImg.getValue()) is str:
                     unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
@@ -94,26 +94,26 @@ class RecoveryImageMaker(ImageMaker):
                         if self.injectKey(os.path.join(bootImgGenerator.getRamdisk(), self.__class__.PATH_KEYS), keysVal):
                             logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
                             imgType = "recovery"
-                            self.setConfigValue("recovery.img", {})
-                            self.setConfigValue("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
-                            self.setConfigValue("%s.img.base" % imgType, bootImgGenerator.getBaseAddr())
-                            self.setConfigValue("%s.img.ramdisk_offset" % imgType, bootImgGenerator.getRamdiskOffset())
-                            self.setConfigValue("%s.img.second_offset" % imgType, bootImgGenerator.getSecondOffset())
-                            self.setConfigValue("%s.img.tags_offset" % imgType, bootImgGenerator.getTagsOffset())
-                            self.setConfigValue("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
-                            self.setConfigValue("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
-                            self.setConfigValue("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
-                            self.setConfigValue("%s.img.kernel" % imgType, bootImgGenerator.getKernel())
-                            self.setConfigValue("%s.img.ramdisk" % imgType, bootImgGenerator.getRamdisk())
-                            self.setConfigValue("%s.img.dt" % imgType, bootImgGenerator.getDeviceTree())
+                            self.setValue("recovery.img", {})
+                            self.setValue("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
+                            self.setValue("%s.img.base" % imgType, bootImgGenerator.getBaseAddr())
+                            self.setValue("%s.img.ramdisk_offset" % imgType, bootImgGenerator.getRamdiskOffset())
+                            self.setValue("%s.img.second_offset" % imgType, bootImgGenerator.getSecondOffset())
+                            self.setValue("%s.img.tags_offset" % imgType, bootImgGenerator.getTagsOffset())
+                            self.setValue("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
+                            self.setValue("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
+                            self.setValue("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
+                            self.setValue("%s.img.kernel" % imgType, bootImgGenerator.getKernel())
+                            self.setValue("%s.img.ramdisk" % imgType, bootImgGenerator.getRamdisk())
+                            self.setValue("%s.img.dt" % imgType, bootImgGenerator.getDeviceTree())
                             result = super(RecoveryImageMaker, self).make(workDir, outDir)
-                            self.setConfigValue("recovery.img", recoveryImg.resolveAsRelativePath())
+                            self.setValue("recovery.img", recoveryImg.resolveAsRelativePath())
                             return result
                         else:
                             logger.warning("key already exists in %s, not injecting" % self.__class__.PATH_KEYS)
                 else:
                     with self.newTmpWorkDir() as recoveryRamDiskDir:
-                        ramDiskPath = self.getMakeConfigProperty("img.ramdisk").resolveAsRelativePath()
+                        ramDiskPath = self.getMakeProperty("img.ramdisk").resolveAsRelativePath()
                         if not ramDiskPath or not os.path.exists(ramDiskPath):
                             raise ValueError("Invalid valid for recovery.img.ramdisk or path does not exist: %s" % ramDiskPath)
 
@@ -121,9 +121,9 @@ class RecoveryImageMaker(ImageMaker):
                         shutil.copytree(ramDiskPath, ramdiskTmpDir)
                         if self.injectKey(os.path.join(ramdiskTmpDir, self.__class__.PATH_KEYS), keysVal):
                             logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
-                            self.setConfigValue("recovery.img.ramdisk", ramdiskTmpDir)
+                            self.setValue("recovery.img.ramdisk", ramdiskTmpDir)
                             result = super(RecoveryImageMaker, self).make(workDir, outDir)
-                            self.setConfigValue("recovery.img.ramdisk", ramDiskPath)
+                            self.setValue("recovery.img.ramdisk", ramDiskPath)
                             return result
                         else:
                             logger.warning("key already exists in %s, not injecting" % self.__class__.PATH_KEYS)

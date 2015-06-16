@@ -5,25 +5,25 @@ class UpdatescriptSubmaker(Submaker):
         u = updatescriptgen
 
         #### remove files
-        for path in self.getConfigValue("files.rm", []):
+        for path in self.getValue("files.rm", []):
             if not path.startswith("/"):
                 path = "/" + path
             u.rm(path)
 
-        for path in self.getConfigValue("files.rmdir", []):
+        for path in self.getValue("files.rmdir", []):
             if not path.startswith("/"):
                 path = "/" + path
             u.rm(path, recursive = True)
 
         #### format?
-        if  self.getConfigValue("script.format_data", False):
+        if  self.getValue("script.format_data", False):
             u.rm("/data", recursive=True)
 
         #### apply our FS permissions
 
         extractedDirs = []
 
-        addFilesDict = self.getConfigValue("files.add", {})
+        addFilesDict = self.getValue("files.add", {})
         paths = sorted(addFilesDict.keys())
         for path in paths:
             pathData = addFilesDict[path]
@@ -82,8 +82,8 @@ class UpdatescriptSubmaker(Submaker):
 
 
         #### misc
-        header, footer = self.getConfigValue("script.header", None), self.getConfigValue("script.footer", None)
-        wait = self.getConfigValue("script.wait", 0)
+        header, footer = self.getValue("script.header", None), self.getValue("script.footer", None)
+        wait = self.getValue("script.wait", 0)
         if header is not None:
             u.setHeader(header)
         if footer is not None:
@@ -105,7 +105,7 @@ class UpdatescriptSubmaker(Submaker):
                     updateScriptFile.write("\n")
                     updateScriptFile.write(prescriptFile.read())
 
-            updateScriptFile.write(u.generate(showProgress=self.getConfigValue("script.progress", True)))
+            updateScriptFile.write(u.generate(showProgress=self.getValue("script.progress", True)))
 
             for script in postscripts:
                 with open(script, "r") as postscriptFile:
@@ -114,7 +114,7 @@ class UpdatescriptSubmaker(Submaker):
 
     def __getFullResolvedInstScriptList(self, key):
         result = []
-        currConfig = self.getConfigProperty("script." + key).getConfig()
+        currConfig = self.getProperty("script." + key).getConfig()
         result.extend(self.__getResolvedInstScriptsList(key, currConfig))
         while not currConfig.isOrphan():
             currConfig = currConfig.getParent()

@@ -4,7 +4,7 @@ import os
 
 class PropertySubmaker(Submaker):
     def make(self, workDir):
-        props = self.getConfigValue(".", {})
+        props = self.getValue(".", {})
         if "__make__" in props:
             del props["__make__"]
 
@@ -16,7 +16,7 @@ class PropertySubmaker(Submaker):
         localOutDir = os.path.join(workDir, outDir)
         if len(propsFlat):
             os.makedirs(localOutDir)
-            self.setConfigValue("update.files.add.data/property", {
+            self.setValue("update.files.add.data/property", {
                 "destination": "/data/property",
                 "uid": "0",
                 "gid": "0",

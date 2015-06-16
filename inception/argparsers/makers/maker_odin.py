@@ -21,7 +21,7 @@ class OdinMaker(Maker):
                 if os.path.exists(incPath):
                     outTarFile.add(incPath, os.path.basename(incPath))
 
-        if self.getMakeConfigValue("checksum", True):
+        if self.getMakeValue("checksum", True):
             with open(outTarPath, "rb") as outTarFile:
                 md5sum = hashlib.md5(outTarFile.read()).hexdigest()
 

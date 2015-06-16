@@ -6,7 +6,7 @@ from inception.common.database import Database
 logger = logging.getLogger(__name__)
 class DatabasesSubmaker(Submaker):
     def make(self, workDir):
-        allSettings = self.getConfigValue(".", {})
+        allSettings = self.getValue(".", {})
         for name, dbData in allSettings.items():
             if name == "__make__":
                 continue
@@ -23,7 +23,7 @@ class DatabasesSubmaker(Submaker):
             logger.debug("Making %s" % dbData["path"])
 
 
-            schemaProp = self.getConfigProperty(name.replace(".", "\.") + ".schema")
+            schemaProp = self.getProperty(name.replace(".", "\.") + ".schema")
             schemaPath = schemaProp.resolveAsRelativePath()
             if schemaPath and os.path.exists(schemaPath):
                 with open(schemaPath, "r") as schemaFile:

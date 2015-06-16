@@ -6,13 +6,13 @@ from inception.constants import InceptionConstants
 class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
         signingKeys = None
-        keys_name = self.getConfigValue("keys")
-        updateBinaryProp = self.getCommonConfigProperty("tools.update-binary.bin")
+        keys_name = self.getValue("keys")
+        updateBinaryProp = self.getCommonProperty("tools.update-binary.bin")
         assert updateBinaryProp.getValue(), "common.tools.update-binary.bin is not set"
         updateBinary = updateBinaryProp.getConfig().resolveRelativePath(updateBinaryProp.getValue())
 
         if keys_name:
-            signingKeysProp= self.getCommonConfigProperty("tools.signapk.keys.%s" % keys_name)
+            signingKeysProp= self.getCommonProperty("tools.signapk.keys.%s" % keys_name)
             if(signingKeysProp):
                 pub = signingKeysProp.getValue()["public"]
                 priv = signingKeysProp.getValue()["private"]
@@ -27,8 +27,8 @@ class UpdatezipSubmaker(Submaker):
         updateZipPath += ".zip"
 
         if signingKeys:
-            javaPath = self.getCommonConfigValue("tools.java.bin")
-            signApkPathProp = self.getCommonConfigProperty("tools.signapk.bin")
+            javaPath = self.getCommonValue("tools.java.bin")
+            signApkPathProp = self.getCommonProperty("tools.signapk.bin")
 
             assert signApkPathProp.getValue(), "common.tools.signapk.bin is not set"
 

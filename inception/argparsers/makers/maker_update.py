@@ -40,7 +40,7 @@ class UpdateMaker(Maker):
         self.makeUpdateZip(rootFS, outDir)
 
     def isMakeTrue(self, key):
-        return self.getMakeConfigValue(key + ".__make__", True)
+        return self.getMakeValue(key + ".__make__", True)
 
     def makeFS(self, fsPath):
         logger.info("Making FS")
@@ -58,7 +58,7 @@ class UpdateMaker(Maker):
             smaker.make(fsPath, self.updatescriptGen)
 
     def makeRoot(self, fsPath):
-        rootMethod = self.getMakeConfigValue("root_method", None)
+        rootMethod = self.getMakeValue("root_method", None)
 
         if rootMethod:
             logger.info("Selected root method: %s" % rootMethod)
@@ -80,7 +80,7 @@ class UpdateMaker(Maker):
             smaker = SettingsSubmaker(self, "settings")
             smaker.make(workDir)
         else:
-            self.setConfigValue("update.settings", {"__override__": True})
+            self.setValue("update.settings", {"__override__": True})
 
     def makeDatabases(self, workDir):
         if self.isMakeTrue("databases"):
@@ -88,7 +88,7 @@ class UpdateMaker(Maker):
             smaker = DatabasesSubmaker(self, "databases")
             smaker.make(workDir)
         else:
-            self.setConfigValue("update.databases", {"__override__": True})
+            self.setValue("update.databases", {"__override__": True})
 
     def makeWPASupplicant(self, workDir):
         if self.isMakeTrue("network"):
@@ -121,7 +121,7 @@ class UpdateMaker(Maker):
             smaker.make(workDir)
 
     def makeStockRecovery(self, workDir):
-        if self.getMakeConfigValue("restore_stock_recovery", False):
+        if self.getMakeValue("restore_stock_recovery", False):
             logger.info("Making Stock recovery")
             stockRecProp = self.getConfig().getProperty("recovery.stock")
             assert stockRecProp.getValue() is not None, "recovery.stock is not specified"
@@ -136,7 +136,7 @@ class UpdateMaker(Maker):
 
             workDirRecPath = os.path.join(workDir, "stockrec.img")
             shutil.copy(stockRecPath, workDirRecPath)
-            self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
+            self.setValue("update.files.add.stockrec\.img", stockRecoveryData)
 
     def makeApps(self, workDir):
         if self.isMakeTrue("apps"):

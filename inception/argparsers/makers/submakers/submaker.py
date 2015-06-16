@@ -18,25 +18,25 @@ class Submaker(object):
     def getFSPath(self):
         return self.maker.getFSPath()
 
-    def getCommonConfigValue(self, key, default = None):
-        return self.getMaker().getCommonConfigValue(key, default)
+    def getCommonValue(self, key, default = None):
+        return self.getMaker().getCommonValue(key, default)
 
-    def getCommonConfigProperty(self, key, default = None):
-        return self.getMaker().getCommonConfigProperty(key, default)
+    def getCommonProperty(self, key, default = None):
+        return self.getMaker().getCommonProperty(key, default)
 
-    def getConfigValue(self, key, default = None, directOnly = False):
+    def getValue(self, key, default = None, directOnly = False):
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
-        return self.maker.getMakeConfigValue(key, default, directOnly)
+        return self.maker.getMakeValue(key, default, directOnly)
 
-    def getConfigProperty(self, key, default = None, directOnly = False):
+    def getProperty(self, key, default = None, directOnly = False):
 
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
-        return self.maker.getMakeConfigProperty(key, default, directOnly)
+        return self.maker.getMakeProperty(key, default, directOnly)
 
-    def setConfigValue(self, key, value):
-        return self.maker.setConfigValue(key, value)
+    def setValue(self, key, value):
+        return self.maker.setValue(key, value)
 
-    def deleteConfigProperty(self, key):
-        return self.maker.deleteConfigProperty(key)
+    def deleteProperty(self, key):
+        return self.maker.deleteProperty(key)

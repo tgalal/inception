@@ -5,7 +5,7 @@ class FsSubmaker(Submaker):
         fsSourcePaths = []
         lookupFPaths = []
 
-        configProp = self.getConfigProperty("add", {})
+        configProp = self.getProperty("add", {})
         currConfig = self.getMaker().getConfig()
         for path in configProp.getValue().keys():
             lookupFPaths.append(path)
@@ -75,7 +75,7 @@ class FsSubmaker(Submaker):
             elif not destPath in written:
 
                 if "__depend__" in pathInfo and pathInfo["__depend__"]:
-                    if self.getConfigValue(pathInfo["__depend__"]):
+                    if self.getValue(pathInfo["__depend__"]):
                         raise Exception("%s does not exits " % srcPath)
                 else:
                     raise Exception("%s does not exits " % srcPath)

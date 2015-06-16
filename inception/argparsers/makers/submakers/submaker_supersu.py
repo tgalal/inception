@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__ )
 class SuperSuSubmaker(Submaker):
 
     def make(self, workDir):
-        supersuZipProp = self.getCommonConfigProperty("root.methods.supersu.path")
+        supersuZipProp = self.getCommonProperty("root.methods.supersu.path")
         assert supersuZipProp.getValue(), "Must set root.methods.supersu.path to the supersu zip file"
-        includeApk = self.getCommonConfigValue("root.methods.supersu.include_apk", True)
-        includeArchs = set(self.getCommonConfigValue("root.methods.supersu.include_archs", []))
+        includeApk = self.getCommonValue("root.methods.supersu.include_apk", True)
+        includeArchs = set(self.getCommonValue("root.methods.supersu.include_archs", []))
 
         superSuTargetRelativePath = "supersu"
         supersuTargetPath = os.path.join(workDir, superSuTargetRelativePath)
@@ -69,13 +69,13 @@ class SuperSuSubmaker(Submaker):
 
                 currPostInst = self.getMaker().getConfig().get("script.post", [], directOnly=True)
                 currPostInst.append(postinstFilePath)
-                self.setConfigValue("update.script.post", currPostInst)
+                self.setValue("update.script.post", currPostInst)
 
-        self.setConfigValue("update.files.add." + newSuperSuZipPath.replace(workDir, "").replace(".", "\.") , {
+        self.setValue("update.files.add." + newSuperSuZipPath.replace(workDir, "").replace(".", "\.") , {
             "destination": superSuZipTmpExtract
         })
 
-        self.setConfigValue("update.files.add." + supersuOriginalUpdatescriptPath.replace(workDir, "").replace(".", "\."), {
+        self.setValue("update.files.add." + supersuOriginalUpdatescriptPath.replace(workDir, "").replace(".", "\."), {
             "destination": superSuUpdatescriptTmpExtract,
             "mode": "0755",
             "uid": "0",
