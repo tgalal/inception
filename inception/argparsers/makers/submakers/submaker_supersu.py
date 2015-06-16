@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__ )
 class SuperSuSubmaker(Submaker):
 
     def make(self, workDir):
-        supersuZipProp = self.getCommonProperty("root.methods.supersu.path")
-        assert supersuZipProp.getValue(), "Must set root.methods.supersu.path to the supersu zip file"
-        includeApk = self.getCommonValue("root.methods.supersu.include_apk", True)
-        includeArchs = set(self.getCommonValue("root.methods.supersu.include_archs", []))
+        supersuZipProp = self.getTargetConfigProperty("root.methods.supersu.path")
+        assert supersuZipProp.getValue(), "Must set %s to the supersu zip file" % supersuZipProp.getKey()
+        includeApk = self.getTargetConfigValue("root.methods.supersu.include_apk", True)
+        includeArchs = set(self.getTargetConfigValue("root.methods.supersu.include_archs", []))
 
         superSuTargetRelativePath = "supersu"
         supersuTargetPath = os.path.join(workDir, superSuTargetRelativePath)

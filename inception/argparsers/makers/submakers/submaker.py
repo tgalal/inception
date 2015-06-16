@@ -18,12 +18,6 @@ class Submaker(object):
     def getFSPath(self):
         return self.maker.getFSPath()
 
-    def getCommonValue(self, key, default = None):
-        return self.getMaker().getCommonValue(key, default)
-
-    def getCommonProperty(self, key, default = None):
-        return self.getMaker().getCommonProperty(key, default)
-
     def getValue(self, key, default = None, directOnly = False):
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
@@ -40,3 +34,34 @@ class Submaker(object):
 
     def deleteProperty(self, key):
         return self.maker.deleteProperty(key)
+
+    def getHostBinary(self, name):
+        return self.maker.getHostBinary(name)
+
+    def getTargetBinary(self, name):
+        return self.maker.getTargetBinary(name)
+
+    def getHostBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getHostBinaryConfigProperty(name, default, directOnly)
+
+    def getTargetBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getTargetBinaryConfigProperty(name, default, directOnly)
+
+    # def getConfigProperty(self, name, default = None, directOnly = False):
+    #     return self.maker.getConfigProperty(name, default, directOnly)
+    #
+    # def getConfigValue(self, name, default = None, directOnly = False):
+    #     return self.maker.getConfigValue(name, default ,directOnly)
+
+    def getHostConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getHostConfigProperty(name, default, directOnly)
+
+    def getHostConfigValue(self, name, default = None, directOnly = False):
+        return self.maker.getHostConfigValue(name, default ,directOnly)
+
+
+    def getTargetConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getTargetConfigProperty(name, default, directOnly)
+
+    def getTargetConfigValue(self, name, default = None, directOnly = False):
+        return self.maker.getTargetConfigValue(name, default ,directOnly)

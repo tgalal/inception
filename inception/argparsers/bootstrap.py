@@ -5,6 +5,7 @@ from inception.common.configsyncer import ConfigSyncer
 from inception.tools import imgtools
 import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
+from inception.config.configv2 import ConfigV2
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
 
@@ -52,8 +53,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDirs()
         #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
-        unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
-        unpacker = unpackerProperty.getConfig().resolveRelativePath(unpackerProperty.getValue())
+        unpackerKey, unpacker = self.config.getHostBinary("unpackbootimg")
         bootImg = self.config.getProperty("boot.img", None)
         if bootImg and self.config.get("boot.__make__", False):
             if type(bootImg.getValue()) is str:
@@ -83,28 +83,26 @@ class BootstrapArgParser(InceptionArgParser):
             if self.args["learn_imgs"]:
                 imgsDir = os.path.join(self.variantDir, "imgs")
                 os.makedirs(imgsDir)
-                if self.newConfig.get("recovery.dev"):
+                if self.newConfig.getMountConfig("recovery.dev"):
                     logger.info("pulling recovery.img")
-                    syncer.syncImg("recovery.img", self.newConfig.get("recovery.dev"), imgsDir, self.variantDir)
+                    syncer.syncImg("recovery.img", self.newConfig.getMountConfig("recovery.dev"), imgsDir, self.variantDir)
                 else:
-                    logger.warn("recovery.dev not set, not syncing recovery.img")
+                    logger.warn("__config__.target.mount.recovery.dev not set, not syncing recovery.img")
 
-                if self.newConfig.get("boot.dev"):
+                if self.newConfig.getMountConfig("boot.dev"):
                     logger.info("pulling boot.img")
-                    syncer.syncImg("boot.img", self.newConfig.get("boot.dev"), imgsDir, self.variantDir)
+                    syncer.syncImg("boot.img", self.newConfig.getMountConfig("boot.dev"), imgsDir, self.variantDir)
                 else:
-                    logger.warn("boot.dev not set, not syncing boot.img")
+                    logger.warn("__config__.target.mount.boot.dev not set, not syncing boot.img")
 
         self.writeNewConfig(self.args["variant"])
 
         self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
 
-
         return True
 
     def createNewConfig(self, identifier, name, baseConfig):
-        return Config.new(identifier, name, baseConfig)
-
+        return ConfigV2.new(identifier, name, baseConfig)
 
     def writeNewConfig(self, name):
         newConfigFile = open(os.path.join(self.variantDir, "%s.json" % name), "w")

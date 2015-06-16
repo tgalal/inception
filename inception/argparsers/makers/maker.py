@@ -22,21 +22,13 @@ class Maker(object):
         key = "device." + key
         return self.config.get(key, default)
 
-    def getCommonValue(self, key, default = None):
-        key = "common." + key
-        return self.config.get(key, default)
-
-    def getCommonProperty(self, key, default = None):
-        key = "common." + key
-        return self.config.getProperty(key, default)
-
     def getMakeValue(self, key, default = None, directOnly = False):
         res = self.config.get(self.getKey() + "." + key, default, directOnly)
         return res
 
-    def getMakeProperty(self, key, default = None, directyOnly = False):
+    def getMakeProperty(self, key, default = None, directOnly = False):
         key = self.getKey() + "." + key
-        return self.config.getProperty(key, default, directyOnly)
+        return self.config.getProperty(key, default, directOnly)
 
     def setValue(self, key, value):
         return self.config.set(key, value)
@@ -46,6 +38,37 @@ class Maker(object):
 
     def getCacheOutName(self):
         return self.config.get("cache.out", InceptionConstants.OUT_NAME_CACHE)
+
+    def getHostBinary(self, name):
+        return self.config.getHostBinary(name)
+
+    def getTargetBinary(self, name):
+        return self.config.getTargetBinary(name)
+
+    def getHostBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.config.getHostBinaryConfigProperty(name, default, directOnly)
+
+    def getTargetBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.config.getTargetBinaryConfigProperty(name, default = default, directOnly = directOnly)
+
+    # def getConfigValue(self, name, default = None, directOnly = False):
+    #     return self.getConfigProperty(name, default, directOnly).getValue()
+    #
+    # def getConfigProperty(self, name, default = None, directOnly = False):
+    #     return self.config.getConfigProperty(name, default, directOnly)
+
+    def getHostConfigValue(self, name, default = None, directOnly = False):
+        return self.getHostConfigProperty(name, default, directOnly).getValue()
+
+    def getHostConfigProperty(self, name, default = None, directOnly = False):
+        return self.config.getHostConfigProperty(name, default, directOnly)
+
+    def getTargetConfigValue(self, name, default = None, directOnly = False):
+        return self.getTargetConfigProperty(name, default, directOnly).getValue()
+
+    def getTargetConfigProperty(self, name, default = None, directOnly = False):
+        return self.config.getTargetConfigProperty(name, default, directOnly)
+
 
     def newTmpWorkDir(self):
         return TmpWorkDir()

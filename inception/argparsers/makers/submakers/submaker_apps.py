@@ -50,19 +50,14 @@ class AppsSubmaker(Submaker):
 
             if len(patchesList):
                 if not self.patchTools:
-                    apkTool = self.getCommonProperty("tools.apktool.bin", None)
-                    assert apkTool.getValue(), "Can't patch APK without apktool. Please set common.tools.apktool.bin"
-                    frameworks = self.getCommonProperty("tools.apktool.frameworks_dir", None)
-                    assert frameworks.getValue(), "Can't patch APK without common.tools.apktool.frameworks_dir set. " \
+                    key, apkTool = self.getHostBinary("apktool")
+                    assert apkTool, "Can't patch APK without apktool. Please set %s" % apkTool
+                    frameworks = self.getHostBinaryConfigProperty("apktool.frameworks_dir", None).resolveAsRelativePath()
+                    assert frameworks, "Can't patch APK without __config__.host.apktool.frameworks_dir set. " \
                                                   "See http://ibotpeaches.github.io/Apktool/documentation/#frameworks"
 
-                    java = self.getCommonProperty("tools.java.bin")
-                    assert java.getValue(), "Can't use apktool without java. Please set common.tools.java.bin"
-
-                    apkTool = apkTool.resolveAsRelativePath()
-                    frameworks = frameworks.resolveAsRelativePath()
-                    java = java.resolveAsRelativePath()
-
+                    javakey, java = self.getHostBinary("java")
+                    assert java, "Can't use apktool without java. Please set %s" % javakey
                     self.patchTools = namedtuple('PatchTools', ['apkTool', 'java', 'frameworks'])(apkTool, java, frameworks)
 
                 self.patchApk(self.patchTools.java,

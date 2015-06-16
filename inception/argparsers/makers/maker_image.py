@@ -17,9 +17,8 @@ class ImageMaker(Maker):
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
             return
 
-        mkbootprop = self.getCommonProperty("tools.mkbootimg.bin")
-        assert mkbootprop.getValue(), "tools.mkbootimg.bin is not set"
-        mkbootbin = mkbootprop.getConfig().resolveRelativePath(mkbootprop.getValue())
+        key, mkbootbin = self.getHostBinary("mkbootimg")
+        assert mkbootbin, "%s is not set" % key
         gen = BootImgGenerator(mkbootbin)
         gen.setWorkDir(workDir)
 

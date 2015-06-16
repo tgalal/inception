@@ -54,8 +54,8 @@ class Config(object):
     def new(cls, identifier, name = None, base = None, template = None):
         sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
         sourceTemplate = sourceTemplate.copy()
-        assert base.__class__ == Config, "Base must be instance of config"
-        config = Config(identifier, sourceTemplate, base)
+        assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
+        config = cls(identifier, sourceTemplate, base)
         config.set("device.name", name)
         config.set("__extends__", base.getIdentifier() if base else None)
         if base:
@@ -73,6 +73,7 @@ class Config(object):
             config.set("update.root_method", base.get("update.root_method", None))
             config.set("update.property.__make__", base.get("update.property.__make__", False))
             config.set("update.network.__make__", base.get("update.network.__make__", False))
+            config.set("update.keys", base.get("update.keys", None))
             config.set("update.script.format_data", base.get("update.script.format_data", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 

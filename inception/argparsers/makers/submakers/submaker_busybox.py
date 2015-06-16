@@ -31,9 +31,9 @@ class BusyboxSubmaker(Submaker):
 
         xbinPath = os.path.join(workDir,"system","xbin")
 
-        busyboxBinPath = self.getProperty("bin").resolveAsRelativePath()
+        key, busyboxBinPath = self.getTargetBinary("busybox")
 
-        assert busyboxBinPath,"Must set update.busybox.bin to busybox path"
+        assert busyboxBinPath,"Must set %s to busybox path" % key
 
         self.setValue("update.files.add./system/xbin/busybox", {
             "uid":"0",

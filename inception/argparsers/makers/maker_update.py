@@ -127,8 +127,8 @@ class UpdateMaker(Maker):
             assert stockRecProp.getValue() is not None, "recovery.stock is not specified"
             stockRecPath = stockRecProp.getConfig().resolveRelativePath(stockRecProp.getValue())
             assert os.path.isfile(stockRecPath), "%s does not exist" % stockRecPath
-            recoveryDev = self.getConfig().get("recovery.dev", None)
-            assert recoveryDev, "recovery.dev is not specified"
+            recoveryDev = self.getConfig().getMountConfig("recovery.dev", None)
+            assert recoveryDev, "__config__.target.mount.recovery.dev is not specified"
 
             stockRecoveryData = {
                 "destination": recoveryDev
