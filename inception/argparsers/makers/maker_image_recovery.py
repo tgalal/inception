@@ -66,7 +66,7 @@ class RecoveryImageMaker(ImageMaker):
                         raise ValueError("Invalid valid for recovery.img.ramdisk or path does not exist: %s" % ramDiskPath)
 
                     ramdiskTmpDir = os.path.join(recoveryRamDiskDir, "ramdisk")
-                    shutil.copytree(ramDiskPath, ramdiskTmpDir)
+                    shutil.copytree(ramDiskPath, ramdiskTmpDir, symlinks=True)
                     if self.injectKey(os.path.join(ramdiskTmpDir, self.__class__.PATH_KEYS), keysVal):
                         logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
                         self.setValue("recovery.img.ramdisk", ramdiskTmpDir)
