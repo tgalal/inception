@@ -2,6 +2,9 @@ from .submaker import Submaker
 import zipfile
 import os
 import shutil
+import logging
+
+logger = logging.getLogger(__name__ )
 
 class SuperSuSubmaker(Submaker):
 
@@ -44,10 +47,22 @@ class SuperSuSubmaker(Submaker):
                     os.remove(os.path.join(tmpDir, superuserApkPath))
                 self.__addDirToZip(newSuperSuZip, os.path.join(tmpDir, "common"), "common")
 
-                shutil.copy(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), supersuOriginalUpdatescriptPath)
+
+                if self.getMaker().getConfig().isMakeable("update.busybox"):
+                    #process file, with busybox onboard in assumption
+                    with open(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), "r") as f:
+                        with open(supersuOriginalUpdatescriptPath, "w") as targetF:
+                            for l in f.readlines():
+                                if l.startswith("#!"):
+                                    targetF.write("#!/system/bin/sh\n")
+                                else:
+                                    targetF.write(l)
+                else:
+                    logger.warning("update.busybox is not set. If you are installing supersu through stock recovery, it might not work.")
+                    shutil.copy(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), supersuOriginalUpdatescriptPath)
 
                 postInstscript = "ui_print(\"Installing SuperSU..\");\n"
-                postInstscript += "run_program(\"%s\", \"1\", \"stdout\", \"/tmp/supersu.zip\");" % (superSuUpdatescriptTmpExtract)
+                postInstscript += "run_program(\"%s\", \"1\", \"stdout\", \"%s\");" % (superSuUpdatescriptTmpExtract, superSuZipTmpExtract)
 
                 with open(postinstFilePath, "w") as postinstFile:
                     postinstFile.write(postInstscript)
