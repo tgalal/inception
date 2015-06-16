@@ -260,6 +260,7 @@ class ConfigSyncer(object):
         propsDict = {}
         with FileTools.newTmpDir() as tmpDir:
             propsDir = os.path.join(tmpDir, "props")
+            os.makedirs(propsDir)
             self.adb.superPull("/data/property", propsDir, fallback=True)
             for f in os.listdir(propsDir):
                 if f.startswith("."):
