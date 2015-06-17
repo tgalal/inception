@@ -64,7 +64,7 @@ class Config(object):
             config.set("cache.__make__", base.get("cache.__make__", False))
             config.set("odin.__make__", base.get("odin.__make__", False))
 
-            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", False))
+            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
             config.set("update.settings.__make__", base.get("update.settings.__make__", False))
             config.set("update.databases.__make__", base.get("update.databases.__make__", False))
             config.set("update.adb.__make__", base.get("update.adb.__make__", False))
