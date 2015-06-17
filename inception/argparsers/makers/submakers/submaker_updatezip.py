@@ -7,7 +7,7 @@ from inception.constants import InceptionConstants
 class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
         keys_name = self.getValue("keys")
-        signingKeys = self.getMaker().getConfig().getKeyConfig(keys_name)
+        signingKeys = self.getMaker().getConfig().getKeyConfig(keys_name) if keys_name else None
         updateBinaryKey, updateBinary = self.getTargetBinary("update-binary")
         assert updateBinary, "%s is not set" % updateBinaryKey
 
