@@ -32,4 +32,6 @@ class CacheMaker(Maker):
         if os.path.exists(updatePkgPath):
             gen.update(updatePkgPath)
 
-        gen.generate(os.path.join(outDir, self.getCacheOutName()))
+        out = os.path.join(outDir, self.getCacheOutName())
+        gen.generate(out)
+        return out

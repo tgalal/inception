@@ -37,7 +37,7 @@ class UpdateMaker(Maker):
         self.makeRoot(rootFS)
         self.makeApps(rootFS)
         self.makeUpdateScript(rootFS)
-        self.makeUpdateZip(rootFS, outDir)
+        return self.makeUpdateZip(rootFS, outDir)
 
     def isMakeTrue(self, key):
         return self.getMakeValue(key + ".__make__", True)
@@ -149,3 +149,4 @@ class UpdateMaker(Maker):
         smake = UpdatezipSubmaker(self, ".")
         updateZipPkgPath = smake.make(work)
         shutil.copy(updateZipPkgPath, outDir)
+        return os.path.join(outDir, os.path.basename(updateZipPkgPath))

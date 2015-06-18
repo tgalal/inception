@@ -29,3 +29,7 @@ class OdinMaker(Maker):
                 outTarFile.write(md5sum + "  " + os.path.basename(outTarPath) + "\n")
 
             os.rename(outTarPath, checksummedOutTar)
+
+            return checksummedOutTar
+
+        return outTarPath

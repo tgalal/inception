@@ -314,15 +314,23 @@ class Config(object):
             ("odin", OdinMaker)
          ]
 
+        out = {}
+
         for makerItem in makersMap:
             key, Maker = makerItem
             if self.get(key + ".__make__", True):
                 logger.info("Making %s" % key)
                 m = Maker(self)
-                m.make(workDir, self.getOutPath())
+                out[key] = m.make(workDir, self.getOutPath())
+                logger.info("Made %s" % key)
             else:
                 logger.info("Skipping '%s' as it's disabled in config" % key)
 
+        outStr = "Made:\n\n"
+        maxLen = max([len(key) for key in out.keys()])
+        for k, v in out.items():
+            outStr += "%*s %s\n" % (-(maxLen + 5), k, v)
+        logger.info(outStr)
 
 
 class ConfigProperty(object):

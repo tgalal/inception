@@ -49,4 +49,7 @@ class ImageMaker(Maker):
         gen.setSignature(signature)
         gen.setRamdiskAddr(ramdiskaddr)
 
-        gen.generate(os.path.join(outDir, self.imageName))
+        out = os.path.join(outDir, self.imageName)
+        gen.generate(out)
+
+        return out
