@@ -95,9 +95,9 @@ class BootstrapArgParser(InceptionArgParser):
                 else:
                     logger.warn("__config__.target.mount.boot.dev not set, not syncing boot.img")
 
-        self.writeNewConfig(self.args["variant"])
+        configPath = self.writeNewConfig(self.args["variant"])
 
-        self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
+        logger.info("Created %s" % configPath)
 
         return True
 
@@ -105,9 +105,12 @@ class BootstrapArgParser(InceptionArgParser):
         return ConfigV2.new(identifier, name, baseConfig)
 
     def writeNewConfig(self, name):
-        newConfigFile = open(os.path.join(self.variantDir, "%s.json" % name), "w")
+        out = os.path.join(self.variantDir, "%s.json" % name)
+        newConfigFile = open(out, "w")
         newConfigFile.write(self.newConfig.dumpContextData())
         newConfigFile.close()
+
+        return out
 
     def createDir(self, d):
         if not os.path.exists(d):
