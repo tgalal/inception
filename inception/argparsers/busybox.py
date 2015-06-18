@@ -3,11 +3,9 @@ from inception.constants import InceptionConstants
 from inception.config import configtreeparser
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
-from inception.config import Config
+from inception.config.configv2 import ConfigV2
 logger = logging.getLogger(__name__)
 from inception.common.filetools import FileTools
-import os
-import shutil
 import sys
 class BusyboxArgParser(InceptionArgParser):
 
@@ -37,7 +35,7 @@ class BusyboxArgParser(InceptionArgParser):
 
         autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
 
-        config = Config.new(autorootBase + ".busybox", "busybox", config)
+        config = ConfigV2.new(autorootBase + ".busybox", "busybox", config)
 
         if self.args["output"]:
             config.setOutPath(self.args["output"])
