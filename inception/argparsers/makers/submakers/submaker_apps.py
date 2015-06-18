@@ -35,14 +35,16 @@ class AppsSubmaker(Submaker):
                         break
 
 
-            dest = "/data/app"
             if "destination" in data:
-                dest = data["destination"]
+                destination = data["destination"]
+                targetDest = destination[1:] if destination[0] == "/" else destination
+                if not targetDest.lower().endswith(".apk"):
+                    targetDest = os.path.join(targetDest, os.path.basename(apkPath))
             elif "system" in data and data["system"]:
-                dest = "/system/app"
+                targetDest = os.path.join("system/app", os.path.basename(apkPath))
+            else:
+                targetDest = os.path.join("data/app", os.path.basename(apkPath))
 
-
-            targetDest = os.path.join(dest[1:] if dest[0] == "/" else dest, os.path.basename(apkPath))
             localDest = os.path.join(workDir, targetDest)
 
             if not os.path.exists(os.path.dirname(localDest)):
