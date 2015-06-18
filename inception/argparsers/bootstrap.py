@@ -4,7 +4,8 @@ from inception.constants import InceptionConstants
 from inception.common.configsyncer import ConfigSyncer
 from inception.tools import imgtools
 import os, shutil, logging
-from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
+from inception.config import ConfigTreeParser, DotIdentifierResolver
+from inception.common.fstabtools import Fstab
 from inception.config.configv2 import ConfigV2
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
@@ -66,7 +67,6 @@ class BootstrapArgParser(InceptionArgParser):
             if type(recoveryImg.getValue()) is str:
                 logger.info("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
-
 
         if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"], self.args["learn_imgs"])):
             syncer = ConfigSyncer(self.newConfig)
@@ -133,7 +133,6 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDir(self.variantDir)
         self.createDir(self.fsDir)
 
-
     def getAbsolutePathOf(self, f):
         return os.path.dirname(os.path.realpath(__file__)) + "/" + f 
 
@@ -154,3 +153,19 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImgGenerator.getKernel(), self.variantDir))
         self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
         self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
+
+        fstab = Fstab.parseFstab(os.path.join(out, bootImgGenerator.getRamdisk(), "etc", "recovery.fstab"))
+
+        processParts = ("boot", "system", "recovery", "cache")
+
+        for p in processParts:
+            fstabPart = fstab.getByMountPoint("/" + p)
+            key = "__config__.target.mount.%s." % p
+            if self.newConfig.get(key + "dev") != fstabPart.getDevice():
+                self.newConfig.set(key + "dev", fstabPart.getDevice())
+
+            if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
+                self.newConfig.set(key + "mount", fstabPart.getMountPoint())
+
+            if self.newConfig.get(key + "fs") != fstabPart.getType():
+                self.newConfig.set(key + "fs", fstabPart.getType())
