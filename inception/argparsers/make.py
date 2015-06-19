@@ -60,6 +60,9 @@ class MakeArgParser(InceptionArgParser):
         if self.config.get("__abstract__", False, directOnly=True):
             print("Won't make abstract config %s" % code)
             sys.exit(1)
+        if self.config.get("__config__") is None:
+            sys.stderr.write("You are using an outdated config tree. Please run 'incept sync -v VARIANT_CODE' or set __config__ (see https://goo.gl/aFWPby)\n")
+            sys.exit(1)
 
 
         if outDir:

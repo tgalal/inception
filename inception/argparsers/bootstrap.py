@@ -7,6 +7,7 @@ import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver
 from inception.common.fstabtools import Fstab
 from inception.config.configv2 import ConfigV2
+import sys
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
 
@@ -42,6 +43,12 @@ class BootstrapArgParser(InceptionArgParser):
         super(BootstrapArgParser, self).process()
         self.createDir(self.deviceDir)
         self.config = self.configTreeParser.parseJSON(self.args["base"])
+
+
+        if self.config.get("__config__") is None:
+            sys.stderr.write("You are using an outdated config tree. Please run 'incept sync -v VARIANT_CODE' or set __config__ (see https://goo.gl/aFWPby)\n")
+            sys.exit(1)
+
         self.configDir = self.config.getSource(getDir=True)
 
         baseCodePath= "/".join(self.args["base"].split(".")[:2])

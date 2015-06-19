@@ -34,9 +34,16 @@ class AutorootArgParser(InceptionArgParser):
 
         config = self.configTreeParser.parseJSON(identifier)
 
+        if config.get("__config__") is None:
+            sys.stderr.write("You are using an outdated config tree. Please run 'incept sync -v VARIANT_CODE' or set __config__ (see https://goo.gl/aFWPby)\n")
+            sys.exit(1)
+
         autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
 
         config = ConfigV2.new(autorootBase + ".autoroot", "autoroot", config)
+
+
+
         if self.args["output"]:
             config.setOutPath(self.args["output"])
 
