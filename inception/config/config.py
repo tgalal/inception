@@ -22,9 +22,6 @@ class Config(object):
 
     TEMPLATE_DEFAULT = {
         "__extends__": None,
-        "device": {
-            "name":  None
-        },
         "boot": {
             "__make__": False
         },
@@ -56,7 +53,6 @@ class Config(object):
         sourceTemplate = sourceTemplate.copy()
         assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
         config = cls(identifier, sourceTemplate, base)
-        config.set("device.name", name)
         config.set("__extends__", base.getIdentifier() if base else None)
         if base:
             config.set("boot.__make__", base.get("boot.__make__", False))
