@@ -1,12 +1,13 @@
-from .argparser import InceptionArgParser
+from inception.argparsers.argparser import InceptionArgParser
 from inception.constants import InceptionConstants
 from inception.config import configtreeparser
 from inception.common.moduletools import ModuleTools
-import json
+from inception.common.configsyncer import ConfigSyncer
 from inception.config.dotidentifierresolver import DotIdentifierResolver
+from inception.common.filetools import FileTools
+import json
 import logging
 import os
-from inception.common.configsyncer import ConfigSyncer
 
 logger = logging.getLogger(__name__)
 
@@ -44,35 +45,8 @@ class LearnArgParser(InceptionArgParser):
         return True
 
     def learnProps(self):
-        ModuleTools.adb(True)
-        from inception.tools.adbwrapper import Adb
-        adb = Adb()
-        propsDict = {}
-        propsDir = os.path.join(self.tmpDir, "props")
-        adb.pull("/data/property", propsDir)
-        for f in os.listdir(propsDir):
-            if f.startswith("."):
-                continue
-            fullPath = os.path.join(propsDir, f)
-            with open(fullPath, 'r') as fHandle:
-                currFileVal = fHandle.read()
-                keys = f.split(".")
-                if keys[0] == "persist":
-                    keys = keys[1:]
-
-                if currFileVal == self.config.get("update.property." + (".".join(keys)), None):
-                    continue
-
-                subDict = propsDict
-                for i in range(0, len(keys) - 1):
-                    k = keys[i]
-                    if not k in subDict:
-                        subDict[k] = {}
-                    subDict = subDict[k]
-
-                subDict[keys[-1]] = currFileVal
-
-        return propsDict
+        syncer = ConfigSyncer(self.config)
+        return syncer.syncProps()
 
     def learnSettings(self):
         syncer = ConfigSyncer(self.config)
