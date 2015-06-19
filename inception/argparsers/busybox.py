@@ -19,7 +19,8 @@ class BusyboxArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", action="store", help="Override default output path")
-        optionalOpts.add_argument("--ignore-stock", action="store_true", help="Don't restore stock recovery when done")
+        optionalOpts.add_argument("--no-stock", action="store_true", help="Don't restore stock recovery when done")
+        optionalOpts.add_argument("--no-recovery", action="store_true", help="Don't make recovery")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -60,12 +61,16 @@ class BusyboxArgParser(InceptionArgParser):
         config.set("update.busybox.__make__", True)
         config.set("update.files.__override__", True)
         config.set("update.keys", "test")
-        config.set("recovery.__make__", True)
+        config.set("recovery.__make__", not self.args["no_recovery"])
         config.set("boot.__make__", False)
-        config.set("update.restore_stock_recovery", not self.args["ignore_stock"])
+        config.set("update.restore_stock_recovery", not self.args["no_stock"])
 
-        if not self.args["ignore_stock"] and not config.get("recovery.stock"):
-            logger.error("recovery.stock is not set, use --ignore-stock to not restore stock recovery when done." )
+        if not self.args["no_stock"] and not config.get("recovery.stock"):
+            logger.error("recovery.stock is not set, use --no-stock to not restore stock recovery when done." )
+            sys.exit(1)
+
+        if not self.args["no_recovery"] and not config.get("recovery.img"):
+            logger.error("recovery.img is not set, use --no-recovery to not make recovery")
             sys.exit(1)
 
         with FileTools.newTmpDir() as workDir:
