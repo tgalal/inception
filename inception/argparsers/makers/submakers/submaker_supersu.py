@@ -58,7 +58,6 @@ class SuperSuSubmaker(Submaker):
                                 else:
                                     targetF.write(l)
                 else:
-                    logger.warning("update.busybox is not set. If you are installing supersu through stock recovery, it might not work.")
                     shutil.copy(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), supersuOriginalUpdatescriptPath)
 
                 postInstscript = "ui_print(\"Installing SuperSU..\");\n"

@@ -5,6 +5,7 @@ from inception.argparsers.makers.submakers.submaker_busybox import BusyboxSubmak
 from inception.common.fstabtools import Fstab
 from inception.common.configsyncer import ConfigSyncer
 from dumpkey import dumppublickey
+import sys
 import os
 import logging
 import shutil
@@ -72,7 +73,10 @@ class RecoveryImageMaker(ImageMaker):
                 fstabOut.write(fstab.__str__())
 
     def injectBusyBox(self, ramDiskDir):
-        _, busybox = self.getTargetBinary("busybox")
+        busyboxKey, busybox = self.getTargetBinary("busybox")
+        if busybox is None:
+            logger.error("Must set %s to busybox path" % busyboxKey)
+            sys.exit(1)
         busyBoxSymlinks = BusyboxSubmaker.SYMLINKS
 
         busyboxSbin = os.path.join(ramDiskDir, "sbin", "busybox")
