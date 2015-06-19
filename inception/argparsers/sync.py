@@ -11,7 +11,9 @@ class SyncArgParser(InceptionArgParser):
         super(SyncArgParser, self).__init__(description = "Sync config tree")
 
         requiredOpts = self.add_argument_group("Required args")
-        requiredOpts.add_argument('-v', '--variant', required = True, action = "store", help="variant config code to use, in the format A.B.C")
+        codeOpts = requiredOpts.add_mutually_exclusive_group(required = True)
+        codeOpts.add_argument('-b', '--base', action = "store", help="variant config code to use, in the format A.B")
+        codeOpts.add_argument('-v', '--variant', action = "store", help="variant config code to use, in the format A.B.C")
         requiredOpts.add_argument('-f', '--force', required = False, action="store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -26,7 +28,7 @@ class SyncArgParser(InceptionArgParser):
                        "Everything under %s will be overwritten. Use -f to force." % InceptionConstants.BASE_DIR)
             return True
 
-        config = self.configTreeParser.parseJSON(self.args["variant"])
+        config = self.configTreeParser.parseJSON(self.args["variant"] or self.args["base"])
 
         while not config.isOrphan():
             config = config.getParent()
