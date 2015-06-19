@@ -7,6 +7,7 @@ import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver
 from inception.common.fstabtools import Fstab
 from inception.config.configv2 import ConfigV2
+from inception.common.propfile import DefaultPropFile
 import sys
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
@@ -179,3 +180,13 @@ class BootstrapArgParser(InceptionArgParser):
 
             if self.newConfig.get(key + "fs") != fstabPart.getType():
                 self.newConfig.set(key + "fs", fstabPart.getType())
+
+
+        defaultProp = DefaultPropFile(os.path.join(out, bootImgGenerator.getRamdisk(), "default.prop"))
+
+        self.newConfig.setTargetConfigValue("arch", defaultProp.getProductCpuABI(), diffOnly=True)
+        self.newConfig.setTargetConfigValue("device.manufacturer", defaultProp.getProductManufacturer(), diffOnly=True)
+        self.newConfig.setTargetConfigValue("device.brand", defaultProp.getProductBrand(), diffOnly=True)
+        self.newConfig.setTargetConfigValue("device.board", defaultProp.getProductBoard(), diffOnly=True)
+        self.newConfig.setTargetConfigValue("device.name", defaultProp.getProductDevice(), diffOnly=True)
+

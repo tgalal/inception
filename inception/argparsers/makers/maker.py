@@ -30,8 +30,14 @@ class Maker(object):
         key = self.getKey() + "." + key
         return self.config.getProperty(key, default, directOnly)
 
-    def setValue(self, key, value):
-        return self.config.set(key, value)
+    def setValue(self, key, value, diffOnly = False):
+        return self.config.set(key, value, diffOnly = diffOnly)
+
+    def setHostConfigValue(self, key, value, diffOnly = False):
+        return self.config.setHostConfigValue(key, value, diffOnly=diffOnly)
+
+    def setTargetConfigValue(self, key, value, diffOnly = False):
+        return self.config.setTargetConfigValue(key, value, diffOnly=diffOnly)
 
     def deleteProperty(self, key):
         return self.config.delete(key)

@@ -50,6 +50,7 @@ class RecoveryImageMaker(ImageMaker):
                         logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
 
                 self.injectBusyBox(workRamdiskDir)
+                self.readProps(workRamdiskDir)
 
 
                 fstabPath = os.path.join(workRamdiskDir, "etc", "fstab")
@@ -66,6 +67,10 @@ class RecoveryImageMaker(ImageMaker):
                 self.setValue("recovery.img", recoveryImg.getValue())
                 return result
 
+    def readProps(self, ramdiskDir):
+        from inception.common.propfile import DefaultPropFile
+        props = DefaultPropFile(os.path.join(ramdiskDir, "default.prop"))
+        self.setTargetConfigValue("arch", props.getProductCpuABI(), diffOnly=True)
 
     def injectFstab(self, fstab, ramdiskDir):
             fstabPath = os.path.join(ramdiskDir, "etc", "fstab")
