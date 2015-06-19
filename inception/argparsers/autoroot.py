@@ -21,6 +21,7 @@ class AutorootArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", help="Override default output path")
+        optionalOpts.add_argument("--no-recovery", action="store_true", help="Don't make recovery")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -64,7 +65,7 @@ class AutorootArgParser(InceptionArgParser):
         config.set("update.files.__override__", True)
         config.set("update.script.wait", 0)
         config.set("update.keys", "test")
-        config.set("recovery.__make__", True)
+        config.set("recovery.__make__", not self.args["no_recovery"])
         config.set("boot.__make__", False)
         config.set("__config__.target.root.methods.supersu.include_apk", True)
         config.set("__config__.target.root.methods.supersu.include_archs", [])
@@ -72,6 +73,10 @@ class AutorootArgParser(InceptionArgParser):
 
         if not config.get("recovery.stock"):
             print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
+            sys.exit(1)
+
+        if not self.args["no_recovery"] and not config.get("recovery.img"):
+            logger.error("recovery.img is not set, use --no-recovery to not make recovery")
             sys.exit(1)
 
         with FileTools.newTmpDir() as workDir:
