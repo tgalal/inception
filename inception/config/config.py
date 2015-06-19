@@ -307,9 +307,9 @@ class Config(object):
     def make(self, workDir):
         self.prepareOutDir()
         makersMap = [
-            ("update", UpdateMaker),
             ("boot", BootImageMaker),
             ("recovery", RecoveryImageMaker),
+            ("update", UpdateMaker),
             ("cache", CacheMaker),
             ("odin", OdinMaker)
          ]

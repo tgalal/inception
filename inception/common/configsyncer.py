@@ -201,6 +201,38 @@ class ConfigSyncer(object):
             return result.split("->")[1].strip()
         return name
 
+    @staticmethod
+    def diffMounts(config, fstab):
+        mountNames = ["cache", "recovery", "system", "data", "boot"]
+        out = {}
+        for mountName in mountNames:
+            mountData = fstab.getByMountPoint("/" + mountName)
+            if mountData:
+                out[mountName] = {}
+                if config.getMountConfig("%s.dev" % mountName) != mountData.getDevice():
+                    out[mountName]["dev"] = mountData.getDevice()
+                fsType = mountData.getType()
+                if not fsType:
+                    logger.warning("Couldn't find fs type for %s" % mountName)
+                elif fsType.lower() != config.getMountConfig("%s.fs" % mountName, "").lower():
+                    out[mountName]["fs"] = fsType
+
+                if config.getMountConfig("%s.mount" % mountName) != mountData.getMountPoint():
+                    out[mountName]["mount"] = mountData.getMountPoint()
+            else:
+                logger.warning("No %s partition data" % mountName)
+
+        if len(out):
+            out = {
+                "__config__": {
+                    "target": {
+                        "mount": out
+                    }
+                }
+            }
+
+        return out
+
     def syncPartitions(self, apply = False):
         out = {
         }
