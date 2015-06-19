@@ -51,6 +51,7 @@ class BusyboxArgParser(InceptionArgParser):
         config.set("update.apps.__make__", False)
         config.set("update.network.__make__", False)
         config.set("update.script.format_data", False)
+        config.set("update.script.wait", 0)
         config.set("update.root_method", None)
         config.set("update.busybox.__make__", True)
         config.set("update.files.__override__", True)
