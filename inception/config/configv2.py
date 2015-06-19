@@ -16,6 +16,9 @@ class ConfigV2(Config):
             self.hostArch = platform.machine()
 
         self.targetArch = self.getTargetConfigValue("arch", "any")
+        if self.targetArch.startswith("arm"):
+            self.targetArch = "arm"
+
         if self.targetArch != "any":
             assert self.targetArch and self.targetArch in self.__class__.ARCHS,\
                 "Must set %s to one of %s, instead got '%s'" % (self.__class__.KEY_CONFIG + ".target.arch", self.__class__.ARCHS, self.targetArch)
@@ -27,6 +30,15 @@ class ConfigV2(Config):
         #     logger.warning("%s is set to %s, while current machine architecture is detected to be %s" %
         #                    (".".join([self.__class__.KEY_CONFIG, self.__class__.KEY_CONFIG_HOST, "arch"]), self.hostArch, platform.machine()))
 
+
+    def setConfigValue(self, name, value, diffOnly = False):
+        self.set(self.__class__.KEY_CONFIG + "." + name, value, diffOnly=diffOnly)
+
+    def setHostConfigValue(self, name, value, diffOnly = False):
+        self.setConfigValue(self.__class__.KEY_CONFIG_HOST + "." + name, value, diffOnly=diffOnly)
+
+    def setTargetConfigValue(self, name, value, diffOnly = False):
+        self.setConfigValue(self.__class__.KEY_CONFIG_TARGET + "." + name, value, diffOnly=diffOnly)
 
     def getTargetBinaryConfigProperty(self, name, default = None, directOnly = False):
         binKey = "bin." + name

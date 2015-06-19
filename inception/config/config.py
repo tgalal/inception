@@ -51,10 +51,11 @@ class Config(object):
     def new(cls, identifier, name = None, base = None, template = None):
         sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
         sourceTemplate = sourceTemplate.copy()
-        assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
+
+        if base: assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
         config = cls(identifier, sourceTemplate, base)
-        config.set("__extends__", base.getIdentifier() if base else None)
         if base:
+            config.set("__extends__", base.getIdentifier() )
             config.set("boot.__make__", base.get("boot.__make__", False))
             config.set("recovery.__make__", base.get("recovery.__make__", False))
             config.set("cache.__make__", base.get("cache.__make__", False))
@@ -200,7 +201,9 @@ class Config(object):
         return False
 
 
-    def set(self, key, value):
+    def set(self, key, value, diffOnly = False):
+        if diffOnly and self.get(key) == value:
+            return
         self.__setProperty(key, value)
 
 
