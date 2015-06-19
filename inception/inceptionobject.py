@@ -13,15 +13,9 @@ class InceptionObject(object):
     def __init__(self):
         self.workDir = None
         self.outDir = None
-        self.logCmd = []
 
     def d(self, *messages):
         print("%s:\t%s" % (self.__class__.__name__, "\t".join(messages) ))
-
-    def writeCmdLog(self, out):
-        f = open(out, "w")
-        f.write("\n".join(self.logCmd))
-        f.close()
 
     def execCmd(self, *cmd, **kwargs):
         #cmd = " ".join(cmd)
@@ -33,7 +27,6 @@ class InceptionObject(object):
 
         cmdStr = " ".join(cmd)
         logger.debug(cmdStr)
-        self.logCmd.append(cmdStr)
         if not preview:
             try:
                 if stdout is not None:

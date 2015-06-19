@@ -3,22 +3,17 @@ from inception.tools.signapk import SignApk
 import shutil
 import os
 from inception.constants import InceptionConstants
+
 class UpdatezipSubmaker(Submaker):
     def make(self, updatePkgDir):
-        signingKeys = None
-        keys_name = self.getConfigValue("keys")
-        updateBinaryProp = self.getCommonConfigProperty("tools.update-binary.bin")
-        assert updateBinaryProp.getValue(), "common.tools.update-binary.bin is not set"
-        updateBinary = updateBinaryProp.getConfig().resolveRelativePath(updateBinaryProp.getValue())
+        keys_name = self.getValue("keys")
+        signingKeys = self.getMaker().getConfig().getKeyConfig(keys_name) if keys_name else None
+        updateBinaryKey, updateBinary = self.getTargetBinary("update-binary")
+        assert updateBinary, "%s is not set" % updateBinaryKey
 
         if keys_name:
-            signingKeysProp= self.getCommonConfigProperty("tools.signapk.keys.%s" % keys_name)
-            if(signingKeysProp):
-                pub = signingKeysProp.getValue()["public"]
-                priv = signingKeysProp.getValue()["private"]
-                pubPath = signingKeysProp.getConfig().resolveRelativePath(pub)
-                privPath =signingKeysProp.getConfig().resolveRelativePath(priv)
-                signingKeys = privPath, pubPath
+            assert signingKeys, "update.keys is '%s' but __config__.host.keys.%s is not set" % (keys_name, keys_name)
+            signingKeys = signingKeys["private"], signingKeys["public"]
 
         shutil.copy(updateBinary, os.path.join(updatePkgDir, "META-INF/com/google/android/"))
         updateZipPath = updatePkgDir + "/../"
@@ -27,17 +22,13 @@ class UpdatezipSubmaker(Submaker):
         updateZipPath += ".zip"
 
         if signingKeys:
-            javaPath = self.getCommonConfigValue("tools.java.bin")
-            signApkPathProp = self.getCommonConfigProperty("tools.signapk.bin")
+            javaKey, javaPath = self.getHostBinary("java")
+            signApkKey, signApkPath = self.getHostBinary("signapk")
 
-            assert signApkPathProp.getValue(), "common.tools.signapk.bin is not set"
+            assert signApkPath, "%s is not set" % signApkKey
 
-            signApkPath = signApkPathProp.getConfig().resolveRelativePath(signApkPathProp.getValue())
-
-
-            assert os.path.exists(signApkPath), "'%s' from common.tools.signapk.bin does not exist %s" % signApkPath
-            assert os.path.exists(javaPath), "'%s' from common.tools.java.bin does not exist %s" % javaPath
-
+            assert os.path.exists(signApkPath), "'%s' from %s does not exist" % (signApkPath, signApkKey)
+            assert os.path.exists(javaPath), "'%s' from %s does not exist" % (javaPath, javaKey)
 
             signApk = SignApk(javaPath, signApkPath)
             targetPath =  updatePkgDir + "/../" + InceptionConstants.OUT_NAME_UPDATE

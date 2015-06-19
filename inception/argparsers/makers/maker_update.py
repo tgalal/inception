@@ -37,10 +37,10 @@ class UpdateMaker(Maker):
         self.makeRoot(rootFS)
         self.makeApps(rootFS)
         self.makeUpdateScript(rootFS)
-        self.makeUpdateZip(rootFS, outDir)
+        return self.makeUpdateZip(rootFS, outDir)
 
     def isMakeTrue(self, key):
-        return self.getMakeConfigValue(key + ".__make__", True)
+        return self.getMakeValue(key + ".__make__", True)
 
     def makeFS(self, fsPath):
         logger.info("Making FS")
@@ -58,7 +58,7 @@ class UpdateMaker(Maker):
             smaker.make(fsPath, self.updatescriptGen)
 
     def makeRoot(self, fsPath):
-        rootMethod = self.getMakeConfigValue("root_method", None)
+        rootMethod = self.getMakeValue("root_method", None)
 
         if rootMethod:
             logger.info("Selected root method: %s" % rootMethod)
@@ -80,7 +80,7 @@ class UpdateMaker(Maker):
             smaker = SettingsSubmaker(self, "settings")
             smaker.make(workDir)
         else:
-            self.setConfigValue("update.settings", {"__override__": True})
+            self.setValue("update.settings", {"__override__": True})
 
     def makeDatabases(self, workDir):
         if self.isMakeTrue("databases"):
@@ -88,7 +88,7 @@ class UpdateMaker(Maker):
             smaker = DatabasesSubmaker(self, "databases")
             smaker.make(workDir)
         else:
-            self.setConfigValue("update.databases", {"__override__": True})
+            self.setValue("update.databases", {"__override__": True})
 
     def makeWPASupplicant(self, workDir):
         if self.isMakeTrue("network"):
@@ -121,14 +121,14 @@ class UpdateMaker(Maker):
             smaker.make(workDir)
 
     def makeStockRecovery(self, workDir):
-        if self.getMakeConfigValue("restore_stock_recovery", False):
+        if self.getMakeValue("restore_stock_recovery", False):
             logger.info("Making Stock recovery")
             stockRecProp = self.getConfig().getProperty("recovery.stock")
             assert stockRecProp.getValue() is not None, "recovery.stock is not specified"
             stockRecPath = stockRecProp.getConfig().resolveRelativePath(stockRecProp.getValue())
             assert os.path.isfile(stockRecPath), "%s does not exist" % stockRecPath
-            recoveryDev = self.getConfig().get("recovery.dev", None)
-            assert recoveryDev, "recovery.dev is not specified"
+            recoveryDev = self.getConfig().getMountConfig("recovery.dev", None)
+            assert recoveryDev, "__config__.target.mount.recovery.dev is not specified"
 
             stockRecoveryData = {
                 "destination": recoveryDev
@@ -136,7 +136,7 @@ class UpdateMaker(Maker):
 
             workDirRecPath = os.path.join(workDir, "stockrec.img")
             shutil.copy(stockRecPath, workDirRecPath)
-            self.setConfigValue("update.files.add.stockrec\.img", stockRecoveryData)
+            self.setValue("update.files.add.stockrec\.img", stockRecoveryData)
 
     def makeApps(self, workDir):
         if self.isMakeTrue("apps"):
@@ -149,3 +149,4 @@ class UpdateMaker(Maker):
         smake = UpdatezipSubmaker(self, ".")
         updateZipPkgPath = smake.make(work)
         shutil.copy(updateZipPkgPath, outDir)
+        return os.path.join(outDir, os.path.basename(updateZipPkgPath))

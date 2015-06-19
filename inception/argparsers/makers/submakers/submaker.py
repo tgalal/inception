@@ -1,7 +1,4 @@
 import abc
-import tempfile
-import shutil
-import os
 class Submaker(object):
     __metaclass__ = abc.ABCMeta
     def __init__(self, maker, key):
@@ -16,39 +13,55 @@ class Submaker(object):
         pass
 
     def newtmpWorkDir(self):
-        return TmpWorkDir()
+        return self.maker.newTmpWorkDir()
 
     def getFSPath(self):
         return self.maker.getFSPath()
 
-    def getCommonConfigValue(self, key, default = None):
-        return self.getMaker().getCommonConfigValue(key, default)
-
-    def getCommonConfigProperty(self, key, default = None):
-        return self.getMaker().getCommonConfigProperty(key, default)
-
-    def getConfigValue(self, key, default = None, directOnly = False):
+    def getValue(self, key, default = None, directOnly = False):
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
-        return self.maker.getMakeConfigValue(key, default, directOnly)
+        return self.maker.getMakeValue(key, default, directOnly)
 
-    def getConfigProperty(self, key, default = None, directOnly = False):
+    def getProperty(self, key, default = None, directOnly = False):
 
         if not self.key == ".":
             key = self.key + "." + key if not key == "." else self.key
-        return self.maker.getMakeConfigProperty(key, default, directOnly)
+        return self.maker.getMakeProperty(key, default, directOnly)
 
-    def setConfigValue(self, key, value):
-        return self.maker.setConfigValue(key, value)
+    def setValue(self, key, value):
+        return self.maker.setValue(key, value)
 
-    def deleteConfigProperty(self, key):
-        return self.maker.deleteConfigProperty(key)
+    def deleteProperty(self, key):
+        return self.maker.deleteProperty(key)
 
-class TmpWorkDir(object):
-    def __enter__(self):
-        self.__path = tempfile.mkdtemp()
-        return self.__path
+    def getHostBinary(self, name):
+        return self.maker.getHostBinary(name)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if os.path.exists(self.__path):
-            shutil.rmtree(self.__path)
+    def getTargetBinary(self, name):
+        return self.maker.getTargetBinary(name)
+
+    def getHostBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getHostBinaryConfigProperty(name, default, directOnly)
+
+    def getTargetBinaryConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getTargetBinaryConfigProperty(name, default, directOnly)
+
+    # def getConfigProperty(self, name, default = None, directOnly = False):
+    #     return self.maker.getConfigProperty(name, default, directOnly)
+    #
+    # def getConfigValue(self, name, default = None, directOnly = False):
+    #     return self.maker.getConfigValue(name, default ,directOnly)
+
+    def getHostConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getHostConfigProperty(name, default, directOnly)
+
+    def getHostConfigValue(self, name, default = None, directOnly = False):
+        return self.maker.getHostConfigValue(name, default ,directOnly)
+
+
+    def getTargetConfigProperty(self, name, default = None, directOnly = False):
+        return self.maker.getTargetConfigProperty(name, default, directOnly)
+
+    def getTargetConfigValue(self, name, default = None, directOnly = False):
+        return self.maker.getTargetConfigValue(name, default ,directOnly)

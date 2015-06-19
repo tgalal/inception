@@ -2,14 +2,17 @@ from .submaker import Submaker
 import zipfile
 import os
 import shutil
+import logging
+
+logger = logging.getLogger(__name__ )
 
 class SuperSuSubmaker(Submaker):
 
     def make(self, workDir):
-        supersuZipProp = self.getCommonConfigProperty("root.methods.supersu.path")
-        assert supersuZipProp.getValue(), "Must set root.methods.supersu.path to the supersu zip file"
-        includeApk = self.getCommonConfigValue("root.methods.supersu.include_apk", True)
-        includeArchs = set(self.getCommonConfigValue("root.methods.supersu.include_archs", []))
+        supersuZipProp = self.getTargetConfigProperty("root.methods.supersu.path")
+        assert supersuZipProp.getValue(), "Must set %s to the supersu zip file" % supersuZipProp.getKey()
+        includeApk = self.getTargetConfigValue("root.methods.supersu.include_apk", True)
+        includeArchs = set(self.getTargetConfigValue("root.methods.supersu.include_archs", []))
 
         superSuTargetRelativePath = "supersu"
         supersuTargetPath = os.path.join(workDir, superSuTargetRelativePath)
@@ -44,23 +47,34 @@ class SuperSuSubmaker(Submaker):
                     os.remove(os.path.join(tmpDir, superuserApkPath))
                 self.__addDirToZip(newSuperSuZip, os.path.join(tmpDir, "common"), "common")
 
-                shutil.copy(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), supersuOriginalUpdatescriptPath)
+
+                if self.getMaker().getConfig().isMakeable("update.busybox"):
+                    #process file, with busybox onboard in assumption
+                    with open(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), "r") as f:
+                        with open(supersuOriginalUpdatescriptPath, "w") as targetF:
+                            for l in f.readlines():
+                                if l.startswith("#!"):
+                                    targetF.write("#!/system/bin/sh\n")
+                                else:
+                                    targetF.write(l)
+                else:
+                    shutil.copy(os.path.join(tmpDir, "META-INF/com/google/android/update-binary"), supersuOriginalUpdatescriptPath)
 
                 postInstscript = "ui_print(\"Installing SuperSU..\");\n"
-                postInstscript += "run_program(\"%s\", \"1\", \"stdout\", \"/tmp/supersu.zip\");" % (superSuUpdatescriptTmpExtract)
+                postInstscript += "run_program(\"%s\", \"1\", \"stdout\", \"%s\");" % (superSuUpdatescriptTmpExtract, superSuZipTmpExtract)
 
                 with open(postinstFilePath, "w") as postinstFile:
                     postinstFile.write(postInstscript)
 
                 currPostInst = self.getMaker().getConfig().get("script.post", [], directOnly=True)
                 currPostInst.append(postinstFilePath)
-                self.setConfigValue("update.script.post", currPostInst)
+                self.setValue("update.script.post", currPostInst)
 
-        self.setConfigValue("update.files.add." + newSuperSuZipPath.replace(workDir, "").replace(".", "\.") , {
+        self.setValue("update.files.add." + newSuperSuZipPath.replace(workDir, "").replace(".", "\.") , {
             "destination": superSuZipTmpExtract
         })
 
-        self.setConfigValue("update.files.add." + supersuOriginalUpdatescriptPath.replace(workDir, "").replace(".", "\."), {
+        self.setValue("update.files.add." + supersuOriginalUpdatescriptPath.replace(workDir, "").replace(".", "\."), {
             "destination": superSuUpdatescriptTmpExtract,
             "mode": "0755",
             "uid": "0",

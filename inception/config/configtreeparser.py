@@ -1,4 +1,5 @@
 from .config import Config
+from .configv2 import ConfigV2
 import json
 import os
 from inception.constants import InceptionConstants
@@ -75,7 +76,7 @@ class ConfigTreeParser(object):
             if isFresh and self.__class__.KEY_NOTES in parsedJSON:
                 self.notes.append((code, jsonFilePath, parsedJSON[self.__class__.KEY_NOTES]))
 
-            result = Config(code,
+            result = ConfigV2(code,
                           parsedJSON,
                           self._parseCode(parentIdentifier) if parentIdentifier else None,
                           jsonFilePath

@@ -2,23 +2,24 @@ from .maker import Maker
 from inception.generators.cacheimg import CacheImgGenerator
 import os
 from inception.constants import InceptionConstants
+import logging
+logger = logging.getLogger(__name__)
 
 class CacheMaker(Maker):
     def __init__(self, config):
         super(CacheMaker, self).__init__(config, "cache")
 
     def make(self, workDir, outDir):
-        make_ext4fsBinProp = self.getCommonConfigProperty("tools.make_ext4fs.bin")
-        assert make_ext4fsBinProp.getValue(), "must set common.tools.make_ext4fs.bin to create cache img"
-        assert os.path.exists(make_ext4fsBinProp.resolveAsRelativePath()), \
-            "%s does not exist, please update common.tools.make.make_ext4fs.bin to the correct path" % make_ext4fsBinProp.getValue()
 
-        make_ext4fsBin = make_ext4fsBinProp.resolveAsRelativePath()
+        key, make_ext4fsBin = self.getHostBinary("make_ext4fs")
+        assert make_ext4fsBin, "must set %s to be able to create the cache img" % key
+        assert os.path.exists(make_ext4fsBin), \
+            "%s does not exist, please update %s to the correct path" % (make_ext4fsBin, key)
 
-        cacheSize = self.getMakeConfigValue("size")
-        assert cacheSize, "cache.size is not set, can't create cache img"
-        cacheSparsed= self.getMakeConfigValue("sparsed", False)
-        cacheMount = self.getMakeConfigValue("mount", "cache")
+        cacheSize = self.config.getMountConfig("cache.size")
+        assert cacheSize, "__config__.target.mount.cache.size is not set, can't create cache img"
+        cacheSparsed= self.getMakeValue("sparsed", False)
+        cacheMount = self.config.getMountConfig("cache.mount", "/cache")
         cacheMount = cacheMount[1:] if cacheMount[0] == "/" else cacheMount
 
         cachePath = os.path.join(workDir, "cache")
@@ -31,4 +32,6 @@ class CacheMaker(Maker):
         if os.path.exists(updatePkgPath):
             gen.update(updatePkgPath)
 
-        gen.generate(os.path.join(outDir, self.getCacheOutName()))
+        out = os.path.join(outDir, self.getCacheOutName())
+        gen.generate(out)
+        return out

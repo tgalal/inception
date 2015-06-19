@@ -3,11 +3,9 @@ from inception.constants import InceptionConstants
 from inception.config import configtreeparser
 from inception.config.dotidentifierresolver import DotIdentifierResolver
 import logging
-from inception.config import Config
+from inception.config.configv2 import ConfigV2
 logger = logging.getLogger(__name__)
 from inception.common.filetools import FileTools
-import os
-import shutil
 import sys
 class AutorootArgParser(InceptionArgParser):
 
@@ -23,6 +21,7 @@ class AutorootArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", help="Override default output path")
+        optionalOpts.add_argument("--no-recovery", action="store_true", help="Don't make recovery")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -36,9 +35,16 @@ class AutorootArgParser(InceptionArgParser):
 
         config = self.configTreeParser.parseJSON(identifier)
 
+        if config.get("__config__") is None:
+            sys.stderr.write("You are using an outdated config tree. Please run 'incept sync -v VARIANT_CODE' or set __config__ (see https://goo.gl/aFWPby)\n")
+            sys.exit(1)
+
         autorootBase = identifier if config.isBase() else ".".join(identifier.split(".")[:-1])
 
-        config = Config.new(autorootBase + ".autoroot", "autoroot", config)
+        config = ConfigV2.new(autorootBase + ".autoroot", "autoroot", config)
+
+
+
         if self.args["output"]:
             config.setOutPath(self.args["output"])
 
@@ -57,15 +63,20 @@ class AutorootArgParser(InceptionArgParser):
         config.set("update.root_method", "supersu")
         config.set("update.busybox.__make__", False)
         config.set("update.files.__override__", True)
+        config.set("update.script.wait", 0)
         config.set("update.keys", "test")
-        config.set("recovery.__make__", True)
+        config.set("recovery.__make__", not self.args["no_recovery"])
         config.set("boot.__make__", False)
-        config.set("common.root.methods.supersu.include_apk", True)
-        config.set("commont.root.methods.supersu.include_archs", [])
+        config.set("__config__.target.root.methods.supersu.include_apk", True)
+        config.set("__config__.target.root.methods.supersu.include_archs", [])
 
 
         if not config.get("recovery.stock"):
             print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
+            sys.exit(1)
+
+        if not self.args["no_recovery"] and not config.get("recovery.img"):
+            logger.error("recovery.img is not set, use --no-recovery to not make recovery")
             sys.exit(1)
 
         with FileTools.newTmpDir() as workDir:

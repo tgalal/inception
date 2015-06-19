@@ -45,9 +45,9 @@ class UpdateScriptGenerator(Generator):
 
         return commands
 
-
-    def mount(self, mountPoint):
-        self.run("/sbin/mount", mountPoint)
+    def mount(self, name, mountPoint, fsType, type_ = "EMMC"):
+        # self.run("/sbin/mount", mountPoint)
+        self._add("mount", self._quote(fsType), self._quote(type_), self._quote(name), self._quote(mountPoint))
 
     def echo(self, text):
         self._add("ui_print", self._quote(text))

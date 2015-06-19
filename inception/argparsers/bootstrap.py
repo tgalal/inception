@@ -1,11 +1,13 @@
 from .argparser import InceptionArgParser
 from .exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
-from inception.inceptionobject import InceptionExecCmdFailedException
 from inception.common.configsyncer import ConfigSyncer
+from inception.tools import imgtools
 import os, shutil, logging
-from inception.config import ConfigTreeParser, DotIdentifierResolver, Config
-
+from inception.config import ConfigTreeParser, DotIdentifierResolver
+from inception.common.fstabtools import Fstab
+from inception.config.configv2 import ConfigV2
+import sys
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
 
@@ -41,6 +43,12 @@ class BootstrapArgParser(InceptionArgParser):
         super(BootstrapArgParser, self).process()
         self.createDir(self.deviceDir)
         self.config = self.configTreeParser.parseJSON(self.args["base"])
+
+
+        if self.config.get("__config__") is None:
+            sys.stderr.write("You are using an outdated config tree. Please run 'incept sync -v VARIANT_CODE' or set __config__ (see https://goo.gl/aFWPby)\n")
+            sys.exit(1)
+
         self.configDir = self.config.getSource(getDir=True)
 
         baseCodePath= "/".join(self.args["base"].split(".")[:2])
@@ -53,8 +61,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDirs()
         #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
-        unpackerProperty = self.config.getProperty("common.tools.unpackbootimg.bin")
-        unpacker = unpackerProperty.getConfig().resolveRelativePath(unpackerProperty.getValue())
+        unpackerKey, unpacker = self.config.getHostBinary("unpackbootimg")
         bootImg = self.config.getProperty("boot.img", None)
         if bootImg and self.config.get("boot.__make__", False):
             if type(bootImg.getValue()) is str:
@@ -67,7 +74,6 @@ class BootstrapArgParser(InceptionArgParser):
             if type(recoveryImg.getValue()) is str:
                 logger.info("Unpacking recovery img")
                 self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
-
 
         if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"], self.args["learn_imgs"])):
             syncer = ConfigSyncer(self.newConfig)
@@ -84,33 +90,34 @@ class BootstrapArgParser(InceptionArgParser):
             if self.args["learn_imgs"]:
                 imgsDir = os.path.join(self.variantDir, "imgs")
                 os.makedirs(imgsDir)
-                if self.newConfig.get("recovery.dev"):
+                if self.newConfig.getMountConfig("recovery.dev"):
                     logger.info("pulling recovery.img")
-                    syncer.syncImg("recovery.img", self.newConfig.get("recovery.dev"), imgsDir, self.variantDir)
+                    syncer.syncImg("recovery.img", self.newConfig.getMountConfig("recovery.dev"), imgsDir, self.variantDir)
                 else:
-                    logger.warn("recovery.dev not set, not syncing recovery.img")
+                    logger.warn("__config__.target.mount.recovery.dev not set, not syncing recovery.img")
 
-                if self.newConfig.get("boot.dev"):
+                if self.newConfig.getMountConfig("boot.dev"):
                     logger.info("pulling boot.img")
-                    syncer.syncImg("boot.img", self.newConfig.get("boot.dev"), imgsDir, self.variantDir)
+                    syncer.syncImg("boot.img", self.newConfig.getMountConfig("boot.dev"), imgsDir, self.variantDir)
                 else:
-                    logger.warn("boot.dev not set, not syncing boot.img")
+                    logger.warn("__config__.target.mount.boot.dev not set, not syncing boot.img")
 
-        self.writeNewConfig(self.args["variant"])
+        configPath = self.writeNewConfig(self.args["variant"])
 
-        self.writeCmdLog(os.path.join(self.variantDir, "bootstrap.commands.log"))
-
+        logger.info("Created %s" % configPath)
 
         return True
 
     def createNewConfig(self, identifier, name, baseConfig):
-        return Config.new(identifier, name, baseConfig)
-
+        return ConfigV2.new(identifier, name, baseConfig)
 
     def writeNewConfig(self, name):
-        newConfigFile = open(os.path.join(self.variantDir, "%s.json" % name), "w")
+        out = os.path.join(self.variantDir, "%s.json" % name)
+        newConfigFile = open(out, "w")
         newConfigFile.write(self.newConfig.dumpContextData())
         newConfigFile.close()
+
+        return out
 
     def createDir(self, d):
         if not os.path.exists(d):
@@ -136,7 +143,6 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDir(self.variantDir)
         self.createDir(self.fsDir)
 
-
     def getAbsolutePathOf(self, f):
         return os.path.dirname(os.path.realpath(__file__)) + "/" + f 
 
@@ -144,68 +150,32 @@ class BootstrapArgParser(InceptionArgParser):
         return os.path.join(self.configDir, configName + ".config")
 
     def unpackimg(self, img, out, unpacker, imgType):
-        if not os.path.isfile(img):
-            raise ValueError("Coudn't find %s to unpack"  % img)
-        filename = img.split('/')[-1]
-        ramdisk = "%s/%s-ramdisk" % (out, filename)
-        kernel = "%s/%s-zImage" % (out, filename)
-        dt = "%s/%s-dt" % (out, filename)
-        ramdiskDir = os.path.join(out, "ramdisk")
-        ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
-        os.makedirs(out)
-        unpackResult = self.execCmd(unpacker, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
-        try:
-            self.execCmd("gunzip", ramdisk + ".gz") 
-        except InceptionExecCmdFailedException as e:
-            self.execCmd("mv", ramdisk + ".gz", ramdisk + ".xz")
-            self.execCmd("unxz", ramdisk + ".xz")
+        bootImgGenerator  = imgtools.unpackimg(unpacker, img, out)
 
-        self.createDir(ramdiskDir)
-        self.execCmd("mv", ramdisk, ramdiskDir)
+        self.newConfig.set("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
+        self.newConfig.set("%s.img.base" % imgType, bootImgGenerator.getBaseAddr())
+        self.newConfig.set("%s.img.ramdisk_offset" % imgType, bootImgGenerator.getRamdiskOffset())
+        self.newConfig.set("%s.img.second_offset" % imgType, bootImgGenerator.getSecondOffset())
+        self.newConfig.set("%s.img.tags_offset" % imgType, bootImgGenerator.getTagsOffset())
+        self.newConfig.set("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
+        self.newConfig.set("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
+        self.newConfig.set("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
+        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImgGenerator.getKernel(), self.variantDir))
+        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
+        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
 
-        f = open(ramdiskExtracted)
-        try:
-            self.execCmd("cpio", "-i", cwd = ramdiskDir, stdin = f)
-        finally:
-            f.close()
-        os.remove(ramdiskExtracted)
+        fstab = Fstab.parseFstab(os.path.join(out, bootImgGenerator.getRamdisk(), "etc", "recovery.fstab"))
 
-        #process unpacker output
-        resultList = unpackResult.split('\n')
-        for l in resultList:
-            try:
-                dissect = l.split(' ')
-                key = dissect[0]
-                value = " ".join(dissect[1:]) or None
-            except ValueError:
-                key = l.split(' ')
-                value = None
+        processParts = ("boot", "system", "recovery", "cache")
 
-            if key == "BOARD_KERNEL_CMDLINE":
-                self.newConfig.set("%s.img.cmdline" % imgType, value)
-            elif key == "BOARD_KERNEL_BASE":
-                self.newConfig.set("%s.img.base" % imgType, "0x" + value)
-            elif key == "BOARD_RAMDISK_OFFSET":
-                self.newConfig.set("%s.img.ramdisk_offset" % imgType, "0x" + value)
-            elif key == "BOARD_SECOND_OFFSET":
-                self.newConfig.set("%s.img.second_offset" % imgType, "0x" + value)
-            elif key == "BOARD_TAGS_OFFSET":
-                self.newConfig.set("%s.img.tags_offset" % imgType, "0x" + value)
-            elif key == "BOARD_PAGE_SIZE":
-                self.newConfig.set("%s.img.pagesize" % imgType, int(value))
-            elif key == "BOARD_SECOND_SIZE":
-                self.newConfig.set("%s.img.second_size" % imgType, int(value))
-            elif key == "BOARD_DT_SIZE":
-                self.newConfig.set("%s.img.dt_size" % imgType, int(value))
+        for p in processParts:
+            fstabPart = fstab.getByMountPoint("/" + p)
+            key = "__config__.target.mount.%s." % p
+            if self.newConfig.get(key + "dev") != fstabPart.getDevice():
+                self.newConfig.set(key + "dev", fstabPart.getDevice())
 
+            if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
+                self.newConfig.set(key + "mount", fstabPart.getMountPoint())
 
-        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(kernel, self.variantDir))
-        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(ramdiskDir, self.variantDir))
-        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(dt, self.variantDir))
-
-
-
-       
-
-
-
+            if self.newConfig.get(key + "fs") != fstabPart.getType():
+                self.newConfig.set(key + "fs", fstabPart.getType())

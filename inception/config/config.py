@@ -22,9 +22,6 @@ class Config(object):
 
     TEMPLATE_DEFAULT = {
         "__extends__": None,
-        "device": {
-            "name":  None
-        },
         "boot": {
             "__make__": False
         },
@@ -54,9 +51,8 @@ class Config(object):
     def new(cls, identifier, name = None, base = None, template = None):
         sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
         sourceTemplate = sourceTemplate.copy()
-        assert base.__class__ == Config, "Base must be instance of config"
-        config = Config(identifier, sourceTemplate, base)
-        config.set("device.name", name)
+        assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
+        config = cls(identifier, sourceTemplate, base)
         config.set("__extends__", base.getIdentifier() if base else None)
         if base:
             config.set("boot.__make__", base.get("boot.__make__", False))
@@ -64,7 +60,7 @@ class Config(object):
             config.set("cache.__make__", base.get("cache.__make__", False))
             config.set("odin.__make__", base.get("odin.__make__", False))
 
-            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", False))
+            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
             config.set("update.settings.__make__", base.get("update.settings.__make__", False))
             config.set("update.databases.__make__", base.get("update.databases.__make__", False))
             config.set("update.adb.__make__", base.get("update.adb.__make__", False))
@@ -73,6 +69,7 @@ class Config(object):
             config.set("update.root_method", base.get("update.root_method", None))
             config.set("update.property.__make__", base.get("update.property.__make__", False))
             config.set("update.network.__make__", base.get("update.network.__make__", False))
+            config.set("update.keys", base.get("update.keys", None))
             config.set("update.script.format_data", base.get("update.script.format_data", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
@@ -291,6 +288,9 @@ class Config(object):
         a,b,c = self.getIdentifier().split(".")
         return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
 
+    def isMakeable(self, key):
+        return self.get(key + ".__make__", True)
+
     def prepareOutDir(self):
         outDir = self.getOutPath()
         if not self.outPath and os.path.exists(outDir):
@@ -303,22 +303,30 @@ class Config(object):
     def make(self, workDir):
         self.prepareOutDir()
         makersMap = [
-            ("update", UpdateMaker),
             ("boot", BootImageMaker),
             ("recovery", RecoveryImageMaker),
+            ("update", UpdateMaker),
             ("cache", CacheMaker),
             ("odin", OdinMaker)
          ]
+
+        out = {}
 
         for makerItem in makersMap:
             key, Maker = makerItem
             if self.get(key + ".__make__", True):
                 logger.info("Making %s" % key)
                 m = Maker(self)
-                m.make(workDir, self.getOutPath())
+                out[key] = m.make(workDir, self.getOutPath())
+                logger.info("Made %s" % key)
             else:
                 logger.info("Skipping '%s' as it's disabled in config" % key)
 
+        outStr = "Made:\n\n"
+        maxLen = max([len(key) for key in out.keys()])
+        for k, v in out.items():
+            outStr += "%*s %s\n" % (-(maxLen + 5), k, v)
+        logger.info(outStr)
 
 
 class ConfigProperty(object):

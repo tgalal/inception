@@ -9,7 +9,7 @@ logger = logging.getLogger(__file__)
 
 def ensureDataMounted(fn):
     def wrapped(self, *args):
-        self.adb.cmd("mount", "/data")
+        self.adb.shell("mount /data")
         return fn(self, *args)
 
     return wrapped
@@ -151,26 +151,37 @@ class ConfigSyncer(object):
         return (diffSettings, databaseContent)
 
     def pullFstab(self):
+        import adb
         with FileTools.newTmpDir() as tmpDir:
-            recoveryFstabPath = os.path.join(tmpDir, "recovery.fstab")
-            self.adb.pull("/etc/recovery.fstab", recoveryFstabPath)
-            parsedRecoveryFstab = Fstab.parseFstab(recoveryFstabPath)
 
-            fstabPath = os.path.join(tmpDir, "fstab")
-            self.adb.pull("/etc/fstab", fstabPath)
-            parsedFstab = Fstab.parseFstab(fstabPath)
+            mountCommandOutFile = os.path.join(tmpDir, "mount_out")
+            mountCommandOut = self.adb.shell("mount")
+            with open(mountCommandOutFile, "w") as out:
+                out.write(mountCommandOut)
 
-            for entry in parsedFstab.getEntries():
-                recovFstabEntry = parsedRecoveryFstab.getByMountPoint(entry.getMountPoint())
-                recovFstabEntry.setDevice(entry.getDevice())
+            try:
+                recoveryFstabPath = os.path.join(tmpDir, "recovery.fstab")
+                self.adb.pull("/etc/recovery.fstab", recoveryFstabPath)
+                parsedRecoveryFstab = Fstab.parseFstab(recoveryFstabPath)
+            except adb.usb_exceptions.AdbCommandFailureException as ex:
+                parsedRecoveryFstab = Fstab.parseFstab(mountCommandOutFile)
 
+            try:
+                fstabPath = os.path.join(tmpDir, "fstab")
+                self.adb.pull("/etc/fstab", fstabPath)
+                parsedFstab = Fstab.parseFstab(fstabPath)
 
-            return parsedRecoveryFstab
+                for entry in parsedFstab.getEntries():
+                    recovFstabEntry = parsedRecoveryFstab.getByMountPoint(entry.getMountPoint())
+                    recovFstabEntry.setDevice(entry.getDevice())
+                return parsedRecoveryFstab
+            except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError) as ex:
+                return parsedRecoveryFstab
 
     def getSizeFor(self, device, resolveByName = False):
         if resolveByName:
             device = self.getDeviceByName(device)
-        result = self.adb.cmd("cat", "/proc/partitions")
+        result = self.adb.shell("cat /proc/partitions")
         grep = device.split("/")[-1]
         for l in result.split("\n"):
             l = l.strip()
@@ -185,48 +196,91 @@ class ConfigSyncer(object):
         return None
 
     def getDeviceByName(self, name):
-        result = self.adb.cmd("ls", "-l", name).strip()
+        result = self.adb.shell("ls -l %s" % name).strip()
         if "->" in result:
             return result.split("->")[1].strip()
         return name
 
+    @staticmethod
+    def diffMounts(config, fstab):
+        mountNames = ["cache", "recovery", "system", "data", "boot"]
+        out = {}
+        for mountName in mountNames:
+            mountData = fstab.getByMountPoint("/" + mountName)
+            if mountData:
+                out[mountName] = {}
+                if config.getMountConfig("%s.dev" % mountName) != mountData.getDevice():
+                    out[mountName]["dev"] = mountData.getDevice()
+                fsType = mountData.getType()
+                if not fsType:
+                    logger.warning("Couldn't find fs type for %s" % mountName)
+                elif fsType.lower() != config.getMountConfig("%s.fs" % mountName, "").lower():
+                    out[mountName]["fs"] = fsType
+
+                if config.getMountConfig("%s.mount" % mountName) != mountData.getMountPoint():
+                    out[mountName]["mount"] = mountData.getMountPoint()
+            else:
+                logger.warning("No %s partition data" % mountName)
+
+        if len(out):
+            out = {
+                "__config__": {
+                    "target": {
+                        "mount": out
+                    }
+                }
+            }
+
+        return out
+
     def syncPartitions(self, apply = False):
         out = {
-
         }
+
         fstab = self.pullFstab()
         if not fstab:
             logger.critical("Could not parse fstab! Skipping partitions..")
             return {}
 
-        cacheData = fstab.getByMountPoint("/cache")
-        if cacheData:
-            if self.config.get("cache.dev") != cacheData.getDevice():
-                out["cache"] = { "dev": cacheData.getDevice() }
+        mountNames = ["cache", "recovery", "system", "data", "boot"]
 
-            cacheSize = self.getSizeFor(cacheData.getDevice())
-            if cacheSize:
-                if self.config.get("cache.size") != cacheSize:
-                    out["cache"]["size"] = cacheSize
+        for mountName in mountNames:
+            mountData = fstab.getByMountPoint("/" + mountName)
+
+            if mountData:
+                out[mountName] = {}
+                if self.config.getMountConfig("%s.dev" % mountName) != mountData.getDevice():
+                    out[mountName]["dev"] = mountData.getDevice()
+
+                mountSize = self.getSizeFor(mountData.getDevice())
+
+                if mountSize:
+                    if self.config.getMountConfig("%s.size" % mountName) != mountSize:
+                        out[mountName]["size"] = mountSize
+                elif mountName == "cache":
+                    logger.warning("Wasn't able to detect %s size" % mountName)
+
+                fsType = mountData.getType()
+                if not fsType:
+                    logger.warning("Couldn't find fs type for %s" % mountName)
+                elif fsType.lower() != self.config.getMountConfig("%s.fs" % mountName, "").lower():
+                    out[mountName]["fs"] = fsType
+
+
+                if self.config.getMountConfig("%s.mount" % mountName) != mountData.getMountPoint():
+                    out[mountName]["mount"] = mountData.getMountPoint()
+
             else:
-                logger.warning("Wasn't able to detect Cache size")
-        else:
-            logger.warning("No cache partition data")
+                logger.warning("No %s partition data" % mountName)
 
-        recoveryData = fstab.getByMountPoint("/recovery")
-        if recoveryData:
-            if self.config.get("recovery.dev") != recoveryData.getDevice():
-                out["recovery"] = { "dev": recoveryData.getDevice() }
-        else:
-            logger.warning("No recovery partition data")
-
-        bootData = fstab.getByMountPoint("/boot")
-        if bootData:
-            if self.config.get("boot.dev") != bootData.getDevice():
-                out["boot"] = { "dev": bootData.getDevice() }
-        else:
-            logger.warning("No boot partition data")
-
+        if len(out):
+            out = {
+                "__config__": {
+                    "target": {
+                        "mount": out
+                    }
+                }
+            }
 
         if apply:
             for k, v in out.items():
@@ -238,7 +292,8 @@ class ConfigSyncer(object):
         propsDict = {}
         with FileTools.newTmpDir() as tmpDir:
             propsDir = os.path.join(tmpDir, "props")
-            self.adb.pull("/data/property", propsDir)
+            os.makedirs(propsDir)
+            self.adb.superPull("/data/property", propsDir, fallback=True)
             for f in os.listdir(propsDir):
                 if f.startswith("."):
                     continue
@@ -273,6 +328,9 @@ class ConfigSyncer(object):
     def syncImg(self, configKey, device, out, relativeTo):
         remotePath = "/sdcard/synced_%s" % configKey
         localPath =  os.path.join(relativeTo, out, os.path.basename(remotePath))
-        self.adb.cmd("dd if=%s of=%s" % (device, remotePath))
-        self.adb.pull(remotePath, localPath)
-        self.config.set(configKey, os.path.relpath(out + "/" + os.path.basename(localPath), relativeTo))
+        try:
+            self.adb.shell("dd if=%s of=%s" % (device, remotePath))
+            self.adb.pull(remotePath, localPath)
+            self.config.set(configKey, os.path.relpath(out + "/" + os.path.basename(localPath), relativeTo))
+        except:
+            logger.warning("Coudn't pull %s" % device)

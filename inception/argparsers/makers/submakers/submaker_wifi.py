@@ -3,7 +3,7 @@ from inception.generators.wpasupplicantconf import WPASupplicantConfGenerator
 import os
 class WifiSubmaker(Submaker):
     def make(self, workDir):
-        aps = self.getConfigValue("aps", [])
+        aps = self.getValue("aps", [])
 
 
         if not len(aps):
@@ -15,7 +15,7 @@ class WifiSubmaker(Submaker):
             "uid": "1000"
         }
 
-        self.setConfigValue("update.files.add./data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
+        self.setValue("update.files.add./data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
 
 
         gen = WPASupplicantConfGenerator()

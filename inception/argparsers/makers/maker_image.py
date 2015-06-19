@@ -10,24 +10,23 @@ class ImageMaker(Maker):
         self.imageName = imageName
 
     def make(self, workDir, outDir):
-        bootConfigProp = self.getMakeConfigProperty("img")
+        bootConfigProp = self.getMakeProperty("img")
         bootConfig = bootConfigProp.getValue()
 
         if type(bootConfig) is str: #path to packed image
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
             return
 
-        mkbootprop = self.getCommonConfigProperty("tools.mkbootimg.bin")
-        assert mkbootprop.getValue(), "tools.mkbootimg.bin is not set"
-        mkbootbin = mkbootprop.getConfig().resolveRelativePath(mkbootprop.getValue())
+        key, mkbootbin = self.getHostBinary("mkbootimg")
+        assert mkbootbin, "%s is not set" % key
         gen = BootImgGenerator(mkbootbin)
         gen.setWorkDir(workDir)
 
-        ramdisk = self.getMakeConfigProperty("img.ramdisk_dir").resolveAsRelativePath()
+        ramdisk = self.getMakeProperty("img.ramdisk_dir").resolveAsRelativePath()
         if ramdisk is None:
-            ramdisk = self.getMakeConfigProperty("img.ramdisk").resolveAsRelativePath()
+            ramdisk = self.getMakeProperty("img.ramdisk").resolveAsRelativePath()
 
-        kernel = self.getMakeConfigProperty("img.kernel").resolveAsRelativePath()
+        kernel = self.getMakeProperty("img.kernel").resolveAsRelativePath()
 
         second = bootConfig["second"] if "second" in bootConfig else None
         cmdline = bootConfig["cmdline"] if "cmdline" in bootConfig else None
@@ -36,7 +35,7 @@ class ImageMaker(Maker):
         ramdisk_offset = bootConfig["ramdisk_offset"] if "ramdisk_offset" in bootConfig\
             else None
         ramdiskaddr = bootConfig["ramdiskaddr"] if "ramdiskaddr" in bootConfig else None
-        devicetree = self.getMakeConfigProperty("img.dt").resolveAsRelativePath()
+        devicetree = self.getMakeProperty("img.dt").resolveAsRelativePath()
         signature = bootConfig["signature"] if "signature" in bootConfig else None
 
         gen.setKernel(kernel)
@@ -50,4 +49,7 @@ class ImageMaker(Maker):
         gen.setSignature(signature)
         gen.setRamdiskAddr(ramdiskaddr)
 
-        gen.generate(os.path.join(outDir, self.imageName))
+        out = os.path.join(outDir, self.imageName)
+        gen.generate(out)
+
+        return out
