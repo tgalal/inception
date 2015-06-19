@@ -73,9 +73,7 @@ class RecoveryImageMaker(ImageMaker):
 
     def injectBusyBox(self, ramDiskDir):
         _, busybox = self.getTargetBinary("busybox")
-        busyBoxSymlinks = self.getTargetBinaryConfigProperty("busybox.symlinks", []).getValue()
-        if not len(busyBoxSymlinks):
-            busyBoxSymlinks = BusyboxSubmaker.SYMLINKS
+        busyBoxSymlinks = BusyboxSubmaker.SYMLINKS
 
         busyboxSbin = os.path.join(ramDiskDir, "sbin", "busybox")
         if os.path.exists(busyboxSbin):
