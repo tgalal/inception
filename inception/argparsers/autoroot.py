@@ -20,7 +20,15 @@ class AutorootArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", help="Override default output path")
-        optionalOpts.add_argument("-r", "--recovery", action="store", help="Use")
+        optionalOpts.add_argument("-r", "--recovery", action="store",
+                                  help="Use supplied recovery img. Inception will search this img for partition info. "
+                                       "This will override recovery.img and recovery.stock")
+        optionalOpts.add_argument("--cache-size", action="store", help="Cache size in bytes. "
+                                                                       "This will override __config__.target.mount.cache.size")
+
+        optionalOpts.add_argument("--cache-sparsed", action="store_true", help="Indicate if created cache img should be spared. "
+                                                                               "This overrides cache.sparsed, and should be set at least for samsung devices")
+
         optionalOpts.add_argument("--no-recovery", action="store_true", help="Don't make recovery")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -70,13 +78,24 @@ class AutorootArgParser(InceptionArgParser):
         config.set("__config__.target.root.methods.supersu.include_apk", True)
         config.set("__config__.target.root.methods.supersu.include_archs", [])
 
+        if self.args["cache_size"]:
+            config.setTargetConfigValue("mount.cache.size", int(self.args["cache_size"]))
+
+        if self.args["cache_sparsed"]:
+            config.set("cache.sparsed", self.args["cache_sparsed"])
 
         if self.args["recovery"]:
             config.set("recovery.img", self.args["recovery"])
             config.set("recovery.stock", self.args["recovery"])
 
+
+        if not config.getMountConfig("cache.size"):
+            logger.error("Autoroot requires having __config__.target.mount.cache.size set, and it's not for %s. "
+                         "Please set or supply the size using --cache-size autoroot arg" % identifier)
+            sys.exit(1)
+
         if not config.get("recovery.stock"):
-            print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
+            logger.error("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
             sys.exit(1)
 
         if not self.args["no_recovery"] and not config.get("recovery.img"):
