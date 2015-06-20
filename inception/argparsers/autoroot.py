@@ -1,4 +1,4 @@
-from .argparser import InceptionArgParser
+from inception.argparsers.argparser import InceptionArgParser
 from inception.constants import InceptionConstants
 from inception.config import configtreeparser
 from inception.config.dotidentifierresolver import DotIdentifierResolver
@@ -14,13 +14,13 @@ class AutorootArgParser(InceptionArgParser):
                                                               "An Inception Auto-Root package will install root and supersu on your device, "
                                                               "and then reinstalls stock recovery back.")
 
-        requiredOpts = self.add_argument_group("Required args").add_mutually_exclusive_group(required=True)
-        requiredOpts.add_argument('-b', '--base', action = "store", help="base config code to use, in the format A.B")
-        requiredOpts.add_argument('-v', "--variant", action = "store", help="variant config code to use, in the format A.B.C")
+        requiredOpts = self.add_argument_group("Required args")
+        requiredOpts.add_argument('-c', '--code', action = "store", help="Base or variant code")
 
 
         optionalOpts = self.add_argument_group("Optional args")
         optionalOpts.add_argument("-o", "--output", help="Override default output path")
+        optionalOpts.add_argument("-r", "--recovery", action="store", help="Use")
         optionalOpts.add_argument("--no-recovery", action="store_true", help="Don't make recovery")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -31,7 +31,7 @@ class AutorootArgParser(InceptionArgParser):
     def process(self):
         super(AutorootArgParser, self).process()
 
-        identifier = self.args["base"] or self.args["variant"]
+        identifier = self.args["code"]
 
         config = self.configTreeParser.parseJSON(identifier)
 
@@ -70,6 +70,10 @@ class AutorootArgParser(InceptionArgParser):
         config.set("__config__.target.root.methods.supersu.include_apk", True)
         config.set("__config__.target.root.methods.supersu.include_archs", [])
 
+
+        if self.args["recovery"]:
+            config.set("recovery.img", self.args["recovery"])
+            config.set("recovery.stock", self.args["recovery"])
 
         if not config.get("recovery.stock"):
             print("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
