@@ -27,6 +27,13 @@ class DefaultPropFile(PropFile):
     def getProductCpuABI(self):
         return self.get("ro.product.cpu.abi")
 
+    def getArch(self):
+        arch = self.getProductCpuABI()
+        if arch.startswith("arm"):
+            return "arm"
+
+        return arch
+
     def getProductManufacturer(self):
         return self.get("ro.product.manufacturer")
 

@@ -70,7 +70,7 @@ class RecoveryImageMaker(ImageMaker):
     def readProps(self, ramdiskDir):
         from inception.common.propfile import DefaultPropFile
         props = DefaultPropFile(os.path.join(ramdiskDir, "default.prop"))
-        self.setTargetConfigValue("arch", props.getProductCpuABI(), diffOnly=True)
+        self.setTargetConfigValue("arch", props.getArch(), diffOnly=True)
 
     def injectFstab(self, fstab, ramdiskDir):
             fstabPath = os.path.join(ramdiskDir, "etc", "fstab")

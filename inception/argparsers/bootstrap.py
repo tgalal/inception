@@ -195,7 +195,7 @@ class BootstrapArgParser(InceptionArgParser):
 
         defaultProp = DefaultPropFile(os.path.join(out, bootImgGenerator.getRamdisk(), "default.prop"))
 
-        self.newConfig.setTargetConfigValue("arch", defaultProp.getProductCpuABI(), diffOnly=True)
+        self.newConfig.setTargetConfigValue("arch", defaultProp.getArch(), diffOnly=True)
         self.newConfig.setTargetConfigValue("device.manufacturer", defaultProp.getProductManufacturer(), diffOnly=True)
         self.newConfig.setTargetConfigValue("device.brand", defaultProp.getProductBrand(), diffOnly=True)
         self.newConfig.setTargetConfigValue("device.board", defaultProp.getProductBoard(), diffOnly=True)
