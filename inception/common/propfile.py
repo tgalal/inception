@@ -9,7 +9,7 @@ class PropFile(object):
                 l = l.strip()
                 if not l or l.startswith("#"):
                     continue
-                k,v = l.split('=')
+                k,v = l.split('=', 1)
                 self._config.set(k, v)
                 self.rawProps.append((k, v))
 
