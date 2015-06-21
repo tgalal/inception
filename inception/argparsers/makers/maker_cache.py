@@ -16,7 +16,7 @@ class CacheMaker(Maker):
         assert os.path.exists(make_ext4fsBin), \
             "%s does not exist, please update %s to the correct path" % (make_ext4fsBin, key)
 
-        cacheSize = self.config.getMountConfig("cache.size")
+        cacheSize = self.config.getMountConfig("cache.size", 33554432)
         assert cacheSize, "__config__.target.mount.cache.size is not set, can't create cache img"
         cacheSparsed= self.getMakeValue("sparsed", False)
         cacheMount = self.config.getMountConfig("cache.mount", "/cache")
