@@ -88,12 +88,6 @@ class AutorootArgParser(InceptionArgParser):
             config.set("recovery.img", self.args["recovery"])
             config.set("recovery.stock", self.args["recovery"])
 
-
-        if not config.getMountConfig("cache.size"):
-            logger.error("Autoroot requires having __config__.target.mount.cache.size set, and it's not for %s. "
-                         "Please set or supply the size using --cache-size autoroot arg" % identifier)
-            sys.exit(1)
-
         if not config.get("recovery.stock"):
             logger.error("Autoroot requires having recovery.stock set, and it's not for %s" % identifier)
             sys.exit(1)
