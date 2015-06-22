@@ -51,6 +51,7 @@ class RecoveryImageMaker(ImageMaker):
 
                 self.injectBusyBox(workRamdiskDir)
                 self.readProps(workRamdiskDir)
+                self.overrideDmVerityHash(workRamdiskDir)
 
 
                 fstabPath = os.path.join(workRamdiskDir, "etc", "fstab")
@@ -66,6 +67,16 @@ class RecoveryImageMaker(ImageMaker):
                 result = super(RecoveryImageMaker, self).make(workDir, outDir)
                 self.setValue("recovery.img", recoveryImg.getValue())
                 return result
+
+    def overrideDmVerityHash(self, ramdiskDir):
+        target = os.path.join(ramdiskDir, "sbin", "dm_verity_hash")
+        if not os.path.exists(target):
+            return
+        with open(target,'w') as f:
+            f.write("#!/sbin/sh\n")
+            f.write("exit 0;\n")
+        os.chmod(target, 493)
+
 
     def readProps(self, ramdiskDir):
         from inception.common.propfile import DefaultPropFile
