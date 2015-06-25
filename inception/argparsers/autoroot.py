@@ -7,6 +7,7 @@ from inception.config.configv2 import ConfigV2
 logger = logging.getLogger(__name__)
 from inception.common.filetools import FileTools
 import sys
+import os
 class AutorootArgParser(InceptionArgParser):
 
     def __init__(self):
@@ -98,5 +99,8 @@ class AutorootArgParser(InceptionArgParser):
 
         with FileTools.newTmpDir() as workDir:
             config.make(workDir)
+            f = open(os.path.join(config.getOutPath(), "config.json"), "w")
+            f.write(config.dumpFullData())
+            f.close()
 
         return True
