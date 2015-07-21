@@ -9,6 +9,8 @@ from inception.argparsers.makers.maker_update import UpdateMaker
 from inception.argparsers.makers.maker_odin import OdinMaker
 from inception.argparsers.makers.maker_image_boot import BootImageMaker
 from inception.argparsers.makers.maker_image_recovery import RecoveryImageMaker
+from inception.argparsers.makers.maker_package import PackageMaker
+from inception.argparsers.makers.maker_config import ConfigMaker
 import logging
 
 logger = logging.getLogger(__name__)
@@ -310,7 +312,9 @@ class Config(object):
             ("recovery", RecoveryImageMaker),
             ("update", UpdateMaker),
             ("cache", CacheMaker),
-            ("odin", OdinMaker)
+            ("odin", OdinMaker),
+            ("config", ConfigMaker),
+            ("package", PackageMaker)
          ]
 
         out = {}
@@ -330,6 +334,10 @@ class Config(object):
         for k, v in out.items():
             outStr += "%*s %s\n" % (-(maxLen + 5), k, v)
         logger.info(outStr)
+
+
+
+
 
 
 class ConfigProperty(object):
