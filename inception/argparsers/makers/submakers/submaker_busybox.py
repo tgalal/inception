@@ -30,6 +30,7 @@ class BusyboxSubmaker(Submaker):
         """
 
         xbinPath = os.path.join(workDir,"system","xbin")
+        busyboxTargetPath =  xbinPath + "/busybox"
 
         key, busyboxBinPath = self.getTargetBinary("busybox")
 
@@ -46,4 +47,4 @@ class BusyboxSubmaker(Submaker):
             os.makedirs(xbinPath)
 
 
-        shutil.copy(busyboxBinPath, xbinPath)
+        shutil.copy(busyboxBinPath, busyboxTargetPath)
