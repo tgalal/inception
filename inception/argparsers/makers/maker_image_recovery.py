@@ -12,6 +12,7 @@ import shutil
 logger = logging.getLogger(__name__)
 class RecoveryImageMaker(ImageMaker):
     PATH_KEYS = "res/keys"
+    FSTABS = ["recovery.fstab", "twrp.fstab"]
     def __init__(self, config):
         super(RecoveryImageMaker, self).__init__(config, "recovery", InceptionConstants.OUT_NAME_RECOVERY)
         self.recoveryBootImgGen = None
@@ -55,7 +56,16 @@ class RecoveryImageMaker(ImageMaker):
 
 
                 fstabPath = os.path.join(workRamdiskDir, "etc", "fstab")
-                fstab = Fstab.parseFstab(os.path.join(workRamdiskDir, "etc", "recovery.fstab"))
+                fstab = None
+
+                for fstabname in RecoveryImageMaker.FSTABS:
+                    fstabpathcheck =  os.path.join(workRamdiskDir, "etc", fstabname)
+                    if os.path.exists(fstabpathcheck):
+                        fstab = Fstab.parseFstab(fstabpathcheck)
+                        break
+
+                if fstab is None:
+                    raise ValueError("Couldn't parse any of /etc/{%s}" % (",".join(RecoveryImageMaker.FSTABS)))
 
                 diffMounts = ConfigSyncer.diffMounts(self.getConfig(), fstab)
                 for k, v in diffMounts.items():
