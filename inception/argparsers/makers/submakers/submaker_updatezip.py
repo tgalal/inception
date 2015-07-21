@@ -15,7 +15,7 @@ class UpdatezipSubmaker(Submaker):
             assert signingKeys, "update.keys is '%s' but __config__.host.keys.%s is not set" % (keys_name, keys_name)
             signingKeys = signingKeys["private"], signingKeys["public"]
 
-        shutil.copy(updateBinary, os.path.join(updatePkgDir, "META-INF/com/google/android/"))
+        shutil.copy(updateBinary, os.path.join(updatePkgDir, "META-INF/com/google/android/update-binary"))
         updateZipPath = updatePkgDir + "/../"
         updateZipPath += "update_unsigned" if signingKeys else "update"
         shutil.make_archive(updateZipPath, "zip", updatePkgDir)
