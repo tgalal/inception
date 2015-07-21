@@ -176,7 +176,17 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
         self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
 
-        fstab = Fstab.parseFstab(os.path.join(out, bootImgGenerator.getRamdisk(), "etc", "recovery.fstab"))
+
+        etcPath = os.path.join(out, bootImgGenerator.getRamdisk(), "etc")
+        fstabFilename = None
+        for f in os.listdir(etcPath):
+            if f.endswith("fstab"):
+                fstabFilename = f
+
+        if fstabFilename is None:
+            raise ValueError("Couldn't locate fstab")
+
+        fstab = Fstab.parseFstab(os.path.join(etcPath, fstabFilename))
 
         processParts = ("boot", "system", "recovery", "cache")
 
