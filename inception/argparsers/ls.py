@@ -89,7 +89,11 @@ class LsArgParser(InceptionArgParser):
             if os.path.exists(configPath):
                 keys = path.split("/")[-depth:]
                 code = ".".join(keys)
-                return {code:  self.configTreeParser.parseJSONFile(configPath, code)}
+                try:
+                    return {code:  self.configTreeParser.parseJSONFile(configPath, code)}
+                except ValueError as e:
+                    logger.warning("Coudn't parse json %s" % configPath)
+                    return {}
 
         elif os.path.isdir(path):
             for f in os.listdir(path):
