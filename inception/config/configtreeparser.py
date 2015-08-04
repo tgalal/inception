@@ -11,6 +11,7 @@ import dulwich
 import logging
 import shutil
 import sys
+import urllib2
 from inception.config.sourcesparser import SourcesConfig
 
 logger = logging.getLogger("ConfigTree")
@@ -97,10 +98,12 @@ class ConfigTreeParser(object):
     def fetchRepo(self, repoName, targetPath, lookupRepos):
         repoPath = repoName + ".git"
         for address in lookupRepos:
-            if not address.startswith("https://") and not address.startswith("http://"):
+            if not address.startswith("https://") and not address.startswith("http://") and not address.startswith("git+ssh://"):
                 address = "https://github.com/" + address + "/" + repoPath
-                if self.syncRepo(targetPath, address):
-                    return True
+            else:
+                address += "/" + repoPath
+            if self.syncRepo(targetPath, address):
+                return True
 
         return False
 
@@ -112,7 +115,10 @@ class ConfigTreeParser(object):
             try:
                 localRepo = Repo(targetPath)
                 config = localRepo.get_config()
-                remoteUrl = config.get(("remote", "origin"), "url")
+                try:
+                    remoteUrl = config.get(("remote", "origin"), "url")
+                except KeyError:
+                    remoteUrl = None
 
                 if not remoteUrl:
                     raise dulwich.errors.NotGitRepository()
@@ -150,6 +156,9 @@ class ConfigTreeParser(object):
             # in an ugly way for now
             shutil.rmtree(targetPath)
             return self.syncRepo(targetPath, remoteUrl)
+        except Exception as e:
+            logger.error(e)
+            return False
 
         return True
 
