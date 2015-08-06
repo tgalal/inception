@@ -1,9 +1,13 @@
 from .generator import Generator
-import os, tempfile
+import os, tempfile, sys
+from droidtools import mkbootimg
+
+if sys.version_info >= (3,0):
+    unicode = str
+
 class BootImgGenerator(Generator):
-    def __init__(self, mkbootBin):
+    def __init__(self):
         super(BootImgGenerator, self).__init__()
-        self.bin = mkbootBin
         self.base = None
         self.ramdiskaddr = None
         self.pagesize = 2048
@@ -47,25 +51,25 @@ class BootImgGenerator(Generator):
         return self.ramdisk
 
     def setDeviceTreeSize(self, size):
-        self.devicetreesize = size
+        self.devicetreesize = int(size)
 
     def getDeviceTreeSize(self):
         return self.devicetreesize
 
     def setSecondSize(self, size):
-        self.secondsize = size
+        self.secondsize = int(size)
 
     def getSecondSize(self):
         return self.secondsize
 
     def setTagsOffset(self, tagsOffset):
-        self.tags_offset = tagsOffset
+        self.tags_offset = int(tagsOffset, 16) if type(tagsOffset) in (str,unicode) else tagsOffset
 
     def getTagsOffset(self):
         return self.tags_offset
 
     def setSecondOffset(self, second_offset):
-        self.second_offset = second_offset
+        self.second_offset = int(second_offset, 16) if type(second_offset) in (str, unicode) else second_offset
 
     def getSecondOffset(self):
         return self.second_offset
@@ -86,7 +90,7 @@ class BootImgGenerator(Generator):
         return self.dt
 
     def setRamdiskAddr(self, addr):
-        self.ramdiskaddr = addr
+        self.ramdiskaddr = int(addr, 16) if type(addr) in (str,unicode) else addr
 
     def getRamdiskAddr(self):
         return self.ramdiskaddr
@@ -98,7 +102,7 @@ class BootImgGenerator(Generator):
         return self.kernel
 
     def setBaseAddr(self, addr):
-        self.base = addr
+        self.base = int(addr, 16) if type(addr) in (str, unicode) else addr
 
     def getBaseAddr(self):
         return self.base
@@ -117,20 +121,10 @@ class BootImgGenerator(Generator):
         return self.signature
 
     def setRamdiskOffset(self, offset):
-        self.ramdisk_offset = offset
+        self.ramdisk_offset = int(offset, 16) if type(offset) in (str, unicode) else offset
 
     def getRamdiskOffset(self):
         return self.ramdisk_offset
-
-    def createArgs(self):
-        args = ()
-        for arg, getter in self.argsMap.items():
-            val = getter()
-            if val:
-                args += ("--%s" % arg, str(val))
-        return args
-
-
 
     def generate(self, out):
         ramdisk = self.getRamdisk()
@@ -153,7 +147,17 @@ class BootImgGenerator(Generator):
             fCpio.close()
             fRamdisk.close()
 
-        args = self.createArgs()
-        cmd = (self.bin,) + args + ("--output", out)
-        #cmd = self.bin + " " + self.createArgs()  + " --output " + out
-        self.execCmd(*cmd)
+        mkbootimg.build(
+            out,
+            None,
+            self.getBaseAddr(),
+            self.getKernelCmdLine(False),
+            self.getPageSize(),
+            None,
+            self.getRamdiskOffset(),
+            self.getSecondOffset(),
+            self.getTagsOffset(),
+            self.getKernel(),
+            self.getRamdisk(),
+            None,
+            self.getDeviceTree())

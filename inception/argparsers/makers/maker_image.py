@@ -17,9 +17,7 @@ class ImageMaker(Maker):
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
             return os.path.join(outDir, self.imageName)
 
-        key, mkbootbin = self.getHostBinary("mkbootimg")
-        assert mkbootbin, "%s is not set" % key
-        gen = BootImgGenerator(mkbootbin)
+        gen = BootImgGenerator()
         gen.setWorkDir(workDir)
 
         ramdisk = self.getMakeProperty("img.ramdisk_dir").resolveAsRelativePath()

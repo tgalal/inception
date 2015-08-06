@@ -32,7 +32,7 @@ def unpackimg(unpackerBin, img, out):
 
     #process unpacker output
     resultList = unpackResult.split('\n')
-    bootImgGenerator = BootImgGenerator(None)
+    bootImgGenerator = BootImgGenerator()
 
     for l in resultList:
         try:
@@ -46,13 +46,13 @@ def unpackimg(unpackerBin, img, out):
         if key == "BOARD_KERNEL_CMDLINE":
             bootImgGenerator.setKernelCmdLine(value)
         elif key == "BOARD_KERNEL_BASE":
-            bootImgGenerator.setBaseAddr("0x" + value)
+            bootImgGenerator.setBaseAddr(value)
         elif key == "BOARD_RAMDISK_OFFSET":
-            bootImgGenerator.setRamdiskOffset("0x" + value)
+            bootImgGenerator.setRamdiskOffset(value)
         elif key == "BOARD_SECOND_OFFSET":
-            bootImgGenerator.setSecondOffset("0x" + value)
+            bootImgGenerator.setSecondOffset(value)
         elif key == "BOARD_TAGS_OFFSET":
-            bootImgGenerator.setTagsOffset("0x" + value)
+            bootImgGenerator.setTagsOffset(value)
         elif key == "BOARD_PAGE_SIZE":
             bootImgGenerator.setPageSize(int(value))
         elif key == "BOARD_SECOND_SIZE":
