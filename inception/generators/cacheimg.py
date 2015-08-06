@@ -28,11 +28,11 @@ class CacheImgGenerator(Ext4FSGenerator):
         else:
             shutil.copy(src, dest)
 
-    def generate(self, out, adbBinPath = None):
+    def generate(self, out):
         #write command
         if len(self.commands):
             commandFile = open(self.recoveryDir + "/command", "w")
             commandFile.write("\n".join(self.commands))
             commandFile.close()
         
-        super(CacheImgGenerator, self).generate(self.workingDir, out, adbBinPath)
+        super(CacheImgGenerator, self).generate(self.workingDir, out)

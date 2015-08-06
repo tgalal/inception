@@ -6,5 +6,5 @@ class Generator(InceptionObject):
     def __init__(self):
         super(Generator, self).__init__()
 
-    def generate(self):
+    def generate(self, *args, **kwargs):
         pass

@@ -1,9 +1,8 @@
 from .generator import Generator, GenerationFailedException
 from exceptions import Ext4FSGenerationFailedException
-from ..constants import InceptionConstants
-import time, sys
+from droidtools import ext4fs_utils
 class Ext4FSGenerator(Generator):
-    def __init__(self, ext4bin):
+    def __init__(self, ext4bin = None):
         super(Ext4FSGenerator, self).__init__()
         self.bin = ext4bin
         self.size = 0
@@ -22,37 +21,13 @@ class Ext4FSGenerator(Generator):
     def setSparsed(self, sparsed):
         self.sparsed = True if sparsed else False
 
-    def generateArgs(self, src, out):
-        cmd = ("-l", str(self.size))
-        if self.sparsed:
-            cmd += ("-s",)
-        if self.mountPoint is not None:
-            cmd += ("-a", self.mountPoint)
-
-        cmd += (out, src)
-
-        return cmd
-
-    def generate(self, src, out, adbBinPath = None):
+    def generate(self, src, out):
         if self.size <= 0:
             raise Ext4FSGenerationFailedException("Ext4 fs size cannot be %s" % self.size)
-        if not self.bin.startswith("device://"):
-            args = self.generateArgs(src, out)
-            cmd = (self.bin,) + args
-            self.execCmd(*cmd)
-        else:
-            if not adbBinPath:
-                print "Adb bin not specified"
-                sys.exit(1)
-            remoteBin = self.bin.split("device://")[1]
-            remoteSrc = "/tmp/cache"
-            remoteOut = "/tmp/cache.img"
-            remoteArgs = self.generateArgs(remoteSrc, remoteOut)
-            remoteCmd = (remoteBin,) + remoteArgs
-            adb = self.getAdb(adbBinPath)
-            adb.cmd("mkdir", remoteSrc)
-            adb.push(src, remoteSrc)
-            adb.cmd(*remoteCmd)
-            adb.pull(remoteOut, out)
+
+        ext4fs_utils.make_ext4fs(out, src,
+                                 self.size,
+                                 self.mountPoint,
+                                 mode=ext4fs_utils.MODE_SPARSED if self.sparsed else ext4fs_utils.MODE_NORMAL)
 
         return True
