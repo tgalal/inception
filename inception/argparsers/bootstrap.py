@@ -62,12 +62,11 @@ class BootstrapArgParser(InceptionArgParser):
         self.setupDirPaths()
         self.createDirs()
 
-        unpackerKey, unpacker = self.config.getHostBinary("unpackbootimg")
         bootImg = self.config.getProperty("boot.img", None)
         if bootImg and self.config.get("boot.__make__", False):
             if type(bootImg.getValue()) is str:
                 logger.info("Unpacking boot img")
-                self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
+                self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir,"boot")
 
 
         if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"], self.args["learn_imgs"])):
@@ -110,7 +109,7 @@ class BootstrapArgParser(InceptionArgParser):
             recoveryImg = self.newConfig.getProperty("recovery.img", None)
             if type(recoveryImg.getValue()) is str:
                 logger.info("Unpacking recovery img")
-                self.unpackimg(recoveryPath or recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
+                self.unpackimg(recoveryPath or recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, "recovery")
             else:
                 logger.warning("recovery is already unpacked at a parent")
 
@@ -161,23 +160,23 @@ class BootstrapArgParser(InceptionArgParser):
     def getConfigPath(self, configName):
         return os.path.join(self.configDir, configName + ".config")
 
-    def unpackimg(self, img, out, unpacker, imgType):
-        bootImgGenerator  = imgtools.unpackimg(unpacker, img, out)
+    def unpackimg(self, img, out, imgType):
+        bootImg  = imgtools.unpackimg(img, out)
 
-        self.newConfig.set("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
-        self.newConfig.set("%s.img.base" % imgType, hex(bootImgGenerator.getBaseAddr()))
-        self.newConfig.set("%s.img.ramdisk_offset" % imgType, hex(bootImgGenerator.getRamdiskOffset()))
-        self.newConfig.set("%s.img.second_offset" % imgType, hex(bootImgGenerator.getSecondOffset()))
-        self.newConfig.set("%s.img.tags_offset" % imgType, hex(bootImgGenerator.getTagsOffset()))
-        self.newConfig.set("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
-        self.newConfig.set("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
-        self.newConfig.set("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
-        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImgGenerator.getKernel(), self.variantDir))
-        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
-        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
+        self.newConfig.set("%s.img.cmdline" % imgType, bootImg.cmdline)
+        self.newConfig.set("%s.img.base" % imgType, hex(bootImg.base))
+        self.newConfig.set("%s.img.ramdisk_offset" % imgType, hex(bootImg.ramdisk_offset))
+        self.newConfig.set("%s.img.second_offset" % imgType, hex(bootImg.second_offset))
+        self.newConfig.set("%s.img.tags_offset" % imgType, hex(bootImg.tags_offset))
+        self.newConfig.set("%s.img.pagesize" % imgType, bootImg.page_size)
+        self.newConfig.set("%s.img.second_size" % imgType, bootImg.second_size)
+        self.newConfig.set("%s.img.dt_size" % imgType, bootImg.dt_size)
+        self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImg.kernel, self.variantDir))
+        self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImg.ramdisk, self.variantDir))
+        self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImg.dt, self.variantDir))
 
 
-        etcPath = os.path.join(out, bootImgGenerator.getRamdisk(), "etc")
+        etcPath = os.path.join(out, bootImg.ramdisk, "etc")
         fstabFilename = None
         if os.path.exists(etcPath):
             for f in os.listdir(etcPath):
@@ -206,7 +205,7 @@ class BootstrapArgParser(InceptionArgParser):
                     self.newConfig.set(key + "fs", fstabPart.getType())
 
 
-        defaultProp = DefaultPropFile(os.path.join(out, bootImgGenerator.getRamdisk(), "default.prop"))
+        defaultProp = DefaultPropFile(os.path.join(out, bootImg.ramdisk, "default.prop"))
 
         if defaultProp.getArch():
             self.newConfig.setTargetConfigValue("arch", defaultProp.getArch(), diffOnly=True)

@@ -1,7 +1,8 @@
 from .maker import Maker
-from inception.generators.bootimg import BootImgGenerator
 import os
 import shutil
+from droidtools.bootimg import BootImg
+from inception.tools import imgtools
 
 class ImageMaker(Maker):
 
@@ -17,37 +18,27 @@ class ImageMaker(Maker):
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
             return os.path.join(outDir, self.imageName)
 
-        gen = BootImgGenerator()
-        gen.setWorkDir(workDir)
+        bootImg = BootImg()
 
-        ramdisk = self.getMakeProperty("img.ramdisk_dir").resolveAsRelativePath()
-        if ramdisk is None:
-            ramdisk = self.getMakeProperty("img.ramdisk").resolveAsRelativePath()
+        bootImg.ramdisk = self.getMakeProperty("img.ramdisk_dir").resolveAsRelativePath()
+        if bootImg.ramdisk is None:
+            bootImg.ramdisk = self.getMakeProperty("img.ramdisk").resolveAsRelativePath()
 
-        kernel = self.getMakeProperty("img.kernel").resolveAsRelativePath()
+        bootImg.kernel = self.getMakeProperty("img.kernel").resolveAsRelativePath()
 
-        second = bootConfig["second"] if "second" in bootConfig else None
-        cmdline = bootConfig["cmdline"] if "cmdline" in bootConfig else None
-        base = bootConfig["base"] if "base" in bootConfig else None
-        pagesize = bootConfig["pagesize"] if "pagesize" in bootConfig else None
-        ramdisk_offset = bootConfig["ramdisk_offset"] if "ramdisk_offset" in bootConfig\
+        bootImg.second = bootConfig["second"] if "second" in bootConfig else None
+        bootImg.cmdline = bootConfig["cmdline"] if "cmdline" in bootConfig else None
+        bootImg.base = bootConfig["base"] if "base" in bootConfig else None
+        bootImg.page_size = bootConfig["pagesize"] if "pagesize" in bootConfig else None
+        bootImg.ramdisk_offset = bootConfig["ramdisk_offset"] if "ramdisk_offset" in bootConfig\
             else None
-        ramdiskaddr = bootConfig["ramdiskaddr"] if "ramdiskaddr" in bootConfig else None
-        devicetree = self.getMakeProperty("img.dt").resolveAsRelativePath()
-        signature = bootConfig["signature"] if "signature" in bootConfig else None
-
-        gen.setKernel(kernel)
-        gen.setRamdisk(ramdisk)
-        gen.setKernelCmdLine(cmdline)
-        gen.setSecondBootLoader(second)
-        gen.setPageSize(pagesize)
-        gen.setBaseAddr(base)
-        gen.setRamdiskOffset(ramdisk_offset)
-        gen.setDeviceTree(devicetree)
-        gen.setSignature(signature)
-        gen.setRamdiskAddr(ramdiskaddr)
+        # ramdiskaddr = bootConfig["ramdiskaddr"] if "ramdiskaddr" in bootConfig else None
+        bootImg.dt = self.getMakeProperty("img.dt").resolveAsRelativePath()
+        bootImg.signature = bootConfig["signature"] if "signature" in bootConfig else None
 
         out = os.path.join(outDir, self.imageName)
-        gen.generate(out)
+
+        imgtools.packimg(bootImg, out)
+
 
         return out

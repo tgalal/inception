@@ -27,23 +27,22 @@ class RecoveryImageMaker(ImageMaker):
                 if type(recoveryImg.getValue()) is str:
                     if preprocessed:
                         return super(RecoveryImageMaker, self).make(workDir, outDir)
+                    bootImg = imgtools.unpackimg(recoveryImg.resolveAsRelativePath(), recoveryExtractDir)
+                    shutil.copytree(os.path.join(recoveryExtractDir, bootImg.ramdisk), workRamdiskDir, symlinks=True)
 
-                    _, unpacker = self.getHostBinary("unpackbootimg")
-                    bootImgGenerator = imgtools.unpackimg(unpacker, recoveryImg.resolveAsRelativePath(), recoveryExtractDir)
-                    shutil.copytree(os.path.join(recoveryExtractDir, bootImgGenerator.getRamdisk()), workRamdiskDir, symlinks=True)
 
                     imgType = "recovery"
-                    self.setValue("recovery.img", {})
-                    self.setValue("%s.img.cmdline" % imgType, bootImgGenerator.getKernelCmdLine(quote=False))
-                    self.setValue("%s.img.base" % imgType, bootImgGenerator.getBaseAddr())
-                    self.setValue("%s.img.ramdisk_offset" % imgType, bootImgGenerator.getRamdiskOffset())
-                    self.setValue("%s.img.second_offset" % imgType, bootImgGenerator.getSecondOffset())
-                    self.setValue("%s.img.tags_offset" % imgType, bootImgGenerator.getTagsOffset())
-                    self.setValue("%s.img.pagesize" % imgType, bootImgGenerator.getPageSize())
-                    self.setValue("%s.img.second_size" % imgType, bootImgGenerator.getSecondSize())
-                    self.setValue("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
-                    self.setValue("%s.img.kernel" % imgType, bootImgGenerator.getKernel())
-                    self.setValue("%s.img.dt" % imgType, bootImgGenerator.getDeviceTree())
+                    self.setValue("recovery.img"                     , {})
+                    self.setValue("%s.img.cmdline"          % imgType, bootImg.cmdline)
+                    self.setValue("%s.img.base"             % imgType, hex(bootImg.base))
+                    self.setValue("%s.img.ramdisk_offset"   % imgType, hex(bootImg.ramdisk_offset))
+                    self.setValue("%s.img.second_offset"    % imgType, hex(bootImg.second_offset))
+                    self.setValue("%s.img.tags_offset"      % imgType, hex(bootImg.tags_offset))
+                    self.setValue("%s.img.pagesize"         % imgType, bootImg.page_size)
+                    self.setValue("%s.img.second_size"      % imgType, bootImg.second_size)
+                    self.setValue("%s.img.dt_size"          % imgType, bootImg.dt_size)
+                    self.setValue("%s.img.kernel"           % imgType, bootImg.kernel)
+                    self.setValue("%s.img.dt"               % imgType, bootImg.dt)
                 else:
                     shutil.copytree(self.getMakeProperty("img.ramdisk").resolveAsRelativePath(), workRamdiskDir, symlinks=True)
 

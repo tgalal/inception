@@ -1,24 +1,26 @@
 from inception.tools import cmdtools
-from inception.generators import BootImgGenerator
-from subprocess import CalledProcessError
+from inception.common import filetools
+from droidtools import unpackbootimg
 import os
-def unpackimg(unpackerBin, img, out):
+import logging
+import tempfile
+logger = logging.getLogger(__name__)
+def unpackimg(img, out):
     if not os.path.isfile(img):
         raise ValueError("Coudn't find %s to unpack"  % img)
     filename = img.split('/')[-1]
     ramdisk = "%s/%s-ramdisk" % (out, filename)
     kernel = "%s/%s-zImage" % (out, filename)
-    dt = "%s/%s-dt" % (out, filename)
     ramdiskDir = os.path.join(out, "ramdisk")
     ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
     if not os.path.exists(out):
         os.makedirs(out)
-    unpackResult = cmdtools.execCmd(unpackerBin, "-i", img, "-o", out, failMessage = "Failed to unpack %s to %s" % (img, out))
-    try:
-        cmdtools.execCmd("gunzip", ramdisk + ".gz")
-    except CalledProcessError as e:
-        cmdtools.execCmd("mv", ramdisk + ".gz", ramdisk + ".xz")
-        cmdtools.execCmd("unxz", ramdisk + ".xz")
+
+    bootImg = unpackbootimg.extract(img, out)
+    if bootImg.ramdisk.endswith(".gz"):
+         cmdtools.execCmd("gunzip", bootImg.ramdisk)
+    else:
+        cmdtools.execCmd("unxz", bootImg.ramdisk)
 
     os.makedirs(ramdiskDir)
     cmdtools.execCmd("mv", ramdisk, ramdiskDir)
@@ -30,38 +32,31 @@ def unpackimg(unpackerBin, img, out):
         f.close()
     os.remove(ramdiskExtracted)
 
-    #process unpacker output
-    resultList = unpackResult.split('\n')
-    bootImgGenerator = BootImgGenerator()
+    bootImg.kernel = kernel
+    bootImg.ramdisk = ramdiskDir
 
-    for l in resultList:
-        try:
-            dissect = l.split(' ')
-            key = dissect[0]
-            value = " ".join(dissect[1:]) or None
-        except ValueError:
-            key = l.split(' ')
-            value = None
+    return bootImg
 
-        if key == "BOARD_KERNEL_CMDLINE":
-            bootImgGenerator.setKernelCmdLine(value)
-        elif key == "BOARD_KERNEL_BASE":
-            bootImgGenerator.setBaseAddr(value)
-        elif key == "BOARD_RAMDISK_OFFSET":
-            bootImgGenerator.setRamdiskOffset(value)
-        elif key == "BOARD_SECOND_OFFSET":
-            bootImgGenerator.setSecondOffset(value)
-        elif key == "BOARD_TAGS_OFFSET":
-            bootImgGenerator.setTagsOffset(value)
-        elif key == "BOARD_PAGE_SIZE":
-            bootImgGenerator.setPageSize(int(value))
-        elif key == "BOARD_SECOND_SIZE":
-            bootImgGenerator.setSecondSize(int(value))
-        elif key == "BOARD_DT_SIZE":
-            bootImgGenerator.setDeviceTreeSize(int(value))
+def packimg(bootImg, out):
+    ramdisk = bootImg.ramdisk
+    with filetools.FileTools.newTmpDir() as tmpWorkDir:
+        if os.path.isdir(ramdisk):
+            logger.debug("Ramdisk is a dir, generating gzip")
 
-    bootImgGenerator.setKernel(kernel)
-    bootImgGenerator.setRamdisk(ramdiskDir)
-    bootImgGenerator.setDeviceTree(dt)
+            fileList = tempfile.NamedTemporaryFile()
+            fCpio = tempfile.TemporaryFile()
+            ramdisk = os.path.join(tmpWorkDir, "ramdisk.cpio.gz")
+            fRamdisk = open(ramdisk, "w+b")
+            cmdtools.execCmd("find", ".", stdout = fileList, cwd = bootImg.ramdisk)
 
-    return bootImgGenerator
+            fileList.seek(0)
+            cmdtools.execCmd("cpio", "-o", "-H", "newc", stdout = fCpio, stdin = fileList, cwd = bootImg.ramdisk)
+            fCpio.seek(0)
+            cmdtools.execCmd("gzip", stdin = fCpio, stdout = fRamdisk, cwd = bootImg.ramdisk)
+            bootImg.ramdisk = ramdisk
+
+            fileList.close()
+            fCpio.close()
+            fRamdisk.close()
+
+        bootImg.build(out)
