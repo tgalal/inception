@@ -3,16 +3,13 @@ from inception.common import filetools
 from droidtools import unpackbootimg, mkbootimg, minicpio
 import os
 import logging
-import tempfile
 import gzip
-import sys
-import shutil
+import stat
 logger = logging.getLogger(__name__)
 def unpackimg(img, out, degas = False):
     if not os.path.isfile(img):
         raise ValueError("Coudn't find %s to unpack"  % img)
     filename = img.split('/')[-1]
-    ramdisk = "%s/%s-ramdisk" % (out, filename)
     kernel = "%s/%s-zImage" % (out, filename)
     ramdiskDir = os.path.join(out, "ramdisk")
     ramdiskExtracted = ramdiskDir + "/" + filename + "-ramdisk"
@@ -29,11 +26,15 @@ def unpackimg(img, out, degas = False):
     else:
         cmdtools.execCmd("unxz", bootImg.ramdisk)
 
-    f = open(ramdiskExtracted)
-    try:
-        cmdtools.execCmd("cpio", "-i", cwd = ramdiskDir, stdin = f)
-    finally:
-        f.close()
+    fcpio = minicpio.CpioFile()
+    fcpio.load_file(ramdiskExtracted)
+    for member in fcpio.members:
+        path = os.path.join(ramdiskDir, member.name)
+        if stat.S_ISDIR(member.mode) and not os.path.exists(path):
+            os.makedirs(path)
+        else:
+            with open(path, 'wb') as outFile:
+                outFile.write(member.content)
     os.remove(ramdiskExtracted)
 
     bootImg.kernel = kernel
