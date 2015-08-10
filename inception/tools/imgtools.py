@@ -47,23 +47,18 @@ def packimg(bootImg, out, degas = False):
         if os.path.isdir(ramdisk):
             logger.debug("Ramdisk is a dir, generating gzip")
 
-            fileList = tempfile.NamedTemporaryFile()
-            fCpio = tempfile.TemporaryFile()
             ramdisk = os.path.join(tmpWorkDir, "ramdisk.cpio.gz")
-            cmdtools.execCmd("find", ".", stdout = fileList, cwd = bootImg.ramdisk)
+            cpioFile = minicpio.CpioFile()
 
-            fileList.seek(0)
-            cmdtools.execCmd("cpio", "-o", "-H", "newc", stdout = fCpio, stdin = fileList, cwd = bootImg.ramdisk)
-
-            fCpio.seek(0)
+            for root, dirs, files in os.walk(bootImg.ramdisk):
+                for file in files:
+                    pathAdd =  os.path.join(root, file)
+                    cpioFile.add_file(pathAdd, os.path.relpath(pathAdd, bootImg.ramdisk))
 
             with gzip.open(ramdisk, 'wb') as fgzip:
-                fgzip.write(fCpio.read())
+                fgzip.write(cpioFile.create())
 
             bootImg.ramdisk = ramdisk
-
-            fileList.close()
-            fCpio.close()
 
         if degas:
             logger.debug("Packing img in degas mode")
