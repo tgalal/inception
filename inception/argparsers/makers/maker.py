@@ -19,10 +19,6 @@ class Maker(object):
     def getFSPath(self):
         return self.config.getFSPath()
 
-    def getDeviceValue(self, key, default = None):
-        key = "device." + key
-        return self.config.get(key, default)
-
     def getMakeValue(self, key, default = None, directOnly = False):
         res = self.config.get(self.getKey() + "." + key, default, directOnly)
         return res

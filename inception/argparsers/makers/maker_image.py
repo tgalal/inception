@@ -13,6 +13,8 @@ class ImageMaker(Maker):
     def make(self, workDir, outDir):
         bootConfigProp = self.getMakeProperty("img")
         bootConfig = bootConfigProp.getValue()
+        deviceName = self.getTargetConfigValue("device.name")
+        degas =  deviceName and deviceName.startswith("degas")
 
         if type(bootConfig) is str: #path to packed image
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
@@ -38,7 +40,7 @@ class ImageMaker(Maker):
 
         out = os.path.join(outDir, self.imageName)
 
-        imgtools.packimg(bootImg, out)
+        imgtools.packimg(bootImg, out, degas)
 
 
         return out

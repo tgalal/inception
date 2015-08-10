@@ -21,13 +21,16 @@ class RecoveryImageMaker(ImageMaker):
         recoveryImg = self.getMakeProperty("img")
         preprocessed = self.getMakeValue("preprocessed", False)
 
+        deviceName = self.getTargetConfigValue("device.name")
+        degas =  deviceName and deviceName.startswith("degas")
+
         with self.newTmpWorkDir() as recoveryExtractDir:
             with self.newTmpWorkDir() as recoveryRamdiskDir:
                 workRamdiskDir = os.path.join(recoveryRamdiskDir, "ramdisk")
                 if type(recoveryImg.getValue()) is str:
                     if preprocessed:
                         return super(RecoveryImageMaker, self).make(workDir, outDir)
-                    bootImg = imgtools.unpackimg(recoveryImg.resolveAsRelativePath(), recoveryExtractDir)
+                    bootImg = imgtools.unpackimg(recoveryImg.resolveAsRelativePath(), recoveryExtractDir, degas)
                     shutil.copytree(os.path.join(recoveryExtractDir, bootImg.ramdisk), workRamdiskDir, symlinks=True)
 
 

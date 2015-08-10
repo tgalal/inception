@@ -161,7 +161,9 @@ class BootstrapArgParser(InceptionArgParser):
         return os.path.join(self.configDir, configName + ".config")
 
     def unpackimg(self, img, out, imgType):
-        bootImg  = imgtools.unpackimg(img, out)
+        deviceName = self.config.getTargetConfigValue("device.name")
+        degas =  deviceName and deviceName.startswith("degas")
+        bootImg  = imgtools.unpackimg(img, out, degas)
 
         self.newConfig.set("%s.img.cmdline" % imgType, bootImg.cmdline)
         self.newConfig.set("%s.img.base" % imgType, hex(bootImg.base))

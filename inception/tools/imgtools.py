@@ -1,11 +1,11 @@
 from inception.tools import cmdtools
 from inception.common import filetools
-from droidtools import unpackbootimg
+from droidtools import unpackbootimg, mkbootimg
 import os
 import logging
 import tempfile
 logger = logging.getLogger(__name__)
-def unpackimg(img, out):
+def unpackimg(img, out, degas = False):
     if not os.path.isfile(img):
         raise ValueError("Coudn't find %s to unpack"  % img)
     filename = img.split('/')[-1]
@@ -16,7 +16,7 @@ def unpackimg(img, out):
     if not os.path.exists(out):
         os.makedirs(out)
 
-    bootImg = unpackbootimg.extract(img, out)
+    bootImg = unpackbootimg.extract(img, out, mode=unpackbootimg.MODE_DEGAS if degas else unpackbootimg.MODE_STANDARD)
     if bootImg.ramdisk.endswith(".gz"):
          cmdtools.execCmd("gunzip", bootImg.ramdisk)
     else:
@@ -37,7 +37,7 @@ def unpackimg(img, out):
 
     return bootImg
 
-def packimg(bootImg, out):
+def packimg(bootImg, out, degas = False):
     ramdisk = bootImg.ramdisk
     with filetools.FileTools.newTmpDir() as tmpWorkDir:
         if os.path.isdir(ramdisk):
@@ -59,4 +59,7 @@ def packimg(bootImg, out):
             fCpio.close()
             fRamdisk.close()
 
-        bootImg.build(out)
+        if degas:
+            logger.debug("Packing img in degas mode")
+
+        bootImg.build(out, mode=mkbootimg.MODE_DEGAS if degas else mkbootimg.MODE_STANDARD)
