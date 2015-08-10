@@ -5,6 +5,8 @@ import os
 import logging
 import tempfile
 import gzip
+import sys
+import shutil
 logger = logging.getLogger(__name__)
 def unpackimg(img, out, degas = False):
     if not os.path.isfile(img):
@@ -18,13 +20,14 @@ def unpackimg(img, out, degas = False):
         os.makedirs(out)
 
     bootImg = unpackbootimg.extract(img, out, mode=unpackbootimg.MODE_DEGAS if degas else unpackbootimg.MODE_STANDARD)
+    os.makedirs(ramdiskDir)
     if bootImg.ramdisk.endswith(".gz"):
-         cmdtools.execCmd("gunzip", bootImg.ramdisk)
+        with gzip.open(bootImg.ramdisk, 'rb') as gzFile, open(ramdiskExtracted, 'wb') as gunzipped:
+                gunzipped.write(gzFile.read())
+
+        os.remove(bootImg.ramdisk)
     else:
         cmdtools.execCmd("unxz", bootImg.ramdisk)
-
-    os.makedirs(ramdiskDir)
-    cmdtools.execCmd("mv", ramdisk, ramdiskDir)
 
     f = open(ramdiskExtracted)
     try:
