@@ -1,9 +1,10 @@
 from inception.tools import cmdtools
 from inception.common import filetools
-from droidtools import unpackbootimg, mkbootimg
+from droidtools import unpackbootimg, mkbootimg, minicpio
 import os
 import logging
 import tempfile
+import gzip
 logger = logging.getLogger(__name__)
 def unpackimg(img, out, degas = False):
     if not os.path.isfile(img):
@@ -46,18 +47,20 @@ def packimg(bootImg, out, degas = False):
             fileList = tempfile.NamedTemporaryFile()
             fCpio = tempfile.TemporaryFile()
             ramdisk = os.path.join(tmpWorkDir, "ramdisk.cpio.gz")
-            fRamdisk = open(ramdisk, "w+b")
             cmdtools.execCmd("find", ".", stdout = fileList, cwd = bootImg.ramdisk)
 
             fileList.seek(0)
             cmdtools.execCmd("cpio", "-o", "-H", "newc", stdout = fCpio, stdin = fileList, cwd = bootImg.ramdisk)
+
             fCpio.seek(0)
-            cmdtools.execCmd("gzip", stdin = fCpio, stdout = fRamdisk, cwd = bootImg.ramdisk)
+
+            with gzip.open(ramdisk, 'wb') as fgzip:
+                fgzip.write(fCpio.read())
+
             bootImg.ramdisk = ramdisk
 
             fileList.close()
             fCpio.close()
-            fRamdisk.close()
 
         if degas:
             logger.debug("Packing img in degas mode")
