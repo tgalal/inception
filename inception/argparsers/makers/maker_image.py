@@ -27,16 +27,17 @@ class ImageMaker(Maker):
             bootImg.ramdisk = self.getMakeProperty("img.ramdisk").resolveAsRelativePath()
 
         bootImg.kernel = self.getMakeProperty("img.kernel").resolveAsRelativePath()
+        bootImg.signature = self.getMakeProperty("img.signature").resolveAsRelativePath()
 
-        bootImg.second = bootConfig["second"] if "second" in bootConfig else None
+        bootImg.second_offset = bootConfig["second_offset"] if "second_offset" in bootConfig else None
         bootImg.cmdline = bootConfig["cmdline"] if "cmdline" in bootConfig else None
         bootImg.base = bootConfig["base"] if "base" in bootConfig else None
         bootImg.page_size = bootConfig["pagesize"] if "pagesize" in bootConfig else None
         bootImg.ramdisk_offset = bootConfig["ramdisk_offset"] if "ramdisk_offset" in bootConfig\
             else None
+        bootImg.tags_offset = bootConfig["tags_offset"] if "tags_offset" in bootConfig else None
         # ramdiskaddr = bootConfig["ramdiskaddr"] if "ramdiskaddr" in bootConfig else None
         bootImg.dt = self.getMakeProperty("img.dt").resolveAsRelativePath()
-        bootImg.signature = bootConfig["signature"] if "signature" in bootConfig else None
 
         out = os.path.join(outDir, self.imageName)
 
