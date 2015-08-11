@@ -176,6 +176,8 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig.set("%s.img.kernel" % imgType, os.path.relpath(bootImg.kernel, self.variantDir))
         self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImg.ramdisk, self.variantDir))
         self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImg.dt, self.variantDir))
+        if bootImg.signature:
+            self.newConfig.set("%s.img.signature" % imgType, os.path.relpath(bootImg.signature, self.variantDir))
 
 
         etcPath = os.path.join(out, bootImg.ramdisk, "etc")
