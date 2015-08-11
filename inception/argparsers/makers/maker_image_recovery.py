@@ -46,6 +46,7 @@ class RecoveryImageMaker(ImageMaker):
                     self.setValue("%s.img.dt_size"          % imgType, bootImg.dt_size)
                     self.setValue("%s.img.kernel"           % imgType, bootImg.kernel)
                     self.setValue("%s.img.dt"               % imgType, bootImg.dt)
+                    self.setValue("%s.img.signature"        % imgType, bootImg.signature)
                 else:
                     shutil.copytree(self.getMakeProperty("img.ramdisk").resolveAsRelativePath(), workRamdiskDir, symlinks=True)
 
