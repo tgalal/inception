@@ -74,6 +74,9 @@ class LsArgParser(InceptionArgParser):
 
     def listLong(self, d):
         keys = sorted(d.keys())
+        if not len(keys):
+            print("")
+            return
         longestKey = max( len(x) for x in keys )
         self.longest = max(longestKey, self.longest)
         for key in keys:
