@@ -118,6 +118,8 @@ class RecoveryImageMaker(ImageMaker):
         os.chmod(busyboxSbin, 493)
         for link in busyBoxSymlinks:
             linkPath = os.path.join(os.path.dirname(busyboxSbin), link)
+            if os.path.exists(linkPath):
+                os.remove(linkPath)
             os.symlink(os.path.basename(busyboxSbin), linkPath)
 
         return True
