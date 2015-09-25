@@ -15,7 +15,7 @@ class ImageMaker(Maker):
 
         if type(bootConfig) is str: #path to packed image
             shutil.copy(bootConfigProp.resolveAsRelativePath(), os.path.join(outDir, self.imageName))
-            return
+            return os.path.join(outDir, self.imageName)
 
         key, mkbootbin = self.getHostBinary("mkbootimg")
         assert mkbootbin, "%s is not set" % key
