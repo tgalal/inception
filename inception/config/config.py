@@ -11,6 +11,7 @@ from inception.argparsers.makers.maker_image_boot import BootImageMaker
 from inception.argparsers.makers.maker_image_recovery import RecoveryImageMaker
 from inception.argparsers.makers.maker_package import PackageMaker
 from inception.argparsers.makers.maker_config import ConfigMaker
+from inception.argparsers.makers.maker_system import SystemMaker
 import logging
 
 logger = logging.getLogger(__name__)
@@ -312,6 +313,7 @@ class Config(object):
             ("recovery", RecoveryImageMaker),
             ("update", UpdateMaker),
             ("cache", CacheMaker),
+            ("system", SystemMaker),
             ("odin", OdinMaker),
             ("config", ConfigMaker),
             ("package", PackageMaker)
@@ -321,7 +323,7 @@ class Config(object):
 
         for makerItem in makersMap:
             key, Maker = makerItem
-            if self.get(key + ".__make__", True):
+            if self.get(key + ".__make__", Maker.DEFAULT_MAKE):
                 logger.info("Making %s" % key)
                 m = Maker(self)
                 out[key] = m.make(workDir, self.getOutPath())

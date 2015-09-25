@@ -10,7 +10,8 @@ class OdinMaker(Maker):
         allIncludes = [
             self.getCacheOutName(),
             InceptionConstants.OUT_NAME_RECOVERY,
-            InceptionConstants.OUT_NAME_BOOT
+            InceptionConstants.OUT_NAME_BOOT,
+            self.getSystemOutName()
         ]
 
         outTarPath = os.path.join(outDir, InceptionConstants.OUT_NAME_ODIN.format(identifier = self.config.getIdentifier().replace(".", "-")))

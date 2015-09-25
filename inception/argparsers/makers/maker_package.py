@@ -26,6 +26,9 @@ class PackageMaker(Maker):
         if "config" not in excludes:
             allIncludes.append(InceptionConstants.OUT_NAME_CONFIG)
 
+        if "system" not in excludes:
+            allIncludes.append(self.getSystemOutName())
+
         outZipPath = os.path.join(outDir, InceptionConstants.OUT_NAME_PACKAGE.format(identifier = self.config.getIdentifier().replace(".", "-")))
         m = Manifest(self.config.identifier)
         with zipfile.ZipFile(outZipPath, "w") as outZipFile:
