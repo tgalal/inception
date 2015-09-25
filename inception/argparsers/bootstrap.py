@@ -156,7 +156,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDir(self.fsDir)
 
     def getAbsolutePathOf(self, f):
-        return os.path.dirname(os.path.realpath(__file__)) + "/" + f 
+        return os.path.dirname(os.path.realpath(__file__)) + "/" + f
 
     def getConfigPath(self, configName):
         return os.path.join(self.configDir, configName + ".config")
@@ -179,35 +179,44 @@ class BootstrapArgParser(InceptionArgParser):
 
         etcPath = os.path.join(out, bootImgGenerator.getRamdisk(), "etc")
         fstabFilename = None
-        for f in os.listdir(etcPath):
-            if f.endswith("fstab"):
-                fstabFilename = f
+        if os.path.exists(etcPath):
+            for f in os.listdir(etcPath):
+                if f.endswith("fstab"):
+                    fstabFilename = f
 
-        if fstabFilename is None:
-            raise ValueError("Couldn't locate fstab")
+            if fstabFilename is None:
+                raise ValueError("Couldn't locate fstab")
 
-        fstab = Fstab.parseFstab(os.path.join(etcPath, fstabFilename))
+            fstab = Fstab.parseFstab(os.path.join(etcPath, fstabFilename))
 
-        processParts = ("boot", "system", "recovery", "cache")
+            processParts = ("boot", "system", "recovery", "cache")
 
-        for p in processParts:
-            fstabPart = fstab.getByMountPoint("/" + p)
-            key = "__config__.target.mount.%s." % p
-            if self.newConfig.get(key + "dev") != fstabPart.getDevice():
-                self.newConfig.set(key + "dev", fstabPart.getDevice())
+            for p in processParts:
+                fstabPart = fstab.getByMountPoint("/" + p)
+                key = "__config__.target.mount.%s." % p
+                if self.newConfig.get(key + "dev") != fstabPart.getDevice():
+                    self.newConfig.set(key + "dev", fstabPart.getDevice())
 
-            if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
-                self.newConfig.set(key + "mount", fstabPart.getMountPoint())
+                if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
+                    self.newConfig.set(key + "mount", fstabPart.getMountPoint())
 
-            if self.newConfig.get(key + "fs") != fstabPart.getType():
-                self.newConfig.set(key + "fs", fstabPart.getType())
+                if self.newConfig.get(key + "fs") != fstabPart.getType():
+                    self.newConfig.set(key + "fs", fstabPart.getType())
 
 
         defaultProp = DefaultPropFile(os.path.join(out, bootImgGenerator.getRamdisk(), "default.prop"))
 
-        self.newConfig.setTargetConfigValue("arch", defaultProp.getArch(), diffOnly=True)
-        self.newConfig.setTargetConfigValue("device.manufacturer", defaultProp.getProductManufacturer(), diffOnly=True)
-        self.newConfig.setTargetConfigValue("device.brand", defaultProp.getProductBrand(), diffOnly=True)
-        self.newConfig.setTargetConfigValue("device.board", defaultProp.getProductBoard(), diffOnly=True)
-        self.newConfig.setTargetConfigValue("device.name", defaultProp.getProductDevice(), diffOnly=True)
+        if defaultProp.getArch():
+            self.newConfig.setTargetConfigValue("arch", defaultProp.getArch(), diffOnly=True)
 
+        if defaultProp.getProductManufacturer():
+            self.newConfig.setTargetConfigValue("device.manufacturer", defaultProp.getProductManufacturer(), diffOnly=True)
+
+        if defaultProp.getProductBrand():
+            self.newConfig.setTargetConfigValue("device.brand", defaultProp.getProductBrand(), diffOnly=True)
+
+        if defaultProp.getProductBoard():
+            self.newConfig.setTargetConfigValue("device.board", defaultProp.getProductBoard(), diffOnly=True)
+
+        if defaultProp.getProductDevice():
+            self.newConfig.setTargetConfigValue("device.name", defaultProp.getProductDevice(), diffOnly=True)
