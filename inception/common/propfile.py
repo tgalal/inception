@@ -29,6 +29,8 @@ class DefaultPropFile(PropFile):
 
     def getArch(self):
         arch = self.getProductCpuABI()
+        if not arch:
+            return None
         if arch.startswith("arm"):
             return "arm"
 
