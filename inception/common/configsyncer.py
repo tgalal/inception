@@ -37,6 +37,7 @@ class ConfigSyncer(object):
             dbPath = os.path.join(tmpDir, "curr.db")
             dbPathShm = dbPath + "-shm"
             dbPathWal = dbPath + "-wal"
+            dbPathJournal = dbPath + "-journal"
 
             if not len(currSettings):
                 logger.warning("Config does not contain settings data, or overrides settings with no data")
@@ -58,11 +59,17 @@ class ConfigSyncer(object):
                 except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
                     pass
 
+                try:
+                    self.adb.pull(path + "-journal", dbPathJournal)
+                except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
+                    pass
+
                 # databaseConfig = self.config.get("update.databases.%s" % identifier.replace(".", "\."), {"data": {}})
                 schemaProperty = self.config.getProperty("update.settings.%s.schema" % identifier.replace(".", "\."))
                 data["schema"] = schemaProperty.resolveAsRelativePath()
                 if data["schema"] and not os.path.exists(data["schema"]):
                     data["schema"] = schemaProperty.getValue()
+
                 diffSettingsConfig, databaseConfig = self.diffSettings(data, dbPath)
 
                 databaseConfig["__depend__"] = "update.settings.%s" % identifier.replace(".", "\.")
