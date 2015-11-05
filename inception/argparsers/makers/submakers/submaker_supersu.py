@@ -54,7 +54,7 @@ class SuperSuSubmaker(Submaker):
                         with open(supersuOriginalUpdatescriptPath, "w") as targetF:
                             for l in f.readlines():
                                 if l.startswith("#!"):
-                                    targetF.write("#!/system/bin/sh\n")
+                                    targetF.write("#!" + self.getTargetConfigValue("root.methods.supersu.sh", "/system/bin/sh") + "\n")
                                 else:
                                     targetF.write(l)
                 else:
