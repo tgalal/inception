@@ -189,10 +189,12 @@ class BootstrapArgParser(InceptionArgParser):
 
             fstab = Fstab.parseFstab(os.path.join(etcPath, fstabFilename))
 
-            processParts = ("boot", "system", "recovery", "cache")
+            processParts = ("boot", "kernel", "system", "recovery", "cache")
 
             for p in processParts:
                 fstabPart = fstab.getByMountPoint("/" + p)
+                if not fstabPart:
+                    continue
                 key = "__config__.target.mount.%s." % p
                 if self.newConfig.get(key + "dev") != fstabPart.getDevice():
                     self.newConfig.set(key + "dev", fstabPart.getDevice())
