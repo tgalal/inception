@@ -74,9 +74,10 @@ class BootImgGenerator(Generator):
         self.kernelCmdLine = cmdline
 
     def getKernelCmdLine(self, quote = True):
-        if self.kernelCmdLine:
-            return "\"%s\"" % self.kernelCmdLine if quote else self.kernelCmdLine
-        return None
+        return self.kernelCmdLine
+        # if self.kernelCmdLine:
+        #     return "\"%s\"" % self.kernelCmdLine if quote else self.kernelCmdLine
+        # return None
 
     def setDeviceTree(self, dt):
         self.dt = dt
