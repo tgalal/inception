@@ -74,6 +74,9 @@ class LsArgParser(InceptionArgParser):
 
     def listLong(self, d):
         keys = sorted(d.keys())
+        if not len(keys):
+            print("")
+            return
         longestKey = max( len(x) for x in keys )
         self.longest = max(longestKey, self.longest)
         for key in keys:
@@ -89,7 +92,11 @@ class LsArgParser(InceptionArgParser):
             if os.path.exists(configPath):
                 keys = path.split("/")[-depth:]
                 code = ".".join(keys)
-                return {code:  self.configTreeParser.parseJSONFile(configPath, code)}
+                try:
+                    return {code:  self.configTreeParser.parseJSONFile(configPath, code)}
+                except ValueError as e:
+                    logger.warning("Coudn't parse json %s" % configPath)
+                    return {}
 
         elif os.path.isdir(path):
             for f in os.listdir(path):

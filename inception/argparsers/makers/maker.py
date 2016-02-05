@@ -5,6 +5,7 @@ import os
 import shutil
 class Maker(object):
     __metaclass__ = abc.ABCMeta
+    DEFAULT_MAKE = True
     def __init__(self, config, key):
         self.config = config
         self.key = key
@@ -30,14 +31,23 @@ class Maker(object):
         key = self.getKey() + "." + key
         return self.config.getProperty(key, default, directOnly)
 
-    def setValue(self, key, value):
-        return self.config.set(key, value)
+    def setValue(self, key, value, diffOnly = False):
+        return self.config.set(key, value, diffOnly = diffOnly)
+
+    def setHostConfigValue(self, key, value, diffOnly = False):
+        return self.config.setHostConfigValue(key, value, diffOnly=diffOnly)
+
+    def setTargetConfigValue(self, key, value, diffOnly = False):
+        return self.config.setTargetConfigValue(key, value, diffOnly=diffOnly)
 
     def deleteProperty(self, key):
         return self.config.delete(key)
 
     def getCacheOutName(self):
         return self.config.get("cache.out", InceptionConstants.OUT_NAME_CACHE)
+
+    def getSystemOutName(self):
+        return self.config.get("system.out", InceptionConstants.OUT_NAME_SYSTEM)
 
     def getHostBinary(self, name):
         return self.config.getHostBinary(name)

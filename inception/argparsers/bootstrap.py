@@ -7,6 +7,7 @@ import os, shutil, logging
 from inception.config import ConfigTreeParser, DotIdentifierResolver
 from inception.common.fstabtools import Fstab
 from inception.config.configv2 import ConfigV2
+from inception.common.propfile import DefaultPropFile
 import sys
 logger = logging.getLogger(__name__)
 class BootstrapArgParser(InceptionArgParser):
@@ -15,12 +16,14 @@ class BootstrapArgParser(InceptionArgParser):
         super(BootstrapArgParser, self).__init__(description = "Bootstrap a variant config, based on an existing base "
                                                                "config, or based on another variant config")
         requiredOpts = self.add_argument_group("Required args")
+
         requiredOpts.add_argument('-b', '--base', required = True, action = "store", help="base config code to use, in the format A.B")
         requiredOpts.add_argument('-v', '--variant', required = True, action = "store", help="variant config code to use, in the format A.B.C")
-        #requiredOpts.add_argument('-v', '--vendor', required = True, action = "store")
-        #requiredOpts.add_argument('-m', '--model', required = True, action = "store")
+
 
         optionalOpts = self.add_argument_group("Optional args")
+        optionalOpts.add_argument("-r", '--recovery', required = False, action="store", help="Use the supplied recovery img in bootstraped config")
+        optionalOpts.add_argument("-u", '--unpack-recovery', required = False, action="store_true", help="Unpack recovery if it exists/supplied")
         optionalOpts.add_argument('--learn-settings', action="store_true",
                                   help="Learn settings from a connected device, and set in the bootstrapped config file" )
 
@@ -41,6 +44,7 @@ class BootstrapArgParser(InceptionArgParser):
 
     def process(self):
         super(BootstrapArgParser, self).process()
+
         self.createDir(self.deviceDir)
         self.config = self.configTreeParser.parseJSON(self.args["base"])
 
@@ -50,16 +54,13 @@ class BootstrapArgParser(InceptionArgParser):
             sys.exit(1)
 
         self.configDir = self.config.getSource(getDir=True)
-
         baseCodePath= "/".join(self.args["base"].split(".")[:2])
-
         self.variantDir = os.path.join(self.deviceDir, baseCodePath, self.args["variant"])
 
         logger.info("Writing new config")
         self.newConfig = self.createNewConfig(self.args["base"] + "." + self.args["variant"], self.args["variant"], self.config)
         self.setupDirPaths()
         self.createDirs()
-        #self.unpackimg(bootImg, self.bootDir, self.config["tools"]["unpackbootimg"], "boot")
 
         unpackerKey, unpacker = self.config.getHostBinary("unpackbootimg")
         bootImg = self.config.getProperty("boot.img", None)
@@ -68,12 +69,6 @@ class BootstrapArgParser(InceptionArgParser):
                 logger.info("Unpacking boot img")
                 self.unpackimg(bootImg.getConfig().resolveRelativePath(bootImg.getValue()), self.bootDir, unpacker, "boot")
 
-
-        recoveryImg = self.config.getProperty("recovery.img", None)
-        if recoveryImg and self.config.get("recovery.__make__", False):
-            if type(recoveryImg.getValue()) is str:
-                logger.info("Unpacking recovery img")
-                self.unpackimg(recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
 
         if any((self.args["learn_settings"], self.args["learn_partitions"], self.args["learn_props"], self.args["learn_imgs"])):
             syncer = ConfigSyncer(self.newConfig)
@@ -101,6 +96,23 @@ class BootstrapArgParser(InceptionArgParser):
                     syncer.syncImg("boot.img", self.newConfig.getMountConfig("boot.dev"), imgsDir, self.variantDir)
                 else:
                     logger.warn("__config__.target.mount.boot.dev not set, not syncing boot.img")
+
+
+        recoveryPath = None
+        if self.args["recovery"]:
+            recoveryPath = os.path.join(self.imgDir, os.path.basename(self.args["recovery"]))
+            self.createDir(self.imgDir)
+            shutil.copy(self.args["recovery"], recoveryPath)
+            relPath =  os.path.relpath(recoveryPath, self.variantDir)
+            self.newConfig.set("recovery.img", relPath)
+
+        if self.args["unpack_recovery"]:
+            recoveryImg = self.newConfig.getProperty("recovery.img", None)
+            if type(recoveryImg.getValue()) is str:
+                logger.info("Unpacking recovery img")
+                self.unpackimg(recoveryPath or recoveryImg.getConfig().resolveRelativePath(recoveryImg.getValue()), self.recoveryDir, unpacker, "recovery")
+            else:
+                logger.warning("recovery is already unpacked at a parent")
 
         configPath = self.writeNewConfig(self.args["variant"])
 
@@ -144,7 +156,7 @@ class BootstrapArgParser(InceptionArgParser):
         self.createDir(self.fsDir)
 
     def getAbsolutePathOf(self, f):
-        return os.path.dirname(os.path.realpath(__file__)) + "/" + f 
+        return os.path.dirname(os.path.realpath(__file__)) + "/" + f
 
     def getConfigPath(self, configName):
         return os.path.join(self.configDir, configName + ".config")
@@ -164,18 +176,49 @@ class BootstrapArgParser(InceptionArgParser):
         self.newConfig.set("%s.img.ramdisk" % imgType, os.path.relpath(bootImgGenerator.getRamdisk(), self.variantDir))
         self.newConfig.set("%s.img.dt" % imgType, os.path.relpath(bootImgGenerator.getDeviceTree(), self.variantDir))
 
-        fstab = Fstab.parseFstab(os.path.join(out, bootImgGenerator.getRamdisk(), "etc", "recovery.fstab"))
 
-        processParts = ("boot", "system", "recovery", "cache")
+        etcPath = os.path.join(out, bootImgGenerator.getRamdisk(), "etc")
+        fstabFilename = None
+        if os.path.exists(etcPath):
+            for f in os.listdir(etcPath):
+                if f.endswith("fstab"):
+                    fstabFilename = f
 
-        for p in processParts:
-            fstabPart = fstab.getByMountPoint("/" + p)
-            key = "__config__.target.mount.%s." % p
-            if self.newConfig.get(key + "dev") != fstabPart.getDevice():
-                self.newConfig.set(key + "dev", fstabPart.getDevice())
+            if fstabFilename is None:
+                raise ValueError("Couldn't locate fstab")
 
-            if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
-                self.newConfig.set(key + "mount", fstabPart.getMountPoint())
+            fstab = Fstab.parseFstab(os.path.join(etcPath, fstabFilename))
 
-            if self.newConfig.get(key + "fs") != fstabPart.getType():
-                self.newConfig.set(key + "fs", fstabPart.getType())
+            processParts = ("boot", "kernel", "system", "recovery", "cache")
+
+            for p in processParts:
+                fstabPart = fstab.getByMountPoint("/" + p)
+                if not fstabPart:
+                    continue
+                key = "__config__.target.mount.%s." % p
+                if self.newConfig.get(key + "dev") != fstabPart.getDevice():
+                    self.newConfig.set(key + "dev", fstabPart.getDevice())
+
+                if self.newConfig.get(key + "mount") != fstabPart.getMountPoint():
+                    self.newConfig.set(key + "mount", fstabPart.getMountPoint())
+
+                if self.newConfig.get(key + "fs") != fstabPart.getType():
+                    self.newConfig.set(key + "fs", fstabPart.getType())
+
+
+        defaultProp = DefaultPropFile(os.path.join(out, bootImgGenerator.getRamdisk(), "default.prop"))
+
+        if defaultProp.getArch():
+            self.newConfig.setTargetConfigValue("arch", defaultProp.getArch(), diffOnly=True)
+
+        if defaultProp.getProductManufacturer():
+            self.newConfig.setTargetConfigValue("device.manufacturer", defaultProp.getProductManufacturer(), diffOnly=True)
+
+        if defaultProp.getProductBrand():
+            self.newConfig.setTargetConfigValue("device.brand", defaultProp.getProductBrand(), diffOnly=True)
+
+        if defaultProp.getProductBoard():
+            self.newConfig.setTargetConfigValue("device.board", defaultProp.getProductBoard(), diffOnly=True)
+
+        if defaultProp.getProductDevice():
+            self.newConfig.setTargetConfigValue("device.name", defaultProp.getProductDevice(), diffOnly=True)

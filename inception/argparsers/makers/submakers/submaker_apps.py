@@ -75,7 +75,12 @@ class AppsSubmaker(Submaker):
             self.registerApkFile(targetDest)
 
     def registerApkFile(self, path):
-        self.setValue("update.files.add.%s" % (path.replace(".", "\.")), {"destination": "/" + path})
+        self.setValue("update.files.add.%s" % (path.replace(".", "\.")), {
+        "destination": "/" + path,
+        "gid": "1000",
+        "uid": "1000",
+        "mode": "0644"
+        })
 
     def patchApk(self, java, apkTool, frameworks, apk,  patches, dest):
         tmpDir = tempfile.mkdtemp()
@@ -93,5 +98,3 @@ class AppsSubmaker(Submaker):
         except:
             shutil.rmtree(tmpDir)
             raise
-
-

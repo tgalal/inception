@@ -83,7 +83,6 @@ class MakeArgParser(InceptionArgParser):
             syncer.applyDiff(syncer.pullAndDiff())
 
         self.config.make(self.workDir)
-        self.writeUsedConfig()
 
         if not self.args["keep_work"]:
             logger.info("Cleaning up work dir")
@@ -91,8 +90,4 @@ class MakeArgParser(InceptionArgParser):
 
         return True
 
-    def writeUsedConfig(self):
-        f = open(os.path.join(self.config.getOutPath(), "config.json"), "w")
-        f.write(self.config.dumpFullData())
-        f.close()
 

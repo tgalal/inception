@@ -12,17 +12,22 @@ import shutil
 logger = logging.getLogger(__name__)
 class RecoveryImageMaker(ImageMaker):
     PATH_KEYS = "res/keys"
+    FSTABS = ["recovery.fstab", "twrp.fstab"]
     def __init__(self, config):
         super(RecoveryImageMaker, self).__init__(config, "recovery", InceptionConstants.OUT_NAME_RECOVERY)
         self.recoveryBootImgGen = None
 
     def make(self, workDir, outDir):
         recoveryImg = self.getMakeProperty("img")
+        preprocessed = self.getMakeValue("preprocessed", False)
 
         with self.newTmpWorkDir() as recoveryExtractDir:
             with self.newTmpWorkDir() as recoveryRamdiskDir:
                 workRamdiskDir = os.path.join(recoveryRamdiskDir, "ramdisk")
                 if type(recoveryImg.getValue()) is str:
+                    if preprocessed:
+                        return super(RecoveryImageMaker, self).make(workDir, outDir)
+
                     _, unpacker = self.getHostBinary("unpackbootimg")
                     bootImgGenerator = imgtools.unpackimg(unpacker, recoveryImg.resolveAsRelativePath(), recoveryExtractDir)
                     shutil.copytree(os.path.join(recoveryExtractDir, bootImgGenerator.getRamdisk()), workRamdiskDir, symlinks=True)
@@ -42,30 +47,57 @@ class RecoveryImageMaker(ImageMaker):
                 else:
                     shutil.copytree(self.getMakeProperty("img.ramdisk").resolveAsRelativePath(), workRamdiskDir, symlinks=True)
 
+
                 self.setValue("recovery.img.ramdisk", workRamdiskDir)
-                if self.getMakeValue("inject_keys", True):
-                    if not self.injectKeys(workRamdiskDir):
-                        logger.warning("key already exists in %s, not injecting" % self.__class__.PATH_KEYS)
-                    else:
-                        logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
+                if not preprocessed:
+                    if self.getMakeValue("inject_keys", True):
+                        if not self.injectKeys(workRamdiskDir):
+                            logger.warning("key already exists in %s, not injecting" % self.__class__.PATH_KEYS)
+                        else:
+                            logger.debug("injected key in %s" % self.__class__.PATH_KEYS)
 
-                self.injectBusyBox(workRamdiskDir)
+                    self.injectBusyBox(workRamdiskDir)
+                    self.readProps(workRamdiskDir)
+                    self.overrideDmVerityHash(workRamdiskDir)
 
 
-                fstabPath = os.path.join(workRamdiskDir, "etc", "fstab")
-                fstab = Fstab.parseFstab(os.path.join(workRamdiskDir, "etc", "recovery.fstab"))
+                    fstabPath = os.path.join(workRamdiskDir, "etc", "fstab")
+                    fstab = None
 
-                diffMounts = ConfigSyncer.diffMounts(self.getConfig(), fstab)
-                for k, v in diffMounts.items():
-                    self.getConfig().setRecursive(k, v)
+                    for fstabname in RecoveryImageMaker.FSTABS:
+                        fstabpathcheck =  os.path.join(workRamdiskDir, "etc", fstabname)
+                        if os.path.exists(fstabpathcheck):
+                            fstab = Fstab.parseFstab(fstabpathcheck)
+                            break
 
-                if not os.path.exists(fstabPath):
-                    self.injectFstab(fstab, workRamdiskDir)
+                    if fstab is None:
+                        raise ValueError("Couldn't parse any of /etc/{%s}" % (",".join(RecoveryImageMaker.FSTABS)))
 
-                result = super(RecoveryImageMaker, self).make(workDir, outDir)
-                self.setValue("recovery.img", recoveryImg.getValue())
+                    diffMounts = ConfigSyncer.diffMounts(self.getConfig(), fstab)
+                    for k, v in diffMounts.items():
+                        self.getConfig().setRecursive(k, v)
+
+                    if not os.path.exists(fstabPath) and self.getMakeValue("inject_fstab", True):
+                        self.injectFstab(fstab, workRamdiskDir)
+
+                    result = super(RecoveryImageMaker, self).make(workDir, outDir)
+                    self.setValue("recovery.img", recoveryImg.getValue())
                 return result
 
+    def overrideDmVerityHash(self, ramdiskDir):
+        target = os.path.join(ramdiskDir, "sbin", "dm_verity_hash")
+        if not os.path.exists(target):
+            return
+        with open(target,'w') as f:
+            f.write("#!/sbin/sh\n")
+            f.write("exit 0;\n")
+        os.chmod(target, 493)
+
+
+    def readProps(self, ramdiskDir):
+        from inception.common.propfile import DefaultPropFile
+        props = DefaultPropFile(os.path.join(ramdiskDir, "default.prop"))
+        self.setTargetConfigValue("arch", props.getArch(), diffOnly=True)
 
     def injectFstab(self, fstab, ramdiskDir):
             fstabPath = os.path.join(ramdiskDir, "etc", "fstab")

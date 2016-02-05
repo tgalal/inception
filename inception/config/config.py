@@ -9,6 +9,9 @@ from inception.argparsers.makers.maker_update import UpdateMaker
 from inception.argparsers.makers.maker_odin import OdinMaker
 from inception.argparsers.makers.maker_image_boot import BootImageMaker
 from inception.argparsers.makers.maker_image_recovery import RecoveryImageMaker
+from inception.argparsers.makers.maker_package import PackageMaker
+from inception.argparsers.makers.maker_config import ConfigMaker
+from inception.argparsers.makers.maker_system import SystemMaker
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,10 +54,11 @@ class Config(object):
     def new(cls, identifier, name = None, base = None, template = None):
         sourceTemplate = template if template is not None else cls.TEMPLATE_DEFAULT
         sourceTemplate = sourceTemplate.copy()
-        assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
+
+        if base: assert base.__class__ == cls, "Base must be instance of %s, got %s" % (cls, base.__class__)
         config = cls(identifier, sourceTemplate, base)
-        config.set("__extends__", base.getIdentifier() if base else None)
         if base:
+            config.set("__extends__", base.getIdentifier() )
             config.set("boot.__make__", base.get("boot.__make__", False))
             config.set("recovery.__make__", base.get("recovery.__make__", False))
             config.set("cache.__make__", base.get("cache.__make__", False))
@@ -200,7 +204,9 @@ class Config(object):
         return False
 
 
-    def set(self, key, value):
+    def set(self, key, value, diffOnly = False):
+        if diffOnly and self.get(key) == value:
+            return
         self.__setProperty(key, value)
 
 
@@ -307,14 +313,17 @@ class Config(object):
             ("recovery", RecoveryImageMaker),
             ("update", UpdateMaker),
             ("cache", CacheMaker),
-            ("odin", OdinMaker)
+            ("system", SystemMaker),
+            ("odin", OdinMaker),
+            ("config", ConfigMaker),
+            ("package", PackageMaker)
          ]
 
         out = {}
 
         for makerItem in makersMap:
             key, Maker = makerItem
-            if self.get(key + ".__make__", True):
+            if self.get(key + ".__make__", Maker.DEFAULT_MAKE):
                 logger.info("Making %s" % key)
                 m = Maker(self)
                 out[key] = m.make(workDir, self.getOutPath())
@@ -327,6 +336,10 @@ class Config(object):
         for k, v in out.items():
             outStr += "%*s %s\n" % (-(maxLen + 5), k, v)
         logger.info(outStr)
+
+
+
+
 
 
 class ConfigProperty(object):
