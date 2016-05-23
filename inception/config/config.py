@@ -332,10 +332,14 @@ class Config(object):
                 logger.info("Skipping '%s' as it's disabled in config" % key)
 
         outStr = "Made:\n\n"
+        footer = self.get("update.script.footer", None)
+        if footer:
+            print("\n%s\n" % footer)
         maxLen = max([len(key) for key in out.keys()])
         for k, v in out.items():
             outStr += "%*s %s\n" % (-(maxLen + 5), k, v)
         logger.info(outStr)
+
 
 
 
