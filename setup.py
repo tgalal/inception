@@ -1,4 +1,4 @@
-deps = ['dulwich', 'argparse', 'pycrypto', 'android-dumpkey']
+deps = ['dulwich==0.10.1a', 'argparse', 'pycrypto', 'android-dumpkey']
 from setuptools import setup, find_packages
 import inception
 setup(

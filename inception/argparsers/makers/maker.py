@@ -46,9 +46,6 @@ class Maker(object):
     def getCacheOutName(self):
         return self.config.get("cache.out", InceptionConstants.OUT_NAME_CACHE)
 
-    def getSystemOutName(self):
-        return self.config.get("system.out", InceptionConstants.OUT_NAME_SYSTEM)
-
     def getHostBinary(self, name):
         return self.config.getHostBinary(name)
 

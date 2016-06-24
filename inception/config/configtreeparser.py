@@ -98,10 +98,13 @@ class ConfigTreeParser(object):
     def fetchRepo(self, repoName, targetPath, lookupRepos):
         repoPath = repoName + ".git"
         for address in lookupRepos:
+            # if address.startswith("git+ssh://"):
+            #     address = address.replace("git+ssh://", "ssh://")
             if not address.startswith("https://") and not address.startswith("http://") and not address.startswith("git+ssh://"):
                 address = "https://github.com/" + address + "/" + repoPath
             else:
                 address += "/" + repoPath
+
             if self.syncRepo(targetPath, address):
                 return True
 
@@ -121,7 +124,7 @@ class ConfigTreeParser(object):
                     remoteUrl = None
 
                 if not remoteUrl:
-                    raise dulwich.errors.NotGitRepository()
+                    raise ValueError("Repo \"%s\" not configured or has no remote url" % targetPath)
 
                 if repoUrl and repoUrl != remoteUrl:
                     print("Error: Supplied remote URL does not match remote url in repo config!")
@@ -135,7 +138,7 @@ class ConfigTreeParser(object):
             os.makedirs(targetPath)
             localRepo = Repo.init(targetPath)
 
-        logger.info("Trying syncing %s to %s" % (remoteUrl, targetPath))
+        logger.info("Syncing %s to %s" % (remoteUrl, targetPath))
 
         client, hostPath = get_transport_and_path(remoteUrl)
         try:
@@ -150,6 +153,7 @@ class ConfigTreeParser(object):
 
         except (dulwich.errors.NotGitRepository,dulwich.errors.GitProtocolError):
             shutil.rmtree(targetPath)
+            logger.error("GitProtocolError", exc_info=1)
             return False
         except KeyError:
             # Handle wild KeyError appearing.
@@ -157,7 +161,7 @@ class ConfigTreeParser(object):
             shutil.rmtree(targetPath)
             return self.syncRepo(targetPath, remoteUrl)
         except Exception as e:
-            logger.error(e)
+            logger.error("Error syncing repo", exc_info =1)
             return False
 
         return True
