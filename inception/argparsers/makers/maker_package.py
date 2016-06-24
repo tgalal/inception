@@ -26,8 +26,9 @@ class PackageMaker(Maker):
         if "config" not in excludes:
             allIncludes.append(InceptionConstants.OUT_NAME_CONFIG)
 
-        if "system" not in excludes:
-            allIncludes.append(self.getSystemOutName())
+        # if "extras" not in excludes:
+        #     for p, v in self.config.get("extras.partitions", {}).items():
+        #         allIncludes.append(p)
 
         outZipPath = os.path.join(outDir, InceptionConstants.OUT_NAME_PACKAGE.format(identifier = self.config.getIdentifier().replace(".", "-")))
         m = Manifest(self.config.identifier)

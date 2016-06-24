@@ -11,7 +11,7 @@ from inception.argparsers.makers.maker_image_boot import BootImageMaker
 from inception.argparsers.makers.maker_image_recovery import RecoveryImageMaker
 from inception.argparsers.makers.maker_package import PackageMaker
 from inception.argparsers.makers.maker_config import ConfigMaker
-from inception.argparsers.makers.maker_system import SystemMaker
+from inception.argparsers.makers.maker_extras import ExtrasMaker
 import logging
 
 logger = logging.getLogger(__name__)
@@ -313,7 +313,7 @@ class Config(object):
             ("recovery", RecoveryImageMaker),
             ("update", UpdateMaker),
             ("cache", CacheMaker),
-            ("system", SystemMaker),
+            ("extras", ExtrasMaker),
             ("odin", OdinMaker),
             ("config", ConfigMaker),
             ("package", PackageMaker)
