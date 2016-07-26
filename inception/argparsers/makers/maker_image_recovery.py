@@ -138,8 +138,7 @@ class RecoveryImageMaker(ImageMaker):
 
         signingKeys = self.getConfig().getKeyConfig(keysName)
         assert signingKeys, "update.keys is '%s' but __config__.host.keys.%s is not set" % (keysName, keysName)
-        pubPath = signingKeys["public"]
-
+        pubPath = unicode(signingKeys["public"])
         keysVal = dumppublickey.print_rsa(pubPath)
 
         return self.injectKey(os.path.join(ramdDiskDir, self.__class__.PATH_KEYS), keysVal)
