@@ -113,12 +113,16 @@ class RecoveryImageMaker(ImageMaker):
 
         busyboxSbin = os.path.join(ramDiskDir, "sbin", "busybox")
         if os.path.exists(busyboxSbin):
-            return False
+            logger.warn("busybox already exists as /sbin/busybox, going to overwrite")
         shutil.copy(busybox, busyboxSbin)
         os.chmod(busyboxSbin, 493)
         for link in busyBoxSymlinks:
             linkPath = os.path.join(os.path.dirname(busyboxSbin), link)
-            os.symlink(os.path.basename(busyboxSbin), linkPath)
+            try:
+                os.symlink(os.path.basename(busyboxSbin), linkPath)
+            except OSError:
+                logger.warn("%s already exists, skipping" % linkPath)
+
 
         return True
 
