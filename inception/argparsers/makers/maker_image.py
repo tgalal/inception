@@ -1,5 +1,6 @@
 from .maker import Maker
 from inception.generators.bootimg import BootImgGenerator
+from inception.tools.bootsignature import BootSignature
 import os
 import shutil
 
@@ -49,7 +50,26 @@ class ImageMaker(Maker):
         gen.setSignature(signature)
         gen.setRamdiskAddr(ramdiskaddr)
 
+
+        keys_name = self.getMakeValue("keys")
+        signingKeys = self.getConfig().getKeyConfig(keys_name) if keys_name else None
+        intermediateOut = os.path.join(workDir, "unsigned_%s.img" % self.imageName)
         out = os.path.join(outDir, self.imageName)
-        gen.generate(out)
+        if signingKeys is not None:
+            gen.generate(intermediateOut)
+            javaKey, javaPath = self.getHostBinary("java")
+            bootsigKey, bootsigPath = self.getHostBinary("BootSignature")
+
+            assert bootsigPath, "%s is not set" % bootsigKey
+
+            assert os.path.exists(bootsigPath), "'%s' from %s does not exist" % (bootsigPath, bootsigKey)
+            assert os.path.exists(javaPath), "'%s' from %s does not exist" % (javaPath, javaKey)
+
+            bootsig = BootSignature(javaPath, bootsigPath)
+            bootsig.sign("/" + self.imageName.split(".")[0], intermediateOut, signingKeys["private"], signingKeys["public"], out)
+        else:
+            gen.generate(out)
+
+
 
         return out
