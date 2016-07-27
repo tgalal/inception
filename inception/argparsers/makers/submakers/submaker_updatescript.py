@@ -1,5 +1,8 @@
 from .submaker import Submaker
 import os
+import sys
+import  logging
+logger = logging.getLogger(__name__)
 class UpdatescriptSubmaker(Submaker):
     def make(self, updatePkgDir, updatescriptgen = None):
         u = updatescriptgen
@@ -15,9 +18,6 @@ class UpdatescriptSubmaker(Submaker):
                 path = "/" + path
             u.rm(path, recursive = True)
 
-        #### format?
-        if  self.getValue("script.format_data", False):
-            u.rm("/data", recursive=True)
 
         #### apply our FS permissions
 

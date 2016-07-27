@@ -52,6 +52,10 @@ class UpdateScriptGenerator(Generator):
     def echo(self, text):
         self._add("ui_print", self._quote(text))
 
+    def format(self, fsType, partitionType, device, mountpoint, fsSize = 0):
+        self._add("format", self._quote(fsType), self._quote(partitionType), self._quote( device), str(fsSize), self._quote(mountpoint))
+        #format(fs_type, partition_type, device, fs_size, mountpoint) - usually use "0" for fs_size (entire partition)
+
     def rm(self, path, recursive = False):
         self.dirty = True
         if recursive:
