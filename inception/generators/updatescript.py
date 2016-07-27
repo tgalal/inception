@@ -10,9 +10,10 @@ class UpdateScriptGenerator(Generator):
         \/     \/    \/|__|             \/     \/ 
 """
 
-    def __init__(self):
+    def __init__(self, metadataSupported = False):
         super(UpdateScriptGenerator, self).__init__()
         self.commands = []
+        self.metadataSupported = metadataSupported
         self.dirty = False
         self.header = ""
         self.footer = self.__class__.ASCII_INCEPTION
@@ -88,11 +89,25 @@ class UpdateScriptGenerator(Generator):
         self._add("package_extract_dir", self._quote(dir), self._quote(out))
 
     def setPermissions(self, path, uid, gid, fmode, dmode = None):
-        self.dirty = True
-        if dmode is None:
-            self._add("set_perm", uid, gid, fmode, self._quote(path))
+        if self.metadataSupported:
+            self.setMetaData(path, uid, gid, fmode, dmode)
         else:
-            self._add("set_perm_recursive", uid, gid, dmode, fmode, self._quote(path))
+            self.dirty = True
+            if dmode is None:
+                self._add("set_perm", uid, gid, fmode, self._quote(path))
+            else:
+                self._add("set_perm_recursive", uid, gid, dmode, fmode, self._quote(path))
+
+    def setMetaData(self,  path, uid, gid, fmode, dmode = None):
+        self.dirty = True
+        uidKey = self._quote("uid")
+        gidKey = self._quote("gid")
+        fmodeKey = self._quote("fmode")
+        dmodeKey = self._quote("dmode")
+        if dmode is None:
+            self._add("set_metadata", self._quote(path), uidKey, uid, gidKey, gid, fmodeKey, fmode)
+        else:
+            self._add("set_metadata_recursive", self._quote(path), uidKey, uid, gidKey, gid, fmodeKey, fmode, dmodeKey, dmode)
 
     def _quote(self, string):
         return "\"%s\"" % string
