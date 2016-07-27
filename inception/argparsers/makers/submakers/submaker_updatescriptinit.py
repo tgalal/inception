@@ -9,9 +9,8 @@ class UpdatescriptInitSubmaker(Submaker):
         mountNames= ["system", "data"]
         dataFormatted = False
         formatData = self.getValue("script.format_data", False)
-        formatSuported = self.getValue("script.format_supported", False)
-
-        if formatData and formatSuported:
+        formatSupported = self.getTargetConfigValue("bin.update-binary.config.format_supported", False)
+        if formatData and formatSupported:
             fsInfo = self.getTargetConfigValue("mount.data", None)
             if fsInfo is not None:
                 try:
