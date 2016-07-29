@@ -25,7 +25,6 @@ class InstallerCmdMaker(Maker):
                 f.write("flash:%s#/installer/%s" % (name, path))
                 f.write("\n")
 
-            f.write(self.getMakeValue("boot_recovery_command", "continue") + "\n")
-
+            f.write(self.getConfig().getTargetConfigValue("bin.fastboot.config.boot_recovery_command", "continue") + "\n")
 
         return outPath
