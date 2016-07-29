@@ -20,7 +20,9 @@ class UpdateMaker(Maker):
     def __init__(self, config):
         super(UpdateMaker, self).__init__(config, "update")
         self.rootFs = "fs"
-        self.updatescriptGen = UpdateScriptGenerator()
+        self.updatescriptGen = UpdateScriptGenerator(
+            self.getTargetConfigValue("bin.update-binary.config.metadata_supported", False)
+        )
 
     def make(self, workDir, outDir):
         logger.info("Making update package")

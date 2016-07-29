@@ -113,12 +113,16 @@ class RecoveryImageMaker(ImageMaker):
 
         busyboxSbin = os.path.join(ramDiskDir, "sbin", "busybox")
         if os.path.exists(busyboxSbin):
-            return False
+            logger.warn("busybox already exists as /sbin/busybox, going to overwrite")
         shutil.copy(busybox, busyboxSbin)
         os.chmod(busyboxSbin, 493)
         for link in busyBoxSymlinks:
             linkPath = os.path.join(os.path.dirname(busyboxSbin), link)
-            os.symlink(os.path.basename(busyboxSbin), linkPath)
+            try:
+                os.symlink(os.path.basename(busyboxSbin), linkPath)
+            except OSError:
+                logger.warn("%s already exists, skipping" % linkPath)
+
 
         return True
 
@@ -134,8 +138,7 @@ class RecoveryImageMaker(ImageMaker):
 
         signingKeys = self.getConfig().getKeyConfig(keysName)
         assert signingKeys, "update.keys is '%s' but __config__.host.keys.%s is not set" % (keysName, keysName)
-        pubPath = signingKeys["public"]
-
+        pubPath = unicode(signingKeys["public"])
         keysVal = dumppublickey.print_rsa(pubPath)
 
         return self.injectKey(os.path.join(ramdDiskDir, self.__class__.PATH_KEYS), keysVal)

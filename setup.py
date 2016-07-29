@@ -1,4 +1,6 @@
-deps = ['dulwich==0.10.1a', 'argparse', 'pycrypto', 'android-dumpkey']
+deps = ['dulwich==0.10.1a', 'argparse', 'pycrypto', 'android-dumpkey', 'libusb1==1.4.1']
+#libusb1==1.4.1 because 1.5.1 introduced some errors
+
 from setuptools import setup, find_packages
 import inception
 setup(
