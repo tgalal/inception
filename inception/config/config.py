@@ -13,6 +13,7 @@ from inception.argparsers.makers.maker_package import PackageMaker
 from inception.argparsers.makers.maker_config import ConfigMaker
 from inception.argparsers.makers.maker_extras import ExtrasMaker
 from inception.argparsers.makers.maker_installercmd import InstallerCmdMaker
+from inception.argparsers.makers.maker_dnx import DnxMaker
 import logging
 
 logger = logging.getLogger(__name__)
@@ -318,7 +319,8 @@ class Config(object):
             ("odin", OdinMaker),
             ("config", ConfigMaker),
             ("package", PackageMaker),
-            ("installercmd", InstallerCmdMaker)
+            ("installercmd", InstallerCmdMaker),
+            ("dnx", DnxMaker)
          ]
 
         out = {}
