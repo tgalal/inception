@@ -26,6 +26,11 @@ class PackageMaker(Maker):
         if "config" not in excludes:
             allIncludes.append(InceptionConstants.OUT_NAME_CONFIG)
 
+        if "dnx" not in excludes:
+            dnxOut = self.config.getDnxOutPath()
+            allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.osloader"))))
+            allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.boot"))))
+
         # if "extras" not in excludes:
         #     for p, v in self.config.get("extras.partitions", {}).items():
         #         allIncludes.append(p)
