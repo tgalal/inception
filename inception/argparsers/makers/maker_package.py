@@ -36,8 +36,9 @@ class PackageMaker(Maker):
             for inc in allIncludes:
                 incPath = os.path.join(outDir, inc)
                 if os.path.exists(incPath):
-                    m.add(incPath, os.path.dirname(incPath))
-                    outZipFile.write(incPath, os.path.basename(incPath))
+                    relativeIncPath = os.path.relpath(incPath, outDir)
+                    m.add(incPath, outDir)
+                    outZipFile.write(incPath, relativeIncPath)
 
             outZipFile.writestr("manifest.json", m.toJSON())
 
