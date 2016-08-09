@@ -301,7 +301,7 @@ class Config(object):
         return self.get("dnx.out", PATH_OUT_DNX)
 
     def isMakeable(self, key):
-        return self.get(key + ".__make__", True)
+        return self.get(key + ".__make__", False)
 
     def prepareOutDir(self):
         outDir = self.getOutPath()
