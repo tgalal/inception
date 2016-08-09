@@ -26,6 +26,11 @@ class PackageMaker(Maker):
         if "config" not in excludes:
             allIncludes.append(InceptionConstants.OUT_NAME_CONFIG)
 
+        if "dnx" not in excludes and self.config.isMakeable("dnx"):
+            dnxOut = self.config.getDnxOutPath()
+            allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.osloader"))))
+            allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.boot"))))
+
         # if "extras" not in excludes:
         #     for p, v in self.config.get("extras.partitions", {}).items():
         #         allIncludes.append(p)
@@ -36,8 +41,9 @@ class PackageMaker(Maker):
             for inc in allIncludes:
                 incPath = os.path.join(outDir, inc)
                 if os.path.exists(incPath):
-                    m.add(incPath, os.path.dirname(incPath))
-                    outZipFile.write(incPath, os.path.basename(incPath))
+                    relativeIncPath = os.path.relpath(incPath, outDir)
+                    m.add(incPath, outDir)
+                    outZipFile.write(incPath, relativeIncPath)
 
             outZipFile.writestr("manifest.json", m.toJSON())
 
@@ -45,7 +51,7 @@ class PackageMaker(Maker):
 
 
 class Manifest(object):
-    MANIFEST_VERSION = 1
+    MANIFEST_VERSION = 2
     def __init__(self, identifier):
         self.identifier = identifier
         self.files = []
