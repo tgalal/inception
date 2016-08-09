@@ -22,6 +22,7 @@ if sys.version_info >= (3,0):
     unicode = str
 
 PATH_OUT_DNX = "dnx"
+PATH_OUT_ODIN = "odin"
 
 class Config(object):
     __OVERRIDE_KEY__ = "__override__"
@@ -299,6 +300,9 @@ class Config(object):
 
     def getDnxOutPath(self):
         return self.get("dnx.out", PATH_OUT_DNX)
+
+    def getOdinOutPath(self):
+        return self.get("odin.out", PATH_OUT_ODIN)
 
     def isMakeable(self, key):
         return self.get(key + ".__make__", False)
