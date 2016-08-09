@@ -26,7 +26,7 @@ class PackageMaker(Maker):
         if "config" not in excludes:
             allIncludes.append(InceptionConstants.OUT_NAME_CONFIG)
 
-        if "dnx" not in excludes:
+        if "dnx" not in excludes and self.config.isMakeable("dnx"):
             dnxOut = self.config.getDnxOutPath()
             allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.osloader"))))
             allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.boot"))))
