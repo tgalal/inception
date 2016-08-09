@@ -51,7 +51,7 @@ class PackageMaker(Maker):
 
 
 class Manifest(object):
-    MANIFEST_VERSION = 1
+    MANIFEST_VERSION = 2
     def __init__(self, identifier):
         self.identifier = identifier
         self.files = []
