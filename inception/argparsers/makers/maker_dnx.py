@@ -5,7 +5,7 @@ import shutil
 import sys
 logger = logging.getLogger(__name__)
 
-PATH_OUT_DNX = "dnx"
+PATH_OUT_DNX = "dnx" #deprecated
 
 class DnxMaker(Maker):
     DEFAULT_MAKE = False
@@ -13,7 +13,7 @@ class DnxMaker(Maker):
         super(DnxMaker, self).__init__(config, "dnx")
 
     def make(self, workDir, outDir):
-        targetDir = os.path.join(outDir, PATH_OUT_DNX)
+        targetDir = os.path.join(outDir, self.config.getDnxOutPath())
         os.makedirs(targetDir)
 
         osLoaderPath = self.getMakeProperty("osloader").resolveAsRelativePath()

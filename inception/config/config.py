@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 if sys.version_info >= (3,0):
     unicode = str
 
+PATH_OUT_DNX = "dnx"
 
 class Config(object):
     __OVERRIDE_KEY__ = "__override__"
@@ -296,6 +297,9 @@ class Config(object):
         a,b,c = self.getIdentifier().split(".")
         return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
 
+    def getDnxOutPath(self):
+        return self.get("dnx.out", PATH_OUT_DNX)
+
     def isMakeable(self, key):
         return self.get(key + ".__make__", True)
 
@@ -318,9 +322,9 @@ class Config(object):
             ("extras", ExtrasMaker),
             ("odin", OdinMaker),
             ("config", ConfigMaker),
-            ("package", PackageMaker),
             ("installercmd", InstallerCmdMaker),
-            ("dnx", DnxMaker)
+            ("dnx", DnxMaker),
+            ("package", PackageMaker)
          ]
 
         out = {}
