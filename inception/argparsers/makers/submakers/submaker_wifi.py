@@ -39,5 +39,5 @@ class WifiSubmaker(Submaker):
 
         wpaSupplicantFilePath = os.path.join(workDir, "wpa_supplicant.conf")
         wpaSupplicantFile = open(wpaSupplicantFilePath, "w")
-        wpaSupplicantFile.write(generated)
+        wpaSupplicantFile.write(generated.encode("utf-8"))
         wpaSupplicantFile.close()

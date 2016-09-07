@@ -19,8 +19,9 @@ class InstallerCmdMaker(Maker):
         outPath = os.path.join(outDir, "installer.cmd")
 
         with open(outPath, "w") as f:
-            if self.getMakeValue("unlock", False):
-                f.write("oem unlock\n")
+            lockState = self.getMakeValue("lock_state", None)
+            if lockState is not None:
+                f.write("oem %s\n" % lockState)
             for name, path in allIncludes.items():
                 f.write("flash:%s#/installer/%s" % (name, path))
                 f.write("\n")
