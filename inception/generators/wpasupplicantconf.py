@@ -36,14 +36,14 @@ class WPASupplicantNetwork(object):
 
 
 class WPASupplicantConfGenerator(Generator):
-    TEMPLATE_NETWORK = """
+    TEMPLATE_NETWORK = u"""
 network={{
     ssid="{ssid}"
     key_mgmt={key_mgmt}
     priority={priority}
     scan_ssid={scan_ssid}
 """
-    TEMPLATE_CONFIG = """
+    TEMPLATE_CONFIG = u"""
 update_config=1
 ctrl_interface={interface}
 eapol_version=1
@@ -79,7 +79,7 @@ fast_reauth=1
 
             nStr += "}"
 
-            networksStr = networksStr + nStr
+            networksStr += nStr
 
         return WPASupplicantConfGenerator.TEMPLATE_CONFIG.format(
             interface = self.interface,
