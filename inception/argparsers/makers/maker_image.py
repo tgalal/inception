@@ -52,7 +52,12 @@ class ImageMaker(Maker):
 
 
         keys_name = self.getMakeValue("keys")
-        signingKeys = self.getConfig().getKeyConfig(keys_name) if keys_name else None
+
+        if keys_name:
+            signingKeys = self.getConfig().getKeyConfig(keys_name)
+            assert signingKeys, "No signing keys names %s" % keys_name
+        else:
+            signingKeys = None
         intermediateOut = os.path.join(workDir, "unsigned_%s.img" % self.imageName)
         out = os.path.join(outDir, self.imageName)
         if signingKeys is not None:
