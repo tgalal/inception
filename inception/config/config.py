@@ -312,17 +312,17 @@ class Config(object):
     def isMakeable(self, key):
         return self.get(key + ".__make__", False)
 
-    def prepareOutDir(self):
+    def prepareOutDir(self, clearOutPath):
         outDir = self.getOutPath()
-        if os.path.exists(outDir):
+        if clearOutPath and os.path.exists(outDir):
             logger.info("Cleaning out dir")
             shutil.rmtree(outDir)
 
         if not os.path.exists(outDir):
             os.makedirs(outDir)
 
-    def make(self, workDir):
-        self.prepareOutDir()
+    def make(self, workDir, clearOutPath = True):
+        self.prepareOutDir(clearOutPath)
         makersMap = [
             ("boot", BootImageMaker),
             ("recovery", RecoveryImageMaker),

@@ -22,6 +22,7 @@ class MakeArgParser(InceptionArgParser):
         optionalOpts.add_argument("-o", "--output", action="store", help = "Override default output path")
         optionalOpts.add_argument("-d", "--keep-dirs", action="store_true", help="Keep output hierarchy when default output path is overriden. Default is True, requires -o")
         optionalOpts.add_argument("-w", "--keep-work", action="store_true", help="Don't delete work dir when finished")
+        optionalOpts.add_argument("-O", "--keep-output", action="store_true", help="Don't clear output dir before make, will replace files with existing names.")
         optionalOpts.add_argument('--learn-settings', action="store_true",
                                   help= "Learn settings from a connected device, and use in generated update package")
 
@@ -107,7 +108,7 @@ class MakeArgParser(InceptionArgParser):
             syncer = ConfigSyncer(self.config)
             syncer.applyDiff(syncer.pullAndDiff())
 
-        self.config.make(self.workDir)
+        self.config.make(self.workDir, not self.args["keep_output"])
 
         if not self.args["keep_work"]:
             logger.info("Cleaning up work dir")
