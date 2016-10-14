@@ -3,7 +3,6 @@ from inception.argparsers.exceptions import InceptionArgParserException
 from inception.constants import InceptionConstants
 from inception.config import ConfigTreeParser, DotIdentifierResolver
 from inception.common.configsyncer import ConfigSyncer
-from inception.common.filetools import FileTools
 import sys
 import os, shutil, logging, tempfile
 
@@ -20,7 +19,8 @@ class MakeArgParser(InceptionArgParser):
 
         optionalOpts = self.add_argument_group("Optional opts")
         optionalOpts.add_argument("-o", "--output", action="store", help = "Override default output path")
-        optionalOpts.add_argument("-k", "--keep-work", action="store_true", help="Don't delete work dir when finished")
+        optionalOpts.add_argument("-d", "--keep-dirs", action="store_true", help="Keep output hierarchy when default output path is overriden. Default is True, requires -o")
+        optionalOpts.add_argument("-w", "--keep-work", action="store_true", help="Don't delete work dir when finished")
         optionalOpts.add_argument('--learn-settings', action="store_true",
                                   help= "Learn settings from a connected device, and use in generated update package")
 
@@ -31,7 +31,6 @@ class MakeArgParser(InceptionArgParser):
 
     def process(self):
         super(MakeArgParser, self).process()
-
         code = self.args["variant"]
         outDir = self.args["output"]
         if code:
@@ -66,7 +65,7 @@ class MakeArgParser(InceptionArgParser):
 
 
         if outDir:
-            self.config.setOutPath(outDir)
+            self.config.setOutPath(outDir, self.args["keep_dirs"])
         else:
             outDir = self.config.getOutPath()
 

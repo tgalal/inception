@@ -285,18 +285,23 @@ class Config(object):
     def isBase(self):
         return len(self.getIdentifier().split(".")) == 2
 
-    def setOutPath(self, outPath):
+    def setOutPath(self, outPath, keepDirs = True):
         self.outPath = outPath
 
-    def getOutPath(self):
-        if self.outPath:
-            return self.outPath
+        if not keepDirs:
+            self.outPath = outPath
+        else:
+            a,b,c = self.getIdentifier().split(".")
+            self.outPath = os.path.join(outPath, a, b, c)
 
+    def getOutPath(self):
         if self.isBase():
             raise ValueError("Base configs have no out paths: %s "% self.getIdentifier())
 
-        a,b,c = self.getIdentifier().split(".")
-        return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
+        if not self.outPath:
+            self.setOutPath(InceptionConstants.OUT_DIR)
+
+        return self.outPath
 
     def getDnxOutPath(self):
         return self.get("dnx.out", PATH_OUT_DNX)
@@ -309,7 +314,7 @@ class Config(object):
 
     def prepareOutDir(self):
         outDir = self.getOutPath()
-        if not self.outPath and os.path.exists(outDir):
+        if os.path.exists(outDir):
             logger.info("Cleaning out dir")
             shutil.rmtree(outDir)
 
