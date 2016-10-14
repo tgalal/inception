@@ -26,6 +26,10 @@ class MakeArgParser(InceptionArgParser):
         optionalOpts.add_argument('--learn-settings', action="store_true",
                                   help= "Learn settings from a connected device, and use in generated update package")
 
+
+        configQueryOpts = self.add_argument_group("Config query options")
+        configQueryOpts.add_argument("--config-list-keys", action="store_true", help="List available signing keys")
+
         makeOpts = self.add_argument_group("General Make opts")
 
         for makeable in self.makeables:
@@ -37,6 +41,13 @@ class MakeArgParser(InceptionArgParser):
             flagGp.add_argument("--%s" % makeable, dest=makeable, action="store_true", help="Make %s, overrides config" % makeable, default=None)
             flagGp.add_argument("--no-%s" % makeable, dest=makeable, action="store_false", help = "Don't make %s, overrides config " % makeable, default=None)
 
+            if makeable == "recovery":
+                makeableGp.add_argument("--recovery-sign", action="store", metavar="keys_name",help="Recovery signing keys name")
+                makeableGp.add_argument("--recovery-no-sign", action="store_true")
+                makeableGp.add_argument("--recovery-img", action="store")
+            elif makeable == "update":
+                makeableGp.add_argument("--update-sign", action="store", metavar="keys_name",help="Update signing keys name")
+                makeableGp.add_argument("--update-no-sign", action="store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -88,7 +99,19 @@ class MakeArgParser(InceptionArgParser):
             elif self.args[makeable] is not None:
                 self.config.set("%s.__make__" % makeable, self.args[makeable])
 
+        if self.args["recovery_no_sign"]:
+            self.config.set("recovery.keys", None)
+        elif self.args["recovery_sign"] is not None:
+            self.config.set("recovery.keys", self.args["recovery_sign"])
 
+        if self.args["recovery_img"]:
+            self.config.set("recovery.img", self.args["recovery_img"])
+
+
+        if self.args["update_no_sign"]:
+            self.config.set("update.keys", None)
+        elif self.args["update_sign"] is not None:
+            self.config.set("update.keys", self.args["update_sign"])
 
         if outDir:
             self.config.setOutPath(outDir, self.args["keep_dirs"])
@@ -96,24 +119,35 @@ class MakeArgParser(InceptionArgParser):
             outDir = self.config.getOutPath()
 
 
-        self.workDir = self.getWorkDir()
-        self.configDir = os.path.dirname(self.config.getSource())
+        if not self.handleConfigQueryArrgs(self.args, self.config):
 
-        logger.info("Cleaning work dir " + self.workDir)
-        if os.path.exists(self.workDir):
-            shutil.rmtree(self.workDir)
-        os.makedirs(self.workDir)
+            self.workDir = self.getWorkDir()
+            self.configDir = os.path.dirname(self.config.getSource())
 
-        if self.args["learn_settings"]:
-            syncer = ConfigSyncer(self.config)
-            syncer.applyDiff(syncer.pullAndDiff())
+            logger.info("Cleaning work dir " + self.workDir)
+            if os.path.exists(self.workDir):
+                shutil.rmtree(self.workDir)
+            os.makedirs(self.workDir)
 
-        self.config.make(self.workDir, not self.args["keep_output"])
+            if self.args["learn_settings"]:
+                syncer = ConfigSyncer(self.config)
+                syncer.applyDiff(syncer.pullAndDiff())
 
-        if not self.args["keep_work"]:
-            logger.info("Cleaning up work dir")
-            shutil.rmtree(self.getWorkDir())
+            self.config.make(self.workDir, not self.args["keep_output"])
+
+            if not self.args["keep_work"]:
+                logger.info("Cleaning up work dir")
+                shutil.rmtree(self.getWorkDir())
 
         return True
 
+
+    def handleConfigQueryArrgs(self, args, config):
+        if args["config_list_keys"]:
+            keys = config.get("__config__.host.keys", {}).keys()
+            for i in range(0, len(keys)):
+                print("%s- %s" % (i+1, keys[i]))
+            return True
+
+        return False
 
