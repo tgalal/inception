@@ -19,7 +19,7 @@ class CacheMaker(Maker):
 
         cacheSize = self.config.getMountConfig("cache.size", "auto")
         if type(cacheSize) is not int or cacheSize <= 0:
-            cacheSize = os.path.getsize(updatePkgPath)
+            cacheSize = os.path.getsize(updatePkgPath) if os.path.exists(updatePkgPath) else 0
             cacheSize = int(cacheSize / (1024 * 1024)) + 10 #safe offset to not fail?
             cacheSize = "%sM" % cacheSize
 
