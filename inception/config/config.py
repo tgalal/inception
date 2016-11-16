@@ -29,18 +29,7 @@ class Config(object):
 
     TEMPLATE_DEFAULT = {
         "__extends__": None,
-        "boot": {
-            "__make__": False
-        },
-        "recovery": {
-            "__make__": False
-        },
-        "cache": {
-            "__make__": False
-        },
         "update": {
-            "__make__": True,
-            "keys": None,
             "network": {
                 "aps": []
             }
@@ -63,22 +52,22 @@ class Config(object):
         config = cls(identifier, sourceTemplate, base)
         if base:
             config.set("__extends__", base.getIdentifier() )
-            config.set("boot.__make__", base.get("boot.__make__", False))
-            config.set("recovery.__make__", base.get("recovery.__make__", False))
-            config.set("cache.__make__", base.get("cache.__make__", False))
-            config.set("odin.__make__", base.get("odin.__make__", False))
-
-            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
-            config.set("update.settings.__make__", base.get("update.settings.__make__", False))
-            config.set("update.databases.__make__", base.get("update.databases.__make__", False))
-            config.set("update.adb.__make__", base.get("update.adb.__make__", False))
-            config.set("update.apps.__make__", base.get("update.apps.__make__", False))
-            config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
-            config.set("update.root_method", base.get("update.root_method", None))
-            config.set("update.property.__make__", base.get("update.property.__make__", False))
-            config.set("update.network.__make__", base.get("update.network.__make__", False))
-            config.set("update.keys", base.get("update.keys", None))
-            config.set("update.script.format_data", base.get("update.script.format_data", False))
+            # config.set("boot.__make__", base.get("boot.__make__", False))
+            # config.set("recovery.__make__", base.get("recovery.__make__", False))
+            # config.set("cache.__make__", base.get("cache.__make__", False))
+            # config.set("odin.__make__", base.get("odin.__make__", False))
+            #
+            # config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
+            # config.set("update.settings.__make__", base.get("update.settings.__make__", False))
+            # config.set("update.databases.__make__", base.get("update.databases.__make__", False))
+            # config.set("update.adb.__make__", base.get("update.adb.__make__", False))
+            # config.set("update.apps.__make__", base.get("update.apps.__make__", False))
+            # config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
+            # config.set("update.root_method", base.get("update.root_method", None))
+            # config.set("update.property.__make__", base.get("update.property.__make__", False))
+            # config.set("update.network.__make__", base.get("update.network.__make__", False))
+            # config.set("update.keys", base.get("update.keys", None))
+            # config.set("update.script.format_data", base.get("update.script.format_data", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config
