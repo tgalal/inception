@@ -11,10 +11,7 @@ class Ext4FSGenerator(Generator):
         self.sparsed = True
 
     def setSize(self, size):
-        try:
-            self.size = int(size)
-        except ValueError:
-            raise Ext4FSGenerationFailedException("Invalid Ext4 fs size")
+        self.size = size
 
     def setMountPoint(self, mountPoint):
         self.mountPoint = mountPoint

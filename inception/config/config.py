@@ -29,18 +29,7 @@ class Config(object):
 
     TEMPLATE_DEFAULT = {
         "__extends__": None,
-        "boot": {
-            "__make__": False
-        },
-        "recovery": {
-            "__make__": False
-        },
-        "cache": {
-            "__make__": False
-        },
         "update": {
-            "__make__": True,
-            "keys": None,
             "network": {
                 "aps": []
             }
@@ -63,22 +52,22 @@ class Config(object):
         config = cls(identifier, sourceTemplate, base)
         if base:
             config.set("__extends__", base.getIdentifier() )
-            config.set("boot.__make__", base.get("boot.__make__", False))
-            config.set("recovery.__make__", base.get("recovery.__make__", False))
-            config.set("cache.__make__", base.get("cache.__make__", False))
-            config.set("odin.__make__", base.get("odin.__make__", False))
-
-            config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
-            config.set("update.settings.__make__", base.get("update.settings.__make__", False))
-            config.set("update.databases.__make__", base.get("update.databases.__make__", False))
-            config.set("update.adb.__make__", base.get("update.adb.__make__", False))
-            config.set("update.apps.__make__", base.get("update.apps.__make__", False))
-            config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
-            config.set("update.root_method", base.get("update.root_method", None))
-            config.set("update.property.__make__", base.get("update.property.__make__", False))
-            config.set("update.network.__make__", base.get("update.network.__make__", False))
-            config.set("update.keys", base.get("update.keys", None))
-            config.set("update.script.format_data", base.get("update.script.format_data", False))
+            # config.set("boot.__make__", base.get("boot.__make__", False))
+            # config.set("recovery.__make__", base.get("recovery.__make__", False))
+            # config.set("cache.__make__", base.get("cache.__make__", False))
+            # config.set("odin.__make__", base.get("odin.__make__", False))
+            #
+            # config.set("update.restore_stock_recovery", base.get("update.restore_stock_recovery", base.get("recovery.stock", None) is not None))
+            # config.set("update.settings.__make__", base.get("update.settings.__make__", False))
+            # config.set("update.databases.__make__", base.get("update.databases.__make__", False))
+            # config.set("update.adb.__make__", base.get("update.adb.__make__", False))
+            # config.set("update.apps.__make__", base.get("update.apps.__make__", False))
+            # config.set("update.busybox.__make__", base.get("update.busybox.__make__", False))
+            # config.set("update.root_method", base.get("update.root_method", None))
+            # config.set("update.property.__make__", base.get("update.property.__make__", False))
+            # config.set("update.network.__make__", base.get("update.network.__make__", False))
+            # config.set("update.keys", base.get("update.keys", None))
+            # config.set("update.script.format_data", base.get("update.script.format_data", False))
             config.set("__notes__", base.get("__notes__", [], directOnly=True))
 
         return config
@@ -285,18 +274,23 @@ class Config(object):
     def isBase(self):
         return len(self.getIdentifier().split(".")) == 2
 
-    def setOutPath(self, outPath):
+    def setOutPath(self, outPath, keepDirs = True):
         self.outPath = outPath
 
-    def getOutPath(self):
-        if self.outPath:
-            return self.outPath
+        if not keepDirs:
+            self.outPath = outPath
+        else:
+            a,b,c = self.getIdentifier().split(".")
+            self.outPath = os.path.join(outPath, a, b, c)
 
+    def getOutPath(self):
         if self.isBase():
             raise ValueError("Base configs have no out paths: %s "% self.getIdentifier())
 
-        a,b,c = self.getIdentifier().split(".")
-        return os.path.join(InceptionConstants.OUT_DIR, a, b, c)
+        if not self.outPath:
+            self.setOutPath(InceptionConstants.OUT_DIR)
+
+        return self.outPath
 
     def getDnxOutPath(self):
         return self.get("dnx.out", PATH_OUT_DNX)
@@ -307,17 +301,17 @@ class Config(object):
     def isMakeable(self, key):
         return self.get(key + ".__make__", False)
 
-    def prepareOutDir(self):
+    def prepareOutDir(self, clearOutPath):
         outDir = self.getOutPath()
-        if not self.outPath and os.path.exists(outDir):
+        if clearOutPath and os.path.exists(outDir):
             logger.info("Cleaning out dir")
             shutil.rmtree(outDir)
 
         if not os.path.exists(outDir):
             os.makedirs(outDir)
 
-    def make(self, workDir):
-        self.prepareOutDir()
+    def make(self, workDir, clearOutPath = True):
+        self.prepareOutDir(clearOutPath)
         makersMap = [
             ("boot", BootImageMaker),
             ("recovery", RecoveryImageMaker),

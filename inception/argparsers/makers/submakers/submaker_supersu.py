@@ -66,9 +66,10 @@ class SuperSuSubmaker(Submaker):
                 with open(postinstFilePath, "w") as postinstFile:
                     postinstFile.write(postInstscript)
 
-                currPostInst = self.getMaker().getConfig().get("script.post", [], directOnly=True)
+                superSuConfig = supersuZipProp.getConfig()
+                currPostInst = superSuConfig.get("script.post", [], directOnly=True)
                 currPostInst.append(postinstFilePath)
-                self.setValue("update.script.post", currPostInst)
+                superSuConfig.set("update.script.post", currPostInst)
 
         self.setValue("update.files.add." + newSuperSuZipPath.replace(workDir, "").replace(".", "\.") , {
             "destination": superSuZipTmpExtract
