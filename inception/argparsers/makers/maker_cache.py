@@ -17,7 +17,9 @@ class CacheMaker(Maker):
         assert os.path.exists(make_ext4fsBin), \
             "%s does not exist, please update %s to the correct path" % (make_ext4fsBin, key)
 
-        cacheSize = self.config.getMountConfig("cache.size", "auto")
+        cacheSize = self.getMakeValue("size")
+        if cacheSize is None: cacheSize = self.config.getMountConfig("cache.size", "auto")
+
         if type(cacheSize) is not int or cacheSize <= 0:
             cacheSize = os.path.getsize(updatePkgPath) if os.path.exists(updatePkgPath) else 0
             cacheSize = int(cacheSize / (1024 * 1024)) + 10 #safe offset to not fail?
