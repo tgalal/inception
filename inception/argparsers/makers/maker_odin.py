@@ -63,7 +63,7 @@ class OdinMaker(Maker):
                 with open(tarTmp, "rb") as outTarFile:
                     md5sum = hashlib.md5(outTarFile.read()).hexdigest()
 
-                with open(checksummedOutTar, "ab") as outTarFile:
+                with open(tarTmp, "ab") as outTarFile:
                     outTarFile.write(md5sum + "  " + os.path.basename(tarTmp) + "\n")
 
                 os.rename(tarTmp, checksummedOutTar)
