@@ -28,8 +28,12 @@ class RecoveryImageMaker(ImageMaker):
                     if preprocessed:
                         return super(RecoveryImageMaker, self).make(workDir, outDir)
 
-                    _, unpacker = self.getHostBinary("unpackbootimg")
-                    bootImgGenerator = imgtools.unpackimg(unpacker, recoveryImg.resolveAsRelativePath(), recoveryExtractDir)
+                    unpackerName = self.getMakeValue("unpacker", "unpackbootimg")
+                    assert unpackerName in ("unpackbootimg", "unmkbootimg")
+                    _, unpacker = self.getHostBinary(unpackerName)
+                    bootImgGenerator = imgtools.unpackimg(unpacker, recoveryImg.resolveAsRelativePath(),
+                                                          recoveryExtractDir,
+                                                          mode = imgtools.MODE_UNMKBOOTIMG if unpackerName == "unmkbootimg" else imgtools.MODE_UNPACKBOOTIMG)
                     shutil.copytree(os.path.join(recoveryExtractDir, bootImgGenerator.getRamdisk()), workRamdiskDir, symlinks=True)
 
                     imgType = "recovery"
@@ -44,6 +48,7 @@ class RecoveryImageMaker(ImageMaker):
                     self.setValue("%s.img.dt_size" % imgType, bootImgGenerator.getDeviceTreeSize())
                     self.setValue("%s.img.kernel" % imgType, bootImgGenerator.getKernel())
                     self.setValue("%s.img.dt" % imgType, bootImgGenerator.getDeviceTree())
+                    self.setValue("%s.img.kernel_offset" % imgType, bootImgGenerator.getKernelOffset())
                 else:
                     shutil.copytree(self.getMakeProperty("img.ramdisk").resolveAsRelativePath(), workRamdiskDir, symlinks=True)
 
