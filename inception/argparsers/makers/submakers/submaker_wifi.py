@@ -1,10 +1,12 @@
 from .submaker import Submaker
 from inception.generators.wpasupplicantconf import WPASupplicantConfGenerator
 import os
+import logging
+
+logger = logging.getLogger(__name__ )
 class WifiSubmaker(Submaker):
     def make(self, workDir):
         aps = self.getValue("aps", [])
-
 
         if not len(aps):
             return
@@ -17,11 +19,8 @@ class WifiSubmaker(Submaker):
 
         self.setValue("update.files.add./data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
 
-
         gen = WPASupplicantConfGenerator()
         gen.setWorkDir(workDir)
-
-
 
         for ap in aps:
             ssid = ap["ssid"]
@@ -30,6 +29,9 @@ class WifiSubmaker(Submaker):
             security = "WPA-PSK" if key and not security else security
             hidden = ap["hidden"] if "hidden" in ap else False
             prioriy = ap["priority"] if "priority" in ap else 1
+
+            logger.debug("Adding SSID %s" % ssid)
+
             gen.addNetwork(ssid, security, key, hidden, prioriy)
 
         generated = gen.generate()
