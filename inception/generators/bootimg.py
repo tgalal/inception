@@ -12,12 +12,13 @@ class BootImgGenerator(Generator):
         self.ramdisk_offset = None
         self.dt = None
         self.second_offset = None
-        self.cmdLine = None
+        self.kernelCmdLine = None
         self.tags_offset = None
         self.secondsize = 0
         self.devicetreesize = 0
         self.signature = None
         self.second = None
+        self.kernel_offset = None
 
         self.additionalArgsStr = ""
 
@@ -28,11 +29,15 @@ class BootImgGenerator(Generator):
             "cmdline": self.getKernelCmdLine,
             "base": self.getBaseAddr,
             "pagesize": self.getPageSize,
+            "dt": self.getDeviceTree,
+            "kernel_offset": self.getKernelOffset,
+            "second_offset": self.getSecondOffset,
+            "tags_offset": self.getTagsOffset,
             "ramdisk_offset": self.getRamdiskOffset,
             "ramdiskaddr": self.getRamdiskAddr,
-            "dt": self.getDeviceTree,
             "signature": self.getSignature
         }
+
 
     def setSecondBootLoader(self, second):
         self.second = second
@@ -78,6 +83,12 @@ class BootImgGenerator(Generator):
         # if self.kernelCmdLine:
         #     return "\"%s\"" % self.kernelCmdLine if quote else self.kernelCmdLine
         # return None
+
+    def getKernelOffset(self):
+        return self.kernel_offset
+
+    def setKernelOffset(self, offset):
+        self.kernel_offset = offset
 
     def setDeviceTree(self, dt):
         self.dt = dt

@@ -48,34 +48,37 @@ class ConfigSyncer(object):
                     continue
                 path = data["path"]
 
-                self.adb.pull(path, dbPath)
                 try:
-                    self.adb.pull(path + "-shm", dbPathShm)
+                    self.adb.pull(path, dbPath)
+                    try:
+                        self.adb.pull(path + "-shm", dbPathShm)
+                    except adb.usb_exceptions.AdbCommandFailureException:
+                        pass
+
+                    try:
+                        self.adb.pull(path + "-wal", dbPathWal)
+                    except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
+                        pass
+
+                    try:
+                        self.adb.pull(path + "-journal", dbPathJournal)
+                    except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
+                        pass
+
+                    # databaseConfig = self.config.get("update.databases.%s" % identifier.replace(".", "\."), {"data": {}})
+                    schemaProperty = self.config.getProperty("update.settings.%s.schema" % identifier.replace(".", "\."))
+                    data["schema"] = schemaProperty.resolveAsRelativePath()
+                    if data["schema"] and not os.path.exists(data["schema"]):
+                        data["schema"] = schemaProperty.getValue()
+
+                    diffSettingsConfig, databaseConfig = self.diffSettings(data, dbPath)
+
+                    databaseConfig["__depend__"] = "update.settings.%s" % identifier.replace(".", "\.")
+
+                    fullDiff["settings"][identifier] = diffSettingsConfig
+                    fullDiff["databases"][identifier] = databaseConfig
                 except adb.usb_exceptions.AdbCommandFailureException:
-                    pass
-
-                try:
-                    self.adb.pull(path + "-wal", dbPathWal)
-                except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
-                    pass
-
-                try:
-                    self.adb.pull(path + "-journal", dbPathJournal)
-                except (adb.usb_exceptions.AdbCommandFailureException, adb.usb_exceptions.ReadFailedError):
-                    pass
-
-                # databaseConfig = self.config.get("update.databases.%s" % identifier.replace(".", "\."), {"data": {}})
-                schemaProperty = self.config.getProperty("update.settings.%s.schema" % identifier.replace(".", "\."))
-                data["schema"] = schemaProperty.resolveAsRelativePath()
-                if data["schema"] and not os.path.exists(data["schema"]):
-                    data["schema"] = schemaProperty.getValue()
-
-                diffSettingsConfig, databaseConfig = self.diffSettings(data, dbPath)
-
-                databaseConfig["__depend__"] = "update.settings.%s" % identifier.replace(".", "\.")
-
-                fullDiff["settings"][identifier] = diffSettingsConfig
-                fullDiff["databases"][identifier] = databaseConfig
+                    logger.warning("Failed to pull " + path)
         return fullDiff
 
 
@@ -336,7 +339,9 @@ class ConfigSyncer(object):
         remotePath = "/sdcard/synced_%s" % configKey
         localPath =  os.path.join(relativeTo, out, os.path.basename(remotePath))
         try:
-            self.adb.shell("dd if=%s of=%s" % (device, remotePath))
+            cmd = "dd if=%s of=%s" % (device, remotePath)
+            logger.info(cmd)
+            self.adb.shell(cmd)
             self.adb.pull(remotePath, localPath)
             self.config.set(configKey, os.path.relpath(out + "/" + os.path.basename(localPath), relativeTo))
         except:
