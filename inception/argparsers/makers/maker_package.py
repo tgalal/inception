@@ -11,16 +11,16 @@ class PackageMaker(Maker):
     def make(self, workDir, outDir):
         allIncludes = []
         excludes = self.getMakeValue("exclude", [])
-        if "cache" not in excludes:
+        if "cache" not in excludes and self.config.isMakeable("cache"):
             allIncludes.append(self.getCacheOutName())
 
-        if "update" not in excludes:
+        if "update" not in excludes and self.config.isMakeable("update"):
             allIncludes.append(InceptionConstants.OUT_NAME_UPDATE)
 
-        if "recovery" not in excludes:
+        if "recovery" not in excludes and self.config.isMakeable("recovery"):
             allIncludes.append(InceptionConstants.OUT_NAME_RECOVERY)
 
-        if "boot" not in excludes:
+        if "boot" not in excludes and self.config.isMakeable("boot"):
             allIncludes.append(InceptionConstants.OUT_NAME_BOOT)
 
         if "config" not in excludes:
@@ -31,9 +31,9 @@ class PackageMaker(Maker):
             allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.osloader"))))
             allIncludes.append(os.path.join(dnxOut, os.path.basename(self.config.get("dnx.boot"))))
 
-        # if "extras" not in excludes:
-        #     for p, v in self.config.get("extras.partitions", {}).items():
-        #         allIncludes.append(p)
+        if "extras" not in excludes and self.config.isMakeable("extras"):
+            for p, v in self.config.get("extras.img", {}).items():
+                allIncludes.append(os.path.join("extras", v))
 
         outZipPath = os.path.join(outDir, InceptionConstants.OUT_NAME_PACKAGE.format(identifier = self.config.getIdentifier().replace(".", "-")))
         m = Manifest(self.config.identifier)
@@ -44,6 +44,8 @@ class PackageMaker(Maker):
                     relativeIncPath = os.path.relpath(incPath, outDir)
                     m.add(incPath, outDir)
                     outZipFile.write(incPath, relativeIncPath)
+                else:
+                    raise Exception("%s does not exist" % incPath)
 
             outZipFile.writestr("manifest.json", m.toJSON())
 
