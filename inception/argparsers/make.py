@@ -47,6 +47,35 @@ class MakeArgParser(InceptionArgParser):
                 makeableGp.add_argument("--recovery-img", action="store")
             elif makeable == "update":
                 makeableGp.add_argument("--update-sign", action="store", metavar="keys_name",help="Update signing keys name")
+
+                makeableGp.add_argument("--update-apps", action="store_true", help="Make apps")
+                makeableGp.add_argument("--update-no-apps", action="store_true", help="Don't make apps")
+
+                makeableGp.add_argument("--update-settings", action="store_true", help="Make settings")
+                makeableGp.add_argument("--update-no-settings", action="store_true", help="Don't make Settings")
+
+                makeableGp.add_argument("--update-network", action="store_true", help="Make network")
+                makeableGp.add_argument("--update-no-network", action="store_true", help="Don't make network")
+
+                makeableGp.add_argument("--update-databases", action="store_true", help="Make databases")
+                makeableGp.add_argument("--update-no-databases", action="store_true", help="Don't make databases")
+
+                makeableGp.add_argument("--update-adb", action="store_true", help="Make adb")
+                makeableGp.add_argument("--update-no-adb", action="store_true", help="Don't make adb")
+
+                makeableGp.add_argument("--update-property", action="store_true", help="Make property")
+                makeableGp.add_argument("--update-no-property", action="store_true", help="Don't make property")
+
+                makeableGp.add_argument("--update-busybox", action="store_true", help="Make busybox")
+                makeableGp.add_argument("--update-no-busybox", action="store_true", help="Don't make busybox")
+
+                makeableGp.add_argument("--update-restore_stock_recovery", action="store_true", help="Restore stock recovery")
+                makeableGp.add_argument("--update-no-restore_stock_recovery", action="store_true", help="Don't restore stock recovery")
+
+                makeableGp.add_argument("--update-root", action="store", help="Root")
+                makeableGp.add_argument("--update-no-root", action="store_true", help="Don't root")
+
+
                 makeableGp.add_argument("--update-no-sign", action="store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
@@ -107,11 +136,29 @@ class MakeArgParser(InceptionArgParser):
         if self.args["recovery_img"]:
             self.config.set("recovery.img", self.args["recovery_img"])
 
-
         if self.args["update_no_sign"]:
             self.config.set("update.keys", None)
         elif self.args["update_sign"] is not None:
             self.config.set("update.keys", self.args["update_sign"])
+
+        updateMakeables = ("apps", "settings", "databases", "property", "adb", "network", "busybox", "root", "restore_stock_recovery")
+
+        for updateMakeable in updateMakeables:
+            if self.args["update_%s" % updateMakeable]:
+                if updateMakeable == "restore_stock_recovery":
+                    self.config.set("update.%s" % updateMakeable, True)
+                elif updateMakeable == "root":
+                    self.config.set("update.root_method", self.args["update_%s" % updateMakeable])
+                else:
+                    self.config.set("update.%s.__make__" % updateMakeable, True)
+            elif self.args["update_no_%s" % updateMakeable]:
+                if updateMakeable == "restore_stock_recovery":
+                    self.config.set("update.%s" % updateMakeable, False)
+                elif updateMakeable == "root":
+                    self.config.set("update.%s", None)
+                else:
+                    self.config.set("update.%s.__make__" % updateMakeable, False)
+
 
         if outDir:
             self.config.setOutPath(outDir, self.args["keep_dirs"])
