@@ -72,8 +72,8 @@ class MakeArgParser(InceptionArgParser):
                 makeableGp.add_argument("--update-restore_stock_recovery", action="store_true", help="Restore stock recovery")
                 makeableGp.add_argument("--update-no-restore_stock_recovery", action="store_true", help="Don't restore stock recovery")
 
-                makeableGp.add_argument("--update-root", action="store", help="Root")
-                makeableGp.add_argument("--update-no-root", action="store_true", help="Don't root")
+                makeableGp.add_argument("--update-root", metavar="method_name", action="store", help="Root the device with the specified root method")
+                makeableGp.add_argument("--update-no-root", action="store_true", help="Don't root the device")
 
 
                 makeableGp.add_argument("--update-no-sign", action="store_true")
