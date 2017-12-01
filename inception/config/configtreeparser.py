@@ -138,6 +138,8 @@ class ConfigTreeParser(object):
             os.makedirs(targetPath)
             localRepo = Repo.init(targetPath)
 
+        remoteUrl = str(remoteUrl)
+
         logger.info("Syncing %s to %s" % (remoteUrl, targetPath))
 
         client, hostPath = get_transport_and_path(remoteUrl)
