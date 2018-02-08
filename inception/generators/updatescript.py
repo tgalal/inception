@@ -98,6 +98,10 @@ class UpdateScriptGenerator(Generator):
             else:
                 self._add("set_perm_recursive", uid, gid, dmode, fmode, self._quote(path))
 
+    def setContext(self, path, context):
+        self.dirty = True
+        self.run("/sbin/chcon", context, path)
+
     def setMetaData(self,  path, uid, gid, fmode, dmode = None):
         self.dirty = True
         uidKey = self._quote("uid")

@@ -80,6 +80,9 @@ class UpdatescriptSubmaker(Submaker):
 
                             u.symlink(destPath, pathData["symlinks"][i:edge])
 
+                if "context" in pathData:
+                    u.setContext(destPath, pathData["context"])
+
 
         #### misc
         header, footer = self.getValue("script.header", None), self.getValue("script.footer", None)
