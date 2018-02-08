@@ -19,7 +19,14 @@ class UpdateScriptGenerator(Generator):
         self.footer = self.__class__.ASCII_INCEPTION
         self.wait = 0
         self.verbose = True
+        self.preScripts = []
+        self.postScripts = []
 
+    def addPrescript(self, script):
+        self.preScripts.append(script)
+
+    def addPostscript(self, script):
+        self.postScripts.append(script)
 
     def setVerbose(self, verbose):
         self.verbose = verbose
@@ -133,6 +140,20 @@ class UpdateScriptGenerator(Generator):
 
         return self._genCmd("set_progress", val)
 
+    def generateSleepCountdown(self):
+        commands = []
+        for remaining in range(self.wait, 0, -1):
+            commands.append(self._genCmd("ui_print", self._quote(str(remaining))))
+            commands.append(self._genCmd("sleep", "1"))
+
+        return commands
+
+
+    def getFinishingCommands(self):
+        sleepCountDown = self.generateSleepCountdown()
+
+        return sleepCountDown + [self._genCmd("ui_print", self._quote("bye!"))]
+
     def generate(self, showProgress = True):
         headerCommands = self.getPrintCommands()
         commandsProgressified = []
@@ -156,7 +177,11 @@ class UpdateScriptGenerator(Generator):
         for i in range(0, 5):
             commands.append(self._genCmd("ui_print", self._quote("#")))
 
-        if self.wait > 0:
-            commands.append(self._genCmd("sleep", "%s" % self.wait))
-        return "\n".join(commands)
+        generated = "\n".join(commands)
 
+        return "{pre}\n{generated}\n{post}\n{finish}".format(
+            pre="\n".join(self.preScripts),
+            generated=generated,
+            post="\n".join(self.postScripts),
+            finish="\n".join(self.getFinishingCommands())
+        )
