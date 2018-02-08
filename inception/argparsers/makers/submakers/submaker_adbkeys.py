@@ -18,5 +18,12 @@ class AdbKeysSubmaker(Submaker):
                 "uid": "1000",
                 "gid": "2000",
                 "mode": "0640",
-                "mode_dirs": "02750"
+                "mode_dirs": "02750",
+                "context": "u:object_r:adb_keys_file:s0"
+            })
+        self.setValue("update.files.add./data/misc/adb/adb_keys", {
+                "uid": "1000",
+                "gid": "2000",
+                "mode": "0640",
+                "context": "u:object_r:adb_keys_file:s0"
             })

@@ -80,6 +80,9 @@ class UpdatescriptSubmaker(Submaker):
 
                             u.symlink(destPath, pathData["symlinks"][i:edge])
 
+                if "context" in pathData:
+                    u.setContext(destPath, pathData["context"])
+
 
         #### misc
         header, footer = self.getValue("script.header", None), self.getValue("script.footer", None)
@@ -97,20 +100,22 @@ class UpdatescriptSubmaker(Submaker):
         postscripts = self.__getFullResolvedInstScriptList("post")
         prescripts = self.__getFullResolvedInstScriptList("pre")
 
+        for script in prescripts:
+            with open(script, "r") as prescriptFile:
+                u.addPrescript(prescriptFile.read().strip())
+
+        for script in postscripts:
+            with open(script, "r") as postscriptFile:
+                u.addPostscript(postscriptFile.read().strip())
+
+
         updateScriptDir = os.path.join(updatePkgDir, "META-INF", "com","google","android")
         os.makedirs(updateScriptDir)
         with open(os.path.join(updateScriptDir, "updater-script"), "w") as updateScriptFile:
-            for script in prescripts:
-                with open(script, "r") as prescriptFile:
-                    updateScriptFile.write("\n")
-                    updateScriptFile.write(prescriptFile.read())
 
-            updateScriptFile.write(u.generate(showProgress=self.getValue("script.progress", True)))
 
-            for script in postscripts:
-                with open(script, "r") as postscriptFile:
-                    updateScriptFile.write("\n")
-                    updateScriptFile.write(postscriptFile.read())
+            updateScriptFile.write(u.generate(self.getValue("script.progress", True)))
+
 
     def __getFullResolvedInstScriptList(self, key):
         result = []

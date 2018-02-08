@@ -46,6 +46,7 @@ class MakeArgParser(InceptionArgParser):
                 makeableGp.add_argument("--recovery-no-sign", action="store_true")
                 makeableGp.add_argument("--recovery-img", action="store")
             elif makeable == "update":
+                makeableGp.add_argument("--update-no-reboot", action="store_true", help="Don't reboot after update script executes")
                 makeableGp.add_argument("--update-sign", action="store", metavar="keys_name",help="Update signing keys name")
 
                 makeableGp.add_argument("--update-apps", action="store_true", help="Make apps")
@@ -158,6 +159,9 @@ class MakeArgParser(InceptionArgParser):
                     self.config.set("update.%s", None)
                 else:
                     self.config.set("update.%s.__make__" % updateMakeable, False)
+
+        if self.args["update_no_reboot"]:
+            self.config.set("update.script.wait", 60 * 5)
 
 
         if outDir:
