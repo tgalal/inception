@@ -17,7 +17,15 @@ class WifiSubmaker(Submaker):
             "uid": "1010",
             "context": "u:object_r:wifi_data_file:s0"
         }
+        wifiDirData = {
+            "mode": "0770",
+            "mode_dirs": "0770",
+            "gid": "1010",
+            "uid": "1010",
+            "context": "u:object_r:wifi_data_file:s0"
+        }
 
+        self.setValue("update.files.add./data/misc/wifi", wifiDirData)
         self.setValue("update.files.add./data/misc/wifi/wpa_supplicant\.conf", wpaSupplicantData)
 
         gen = WPASupplicantConfGenerator()
