@@ -78,6 +78,10 @@ class MakeArgParser(InceptionArgParser):
 
 
                 makeableGp.add_argument("--update-no-sign", action="store_true")
+                makeableGp.add_argument("--update-no-wipe", action="store_true")
+                makeableGp.add_argument("--update-wipe", action="store_true")
+                makeableGp.add_argument("--update-verbose", action="store_true")
+                makeableGp.add_argument("--update-no-verbose", action="store_true")
 
         self.deviceDir = InceptionConstants.VARIANTS_DIR
         self.baseDir = InceptionConstants.BASE_DIR
@@ -162,6 +166,16 @@ class MakeArgParser(InceptionArgParser):
 
         if self.args["update_no_reboot"]:
             self.config.set("update.script.wait", 60 * 5)
+
+        if self.args["update_no_wipe"]:
+            self.config.set("update.script.format_data", False)
+        elif self.args["update_wipe"]:
+            self.config.set("update.script.format_data", True)
+
+        if self.args["update_no_verbose"]:
+            self.config.set("update.script.verbose", False)
+        elif self.args["update_verbose"]:
+            self.config.set("update.script.verbose", True)
 
 
         if outDir:
