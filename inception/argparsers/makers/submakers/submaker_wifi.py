@@ -41,7 +41,19 @@ class WifiSubmaker(Submaker):
 
             logger.debug("Adding SSID %s" % ssid)
 
-            gen.addNetwork(ssid, security, key, hidden, prioriy)
+            if security == "WPA-EAP":
+                gen.add_eap_tls_network(
+                    ssid,
+                    ap["eap"],
+                    ap["identity"],
+                    ap["ca_cert"],
+                    ap["client_cert"],
+                    ap["key_id"],
+                    engine_id=ap["engine_id"] if "engine_id" in ap else None,
+                    hidden=hidden
+                )
+            else:
+                gen.addNetwork(ssid, security, key, hidden, prioriy)
 
         generated = gen.generate()
 
